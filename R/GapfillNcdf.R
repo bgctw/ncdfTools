@@ -626,75 +626,30 @@ GapfillNcdfSaveResults <- function(datacube, reconstruction, args.call.global,
 
 
 ##################################   gapfill data cube #########################
-GapfillNcdfDatacube <- function(datacube, dims.process.id, dims.cycle.id, 
-    dims.cycle, dims.process, first.guess = 'mean', tresh.fill.dc =  .1, 
-    ocean.mask = c(),  max.cores = 8, process.cells = c('gappy','all')[1], 
-    args.call.SSA = list(), iters.n, print.status,  datapts.n, dims.info, 
-    calc.parallel = TRUE, save.debug.info, h, l,  MSSA, MSSA.blocksize)
+GapfillNcdfDatacube <- function(
+     tresh.fill.dc =  .1, ocean.mask = c(),  max.cores = 8, args.call.SSA = list(), 
+     iters.n, print.status,  datapts.n, dims.info, calc.parallel = TRUE, 
+     save.debug.info, h, l,  MSSA, MSSA.blocksize, first.guess = 'mean', 
+     dims.cycle, datacube, dims.cycle.id, dims.process.id, dims.process, 
+     process.cells = c('gappy','all')[1])
 ##TODO
 #remove h, save.debug.info
 {
-  ##FIXME
-  # possibility to identify gap less MSSA blocks
+
   slices.n            <- prod(dim(datacube)[dims.cycle.id + 1])
   dims.process.length <- dim(datacube)[dims.process.id + 1]
   dims.cycle.length   <- dim(datacube)[dims.cycle.id + 1]
   
-  #determine grid cells to process
-  if (print.status)
-    cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
-
-  if (MSSA) {
-    slices.process             <- rep(TRUE, slices.n)
-    slices.without.gaps        <- rep(FALSE, slices.n)
-    slices.ocean               <- rep(FALSE, slices.n)
-    slices.too.gappy           <- rep(FALSE, slices.n)
-    slices.constant            <- rep(FALSE, slices.n)
-    values.constant            <- integer(length = slices.n)
-  } else {  
-    amnt.na                 <- apply(datacube, MAR = dims.cycle.id + 1 ,
-                                     function(x) sum(is.na(x)) / prod(dim(datacube)[dims.process.id + 1])   )
-    if ((length(ocean.mask) > 0 ) & (sum(!is.na(match(c('longitude','latitude'), 
-                                                      dims.process))) == 2))
-      amnt.na <- (amnt.na - (sum(ocean.mask) / prod(dim(datacube)[dims.process.id + 1]))) / 
-        (1 - sum(ocean.mask) / prod(dim(datacube)[dims.process.id + 1]) )
-    if (process.cells == 'gappy') {
-      slices.without.gaps       <- as.vector((amnt.na == 0))
-    } else {
-      slices.without.gaps       <- rep(FALSE, slices.n)
-    }
-    if (length(ocean.mask) > 0 & sum(!is.na(match(c('longitude','latitude'), 
-                                                  dims.cycle))) == 2) {
-      slices.ocean           <- as.vector(ocean.mask)
-    } else {
-      slices.ocean           <- rep(FALSE, slices.n)
-    }
-    slices.too.gappy           <- as.vector(amnt.na >= (1 - (tresh.fill.dc)))
-    if ((length(first.guess) > 1) & tresh.fill.dc == 0) {
-      amnt.na.first.guess    <- apply(first.guess, MAR = dims.cycle.id + 1,
-                                      function(x)sum(is.na(x)) / prod(dims.process.length)   )
-      slices.too.gappy[amnt.na.first.guess < 0.9] <- FALSE
-    }
-    slices.too.gappy[slices.ocean] <- FALSE
-    slices.constant            <- as.vector(apply(datacube, MAR = dims.cycle.id + 1,
-                                                  function(x){length(unique(na.omit(as.vector(x)))) == 1}))
-    if (sum(slices.constant) > 0 && print.status)
-      cat(paste(Sys.time(), ' : ', sum(slices.constant),' constant grids/slices',
-                ' were found and will be filled with constant values!\n', sep=''))
-    values.constant            <-  as.vector(apply(datacube, MAR = dims.cycle.id + 1,
-                                                   mean, na.rm=TRUE   ))
-    slices.constant[slices.without.gaps & slices.ocean & slices.too.gappy] <- FALSE
-    
-    slices.process             <- !slices.constant & !slices.ocean & 
-                                  !slices.too.gappy & !slices.without.gaps
-  }
-  iters.n <- sum(slices.process)
-  
-  ## TODO 
-  #remove after debugging
-  if (save.debug.info)
-      dump.frames(dumpto = paste(file.name, '_dumpframe_grididentify_', h, '_', 
-                  l, sep = ''), to.file = TRUE)
+  results.identify    <- GapfillNcdfIdentifyCells(dims.cycle, dims.cycle.id, 
+                                                  dims.process.id, datacube,
+                                                  MSSA, dims.process, 
+                                                  process.cells = c('gappy','all')[1], 
+                                                  first.guess = 'mean',
+                                                  ocean.mask = c(), 
+                                                  print.status, 
+                                                  slices.n, dims.process.length,
+                                                  tresh.fill.dc)
+  AttachList(results.identify)
   
   #create iterator
   if (sum(slices.process) == 0) {
@@ -764,7 +719,66 @@ GapfillNcdfDatacube <- function(datacube, dims.process.id, dims.cycle.id,
 }
 
 
+#########################      identify valid cells          ###################
 
+GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id, datacube,
+    MSSA, dims.process, process.cells = c('gappy','all')[1], first.guess = 'mean', 
+    ocean.mask = c(), print.status, slices.n, dims.process.length, tresh.fill.dc) {  
+  ##FIXME
+  # possibility to identify gap less MSSA blocks    
+  #determine grid cells to process
+  if (print.status)
+    cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
+  
+  if (MSSA) {
+    slices.process             <- rep(TRUE, slices.n)
+    slices.without.gaps        <- rep(FALSE, slices.n)
+    slices.ocean               <- rep(FALSE, slices.n)
+    slices.too.gappy           <- rep(FALSE, slices.n)
+    slices.constant            <- rep(FALSE, slices.n)
+    values.constant            <- integer(length = slices.n)
+  } else {  
+    amnt.na                 <- apply(datacube, MAR = dims.cycle.id + 1 ,
+        function(x) sum(is.na(x)) / prod(dim(datacube)[dims.process.id + 1])   )
+    if ((length(ocean.mask) > 0 ) & (sum(!is.na(match(c('longitude','latitude'), 
+                      dims.process))) == 2))
+      amnt.na <- (amnt.na - (sum(ocean.mask) / prod(dim(datacube)[dims.process.id + 1]))) / 
+          (1 - sum(ocean.mask) / prod(dim(datacube)[dims.process.id + 1]) )
+    if (process.cells == 'gappy') {
+      slices.without.gaps       <- as.vector((amnt.na == 0))
+    } else {
+      slices.without.gaps       <- rep(FALSE, slices.n)
+    }
+    if (length(ocean.mask) > 0 & sum(!is.na(match(c('longitude','latitude'), 
+                dims.cycle))) == 2) {
+      slices.ocean           <- as.vector(ocean.mask)
+    } else {
+      slices.ocean           <- rep(FALSE, slices.n)
+    }
+    slices.too.gappy           <- as.vector(amnt.na >= (1 - (tresh.fill.dc)))
+    if ((length(first.guess) > 1) & tresh.fill.dc == 0) {
+      amnt.na.first.guess    <- apply(first.guess, MAR = dims.cycle.id + 1,
+          function(x)sum(is.na(x)) / prod(dims.process.length)   )
+      slices.too.gappy[amnt.na.first.guess < 0.9] <- FALSE
+    }
+    slices.too.gappy[slices.ocean] <- FALSE
+    slices.constant            <- as.vector(apply(datacube, MAR = dims.cycle.id + 1,
+            function(x){length(unique(na.omit(as.vector(x)))) == 1}))
+    if (sum(slices.constant) > 0 && print.status)
+      cat(paste(Sys.time(), ' : ', sum(slices.constant),' constant grids/slices',
+              ' were found and will be filled with constant values!\n', sep=''))
+    values.constant            <-  as.vector(apply(datacube, MAR = dims.cycle.id + 1,
+            mean, na.rm=TRUE   ))
+    slices.constant[slices.without.gaps & slices.ocean & slices.too.gappy] <- FALSE
+    
+    slices.process             <- !slices.constant & !slices.ocean & 
+        !slices.too.gappy & !slices.without.gaps
+  }
+  iters.n <- sum(slices.process)
+  return(list(iters.n = iters.n, slices.process = slices.process, 
+              values.constant = values.constant, slices.constant = slices.constant, 
+              slices.without.gaps = slices.without.gaps))
+}
 
 ###############################  create iteration datacube   ###################
 
