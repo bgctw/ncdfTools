@@ -481,12 +481,12 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
     for (n in 1:length(args.list)) {
       if((class(get(args.list[n]))) != 'list')
         stop(paste('Argument ', args.list[n], ' is not a list!'))
-      if (length(get(args.list[n])) != length(dimensions))
+      if (length(get(args.list[n])[[1]]) != length(dimensions[[1]]))
         stop(paste('Argument ', args.list[n], ' has to be a list of the same ',
                    'length as dimensions for process.type == \'stepwise\'!'))
-      if (! all(sapply(get(args.list[n]), length) == 1 ))
-        stop(paste('Argument ', args.list[n], '[[1..n]] can only be a list of ',
-                   'length one for process.type == \'stepwise\'!', sep = ''))
+#      if (! all(sapply(get(args.list[n]), length) == 1 ))
+#        stop(paste('Argument ', args.list[n], '[[1..n]] can only be a list of ',
+#                   'length one for process.type == \'stepwise\'!', sep = ''))
     }
     for (o in 1:length(dimensions))
       if (sapply(dimensions[o] , function(x) length(x)) > 2)
