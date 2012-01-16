@@ -243,8 +243,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           ##get first guess
           if (h > 1 && exists('file.name.guess.curr')) {
             file.con.guess   <- open.nc(file.name.guess.curr)
-            first.guess      <- var.get.nc(file.con.guess, sub('[.]nc', '', 
-									file.name.guess.curr))
+            first.guess      <- var.get.nc(file.con.guess, sub('[.]nc', '', file.name.guess.curr))
             close.nc(file.con.guess)
           }
           ##run calculation
@@ -280,12 +279,13 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               if (!is.null(recstr.t$reconstruction)) {
                 var.res.steps[h, k] <- var(datacube[!is.na(recstr.t) & !is.na(datacube)] -
                                            recstr.t[!is.na(recstr.t)  & !is.na(datacube)])
-               else {
-                 var.res.steps[h, k] <- Inf
+              } else {
+                var.res.steps[h, k] <- Inf
+              }
             }
             step.chosen[h]       <- which.min(var.res.steps[h, ])
             gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen[h], 
-                                              sep = ''))
+                                                sep = ''))
             if (ratio.test != 1 && g == 1) {
               slices.process     <- gapfill.results.step$slices.process
               slices.constant    <- gapfill.results.step$slices.constant
