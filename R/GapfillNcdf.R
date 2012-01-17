@@ -51,6 +51,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                       ##   in the 'stepwise' sheme, supplying this value is only reasonable in the 'variances' sheme.
 , max.steps = 10
 , ratio.test = 1
+, force.all.dims = FALSE
 , var.name = 'auto'   ##<< character string: name of the variable to fill. If set to 'auto' (default), the name
                       ##   is taken from the file as the variable with a different name than the dimensions. An
                       ##   error is produced here in cases where more than one such variable exists.
@@ -278,12 +279,27 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               recstr.t            <- get(paste('gapfill.results.dim', k, sep=''))[['reconstruction']]
               if (!is.null(recstr.t)) {
                 var.res.steps[h, k] <- var(datacube[!is.na(recstr.t) & !is.na(datacube)] -
-                                           recstr.t[!is.na(recstr.t)  & !is.na(datacube)])
+                        recstr.t[!is.na(recstr.t)  & !is.na(datacube)])
               } else {
                 var.res.steps[h, k] <- Inf
               }
             }
             step.chosen[h]       <- which.min(var.res.steps[h, ])
+            if (force.all.dims) {
+              if (!exists('force.dim')) {
+                force.dim <- logical(n.dims.loop)                      
+                for (r in 1:n.dims.loop) {
+                  slices.too.gappy.t <- get(paste('gapfill.results.dim', k, sep=''))[['slices.too.gappy']]
+                  if (sum(slices.too.gappy.t) > 0)
+                    force.dim[-r] <- TRUE                 
+                }
+              }
+              if (sum(force.dim) > 0) {
+                step.chosen[h]   <- which.min(force.dim)
+                force.dim[which.min(force.dim)] <- FALSE
+              }        
+            }
+            
             gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen[h], 
                                                 sep = ''))
             if (ratio.test != 1 && g == 1) {
@@ -404,7 +420,7 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
     print.status, first.guess, pad.series, process.cells, ocean.mask, tresh.fill,
     var.name, amnt.iters.start, amnt.iters, file.name, process.type, size.biggap, 
     amnt.artgaps, M, n.comp, dimensions, max.steps, tresh.fill.first, 
-    save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test)
+    save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test, force.all.dims)
 {
   ##TODO
   # include test for MSSA and windowlength=1
