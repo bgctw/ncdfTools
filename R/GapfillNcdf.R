@@ -276,7 +276,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             var.res.steps <- matrix(NA,ncol = n.dims.loop, nrow = n.steps)
             for (k in 1:n.dims.loop) {
               recstr.t            <- get(paste('gapfill.results.dim', k, sep=''))[['reconstruction']]
-              if (!is.null(recstr.t$reconstruction)) {
+              if (!is.null(recstr.t)) {
                 var.res.steps[h, k] <- var(datacube[!is.na(recstr.t) & !is.na(datacube)] -
                                            recstr.t[!is.na(recstr.t)  & !is.na(datacube)])
               } else {
