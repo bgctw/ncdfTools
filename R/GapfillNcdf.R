@@ -273,8 +273,9 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         
         ##test which dimension to be used for the next step
         if (process.type == 'variances') {
-          if (g == 1) {				
-            var.res.steps <- matrix(NA,ncol = n.dims.loop, nrow = n.steps)
+          if (g == 1) {
+            if (!exists('var.res.steps'))
+              var.res.steps <- matrix(NA,ncol = n.dims.loop, nrow = n.steps)
             for (k in 1:n.dims.loop) {
               recstr.t            <- get(paste('gapfill.results.dim', k, sep=''))[['reconstruction']]
               if (!is.null(recstr.t)) {
@@ -295,9 +296,9 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                 }
               }
               if (sum(force.dim) > 0) {
-                step.chosen[h]   <- which.min(force.dim)
-                force.dim[which.min(force.dim)] <- FALSE
-              }        
+                step.chosen[h]   <- which(force.dim)[which.min(var.res.steps[h, which(force.dim)])]
+                force.dim[step.chosen[h]] <- FALSE
+              }
             }
             
             gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen[h], 
@@ -765,7 +766,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
 
   return(list(reconstruction = data.results.step, data.variances = data.variances,
               slices.without.gaps = slices.without.gaps, slices.process = slices.process, 
-              max.cores = max.cores, slices.process = slices.process,
+              max.cores = max.cores, slices.process = slices.process, slices.too.gappy = slices.too.gappy,
               slices.constant = slices.constant, values.constant = values.constant, 
               slices.excluded = slices.excluded))
 }
@@ -838,7 +839,8 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
   iters.n <- sum(slices.process)
   return(list(iters.n = iters.n, slices.process = slices.process, 
               values.constant = values.constant, slices.constant = slices.constant, 
-              slices.without.gaps = slices.without.gaps, slices.excluded = slices.excluded))
+              slices.without.gaps = slices.without.gaps, slices.excluded = slices.excluded,
+              slices.too.gappy = slices.too.gappy))
 }
 
 ###############################  create iteration datacube   ###################
