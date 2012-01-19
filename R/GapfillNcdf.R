@@ -775,13 +775,13 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
 #########################      identify valid cells          ###################
 
 GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id, datacube,
-    MSSA, dims.process, process.cells = c('gappy','all')[1], first.guess = 'mean', 
-    ocean.mask = c(), print.status, slices.n, dims.process.length, tresh.fill.dc,
-	ratio.test, g, slices.excluded, slices.without.gaps = rep(FALSE, slices.n), 
-	slices.too.gappy = rep(FALSE, slices.n), slices.constant = rep(FALSE, slices.n), 
-	slices.process = rep(TRUE, slices.n), slices.ocean = rep(FALSE, slices.n),		
-	values.constant = integer(length = slices.n)
-){  
+                                     MSSA, dims.process, process.cells = c('gappy','all')[1], first.guess = 'mean', 
+                                     ocean.mask = c(), print.status, slices.n, dims.process.length, tresh.fill.dc,
+                                     ratio.test, g , slices.without.gaps = rep(FALSE, slices.n), 
+                                     slices.too.gappy = rep(FALSE, slices.n), slices.constant = rep(FALSE, slices.n), 
+                                     slices.process = rep(TRUE, slices.n), slices.ocean = rep(FALSE, slices.n),		
+                                     values.constant = integer(length = slices.n),  slices.excluded = rep(FALSE, slices.n))
+{  
 	##FIXME
     # possibility to identify gap less MSSA blocks    
     #determine grid cells to process
