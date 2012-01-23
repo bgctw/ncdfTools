@@ -16,6 +16,7 @@ image.rotated = function(
 ##seealso<<
 ##\code{\link{image}}, the plotting routines of the raster package
 {
+    add.args = list(...)
     if (length(col.vals)==0) {
         col.strings=colnames(data)
         col.vals=1:dim(data)[2]
@@ -33,8 +34,11 @@ image.rotated = function(
       par(mar=par()$mar + c(0,0,0,2))
 
     image(x=sort(col.vals),y=sort(row.vals),z=data,xaxt='n',yaxt='n',col=col,zlim=zlim,...)
-    axis(side=1,labels=col.strings,at=col.vals)
-    axis(side=2,labels=row.strings,at=row.vals)    
+
+    if (is.null(add.args$xaxt) || add.args$xaxt != 'n')
+       axis(side=1,labels=col.strings,at=col.vals)
+    if (is.null(add.args$yaxt) || add.args$yaxt != 'n')
+       axis(side=2,labels=row.strings,at=row.vals)    
     
     if (scale) {
       require(plotrix)
