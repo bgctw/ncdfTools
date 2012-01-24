@@ -685,7 +685,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
   args.identify <- list(dims.cycle = dims.cycle, dims.cycle.id = dims.cycle.id,
                         dims.process.id = dims.process.id, datacube = datacube,
                         MSSA = MSSA, dims.process =  dims.process, process.cells = c('gappy','all')[1], 
-                        first.guess = 'mean', ocean.mask = c(), print.status = print.status, 
+                        first.guess = first.guess, ocean.mask = c(), print.status = print.status, 
 		        slices.n = slices.n, dims.process.length = dims.process.length,
                         tresh.fill.dc = tresh.fill.dc, ratio.test = ratio.test, g = g, l = l, h = h)
   if (g == 2)
@@ -837,6 +837,7 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
     }
   }
   iters.n <- sum(slices.process)
+
 
   return(list(iters.n = iters.n, slices.process = slices.process, 
               values.constant = values.constant, slices.constant = slices.constant, 
