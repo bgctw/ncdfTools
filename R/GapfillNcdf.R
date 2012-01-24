@@ -201,14 +201,14 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           if (g == 2 && step.chosen[h] != l)
             next
           tresh.fill.dc         <- tresh.fill[[ind]][[l]]                  
-
           
           ##prepare parallel iteration parameters
           if (process.type == 'stepwise') {
             amnt.iters.loop       <- amnt.iters[[h]][[1]]
             amnt.iters.start.loop <- amnt.iters.start[[h]][[1]]
           } else if (process.type == 'variances') {
-            tresh.fill.dc         <- tresh.fill.first[[ind]][[l]]
+            if (h == 1)
+              tresh.fill.dc         <- tresh.fill.first[[ind]][[l]]
             amnt.iters.loop       <- c(h, amnt.iters[[1]][[l]][2])
             amnt.iters.start.loop <- c(max(c(1, h - 1)), 1)
           }
@@ -227,9 +227,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           diminfo.step <- list(dims.process = dims.process, dims.process.id = dims.process.id,
                                dims.process.length = dims.process.length, dims.cycle.id = dims.cycle.id,
                                dims.cycle.length = dims.cycle.length)
-
-
-
           
           ##determine call settings for SSA
           args.call.SSA <- list(amnt.artgaps = amnt.artgaps[[ind]][[l]],
@@ -690,7 +687,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                         MSSA = MSSA, dims.process =  dims.process, process.cells = c('gappy','all')[1], 
                         first.guess = 'mean', ocean.mask = c(), print.status = print.status, 
 		        slices.n = slices.n, dims.process.length = dims.process.length,
-                        tresh.fill.dc = tresh.fill.dc, ratio.test = ratio.test, g = g)
+                        tresh.fill.dc = tresh.fill.dc, ratio.test = ratio.test, g = g, l = l, h = h)
   if (g == 2)
     args.identify <- c(args.identify, list(slices.excluded = slices.excluded,
                                            values.constant = values.constant,
@@ -777,14 +774,17 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
 GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id, datacube,
                                      MSSA, dims.process, process.cells = c('gappy','all')[1], first.guess = 'mean', 
                                      ocean.mask = c(), print.status, slices.n, dims.process.length, tresh.fill.dc,
-                                     ratio.test, g , slices.without.gaps = rep(FALSE, slices.n), 
+                                     ratio.test, g , slices.without.gaps = rep(FALSE, slices.n), h, l,
                                      slices.too.gappy = rep(FALSE, slices.n), slices.constant = rep(FALSE, slices.n), 
                                      slices.process = rep(TRUE, slices.n), slices.ocean = rep(FALSE, slices.n),		
                                      values.constant = integer(length = slices.n),  slices.excluded = rep(FALSE, slices.n))
-{  
-	##FIXME
-    # possibility to identify gap less MSSA blocks    
-    #determine grid cells to process
+{
+  ##FIXME
+  # possibility to identify gap less MSSA blocks
+
+  ##ToDo: remove h and l from argument list
+  
+  #determine grid cells to process
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
   
@@ -837,6 +837,7 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
     }
   }
   iters.n <- sum(slices.process)
+
   return(list(iters.n = iters.n, slices.process = slices.process, 
               values.constant = values.constant, slices.constant = slices.constant, 
               slices.without.gaps = slices.without.gaps, slices.excluded = slices.excluded,
@@ -896,7 +897,6 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
   } else {
     iter.gridind[]       <- c(1, iters.n)
   }
-  
   return(list(iter.gridind = iter.gridind , ind.process.cube = ind.process.cube,
               max.cores = max.cores, index.MSSAseries = index.MSSAseries))
 }
