@@ -30,8 +30,10 @@ image.rotated = function(
           col.strings <- col.vals
     }
     data=t(data)[,dim(data)[1]:1]
-    if (scale)
+    if (scale) {
+      old.mar <- par()$mar
       par(mar=par()$mar + c(0,0,0,2))
+    }  
 
     image(x=sort(col.vals),y=sort(row.vals),z=data,xaxt='n',yaxt='n',col=col,zlim=zlim,...)
 
@@ -50,5 +52,7 @@ image.rotated = function(
                    legend=pretty(seq(zlim[1],zlim[2],
                      length.out = length(col)))
                    ,gradient='y',align='rb',cex=1.2)
-    }  
+    } 
+    if (scale)  
+      par(mar = old.mar)
 }    
