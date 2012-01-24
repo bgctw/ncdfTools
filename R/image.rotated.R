@@ -17,7 +17,7 @@ image.rotated = function(
 ##\code{\link{image}}, the plotting routines of the raster package
 {
     add.args = list(...)
-    if (length(col.vals)==0) {
+    if (length(col.vals)==0) { 
         col.strings=colnames(data)
         col.vals=1:dim(data)[2]
         if (is.null(col.strings))
