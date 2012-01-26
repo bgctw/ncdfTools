@@ -21,7 +21,7 @@ extract.FN.ncdf <- function(path = getwd(), sites, pars, time.ends, dim.borders)
     timevec.t    <- var.get.nc(con.data, 'time')
     timevec.ends <- as.chron(date.ncdf2R(timevec.t[c(1,length(timevec.t))], units = 'days'))
     ind.start    <- which(abs(times - timevec.ends[1]) == min(abs(times - timevec.ends[1])))
-    ind.end      <- which(abs(times - timevec.ends[2]) == min(abs(times - timevec.ends[2])))
+    ind.end      <- which(abs(timevec.ends[2]- times) == min(abs(timevec.ends[2] - times)))
     
     vars.available <- ncdf.get.varinfo(con.data)[,'name'] 
     for (par.t in pars) {
@@ -35,6 +35,6 @@ extract.FN.ncdf <- function(path = getwd(), sites, pars, time.ends, dim.borders)
     counter = counter + 1
     print(paste('finished file ', counter, ' of ', length(sites), sep = ''))    
   }
-  setwd(path)
+  setwd(owd)
   return(data.extr)
 }
