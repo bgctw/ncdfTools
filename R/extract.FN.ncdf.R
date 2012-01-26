@@ -1,11 +1,11 @@
-extract.FN.ncdf <- function(path = getwd(), sites, pars, time.ends) 
+extract.FN.ncdf <- function(path = getwd(), sites, pars, time.ends, dim.borders) 
 {
   require(RNetCDF)
   require(chron)
   owd <- setwd(path)
   times = seq(from=as.chron(time.ends[1]), to = as.chron(time.ends[2]), by = times("00:30:00"))
   
-  data.extr <- array(NA, dim = c(length(sites), length(pars), length(times), 7))
+  data.extr <- array(NA, dim = c(length(sites), length(pars), length(times), length(dim.borders)))
   dimnames(data.extr) <- list(sites, pars, as.character(times))
   
   ##TODO make the datacube size more general and universal 
@@ -25,8 +25,11 @@ extract.FN.ncdf <- function(path = getwd(), sites, pars, time.ends)
     
     vars.available <- ncdf.get.varinfo(con.data)[,'name'] 
     for (par.t in pars) {
-      if (is.element(par.t, vars.available))
-        data.extr[site.t, par.t, ind.start:ind.end, ] <- var.get.nc(con.data, par.t)
+      if (is.element(par.t, vars.available)) {
+        for (j in 1:length(dim.borders))    
+           data.extr[site.t, par.t, ind.start:ind.end, j] <- 
+               rowSums(matrix(var.get.nc(con.data, par.t)[, dim.borders[[j]]], ncol = length(dim.borders[[j]])) )
+      }
     }
     close.nc(con.data)
     counter = counter + 1
