@@ -16,19 +16,37 @@ image.rotated = function(
 ##seealso<<
 ##\code{\link{image}}, the plotting routines of the raster package
 {
+    oopts <- options(warn=-1)
     add.args = list(...)
     if (length(col.vals)==0) { 
         col.strings=colnames(data)
         col.vals=1:dim(data)[2]
         if (is.null(col.strings))
           col.strings <- col.vals
+        if(sum(is.na(as.numeric(col.strings)))==0) {
+          col.strings.pretty   <- pretty(as.numeric(col.strings))
+          a = lm(y~x, data=data.frame(x=range(as.numeric(col.strings)), y=range(col.vals)))
+          col.vals.axis <- coefficients(a)[1] +  coefficients(a)[2]*col.strings.pretty 
+        } else {
+          col.vals.axis <- 1:length(row.strings)
+          col.strings.pretty <- col.strings
+        }
     }
     if (length(row.vals)==0) {
         row.strings=rev(rownames(data))
         row.vals=1:dim(data)[1]
-        if (is.null(col.strings))
-          col.strings <- col.vals
+        if (is.null(row.strings))
+          row.strings <- row.vals
+        if(sum(is.na(as.numeric(row.strings)))==0) {
+          row.strings.pretty   <- pretty(as.numeric(row.strings))
+          a = lm(y~x, data=data.frame(x=range(as.numeric(row.strings)), y=range(row.vals)))
+          row.vals.axis <- coefficients(a)[1] +  coefficients(a)[2]*row.strings.pretty 
+        } else {
+          row.vals.axis <- 1:length(row.strings)
+          row.strings.pretty <- row.strings         
+        }
     }
+    options(oopts)
     data=t(data)[,dim(data)[1]:1]
     if (scale) {
       old.mar <- par()$mar
@@ -37,10 +55,10 @@ image.rotated = function(
 
     image(x=sort(col.vals),y=sort(row.vals),z=data,xaxt='n',yaxt='n',col=col,zlim=zlim,...)
 
-    if (is.null(add.args$xaxt) || add.args$xaxt != 'n')
-       axis(side=1,labels=col.strings,at=col.vals)
+    if (is.null(add.args$xaxt) || add.args$xaxt != 'n')       
+       axis(side=1,labels=col.strings.pretty,at=col.vals.axis)
     if (is.null(add.args$yaxt) || add.args$yaxt != 'n')
-       axis(side=2,labels=row.strings,at=row.vals)    
+       axis(side=2,labels=row.strings.pretty,at=row.vals.axis)    
     
     if (scale) {
       require(plotrix)
