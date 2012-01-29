@@ -185,6 +185,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     if (calc.parallel)
         RegisterParallel(package.parallel, max.cores)
     for (h in 1:n.steps) {
+      if (print.status)
+            cat(paste(Sys.time(), ' : Starting step ', h, '\n',sep = ''))
       if (process.type == 'stepwise') {
         ind                   <- h        
       } else if (process.type == 'variances') {
@@ -227,7 +229,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           diminfo.step <- list(dims.process = dims.process, dims.process.id = dims.process.id,
                                dims.process.length = dims.process.length, dims.cycle.id = dims.cycle.id,
                                dims.cycle.length = dims.cycle.length)
-          
+
           ##determine call settings for SSA
           args.call.SSA <- list(amnt.artgaps = amnt.artgaps[[ind]][[l]],
                                 M = M[[ind]][[l]],
@@ -321,7 +323,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           var.res.steps        <- 'not available'
         }        
       }
-      
       ##save first guess for next step
       if (n.steps > 1 && !is.null(gapfill.results.step$reconstruction)) {
         file.name.guess.curr              <- paste(sub('.nc$', '', file.name),
@@ -550,7 +551,7 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
 
 }
 
-2
+
 
 ##################################      create files    ########################
 
@@ -820,25 +821,32 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
         cat(paste(Sys.time(), ' : ', sum(slices.constant),' constant grids/slices',
                   ' were found and will be filled with constant values!\n', sep=''))
       values.constant            <-  as.vector(apply(datacube, MAR = dims.cycle.id + 1,
-                                                     mean, na.rm=TRUE   ))
+                                                     mean, na.rm = TRUE))
       slices.constant[slices.without.gaps & slices.ocean & slices.too.gappy] <- FALSE
       
       slices.process             <- !slices.constant & !slices.ocean & 
                                     !slices.too.gappy & !slices.without.gaps
-      slices.excluded    <- logical(slices.n)
-      if (ratio.test != 1 && g == 1) {
+      slices.excluded            <- logical(slices.n)
+
+      ##extract only a ratio of the slices to calculate for variance testing
+      if (ratio.test != 1) {
         slices.test.n      <- ceiling(sum(slices.process) * ratio.test)
         ind.slices.process <- sample(which(slices.process), slices.test.n)
         slices.excluded[setdiff(which(slices.process), ind.slices.process)] <- TRUE
         slices.process[-ind.slices.process] <- FALSE
-      } 
+      }
+
+      ##add slices usually not filled in case no validation data is available later
+      if (sum(slices.process) > 0 && mean(amnt.na[slices.process]) > 0.8) {
+        ind.added <- sample(which(slices.without.gaps), sum(slices.process))
+        slices.process[ind.added] <- TRUE
+        slices.without.gaps[ind.added] <- FALSE
+      }
     } else {
       slices.process <- slices.excluded
     }
   }
   iters.n <- sum(slices.process)
-
-
   return(list(iters.n = iters.n, slices.process = slices.process, 
               values.constant = values.constant, slices.constant = slices.constant, 
               slices.without.gaps = slices.without.gaps, slices.excluded = slices.excluded,
