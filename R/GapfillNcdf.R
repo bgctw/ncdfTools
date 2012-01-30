@@ -251,7 +251,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           args.Datacube <- c(list(datacube = datacube, max.cores = max.cores,
                                   tresh.fill.dc = tresh.fill.dc,first.guess = first.guess,
                                   dims.process.id = dims.process.id, dims.cycle.id = dims.cycle.id,
-								dims.process = dims.process, dims.cycle = dims.cycle, 
+                                  dims.process = dims.process, dims.cycle = dims.cycle, 
                                   print.status = print.status, datapts.n = datapts.n, dims.info = dims.info,
                                   calc.parallel = calc.parallel, ocean.mask = ocean.mask, 
                                   save.debug.info = save.debug.info, h = h, l = l,  MSSA = MSSA[[ind]][[l]],
@@ -323,6 +323,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           var.res.steps        <- 'not available'
         }        
       }
+      browser()
       ##save first guess for next step
       if (n.steps > 1 && !is.null(gapfill.results.step$reconstruction)) {
         file.name.guess.curr              <- paste(sub('.nc$', '', file.name),
@@ -686,7 +687,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
   args.identify <- list(dims.cycle = dims.cycle, dims.cycle.id = dims.cycle.id,
                         dims.process.id = dims.process.id, datacube = datacube,
                         MSSA = MSSA, dims.process =  dims.process, process.cells = c('gappy','all')[1], 
-                        first.guess = first.guess, ocean.mask = c(), print.status = print.status, 
+                        first.guess = first.guess, ocean.mask = ocean.mask, print.status = print.status, 
 		        slices.n = slices.n, dims.process.length = dims.process.length,
                         tresh.fill.dc = tresh.fill.dc, ratio.test = ratio.test, g = g, l = l, h = h)
   if (g == 2)
