@@ -796,8 +796,8 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
                                        function(x) sum(is.na(x)) / prod(dim(datacube)[dims.process.id + 1])   )
       if ((length(ocean.mask) > 0 ) & (sum(!is.na(match(c('longitude','latitude'), 
                                                         dims.process))) == 2))
-        amnt.na <- (amnt.na - (sum(ocean.mask) / prod(dim(datacube)[dims.process.id + 1]))) / 
-          (1 - sum(ocean.mask) / prod(dim(datacube)[dims.process.id + 1]) )
+        amnt.na <- 1- apply(datacube, MAR = dims.cycle.id + 1 ,
+                         function(x) sum(!is.na(x[as.vector(!ocean.mask)])) / sum(!ocean.mask)   )
       if (process.cells == 'gappy') {
         slices.without.gaps       <- as.vector((amnt.na == 0))
       } else {
@@ -813,6 +813,9 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
       if ((length(first.guess) > 1) & tresh.fill.dc == 0) {
         amnt.na.first.guess    <- apply(first.guess, MAR = dims.cycle.id + 1,
                                         function(x)sum(is.na(x)) / prod(dims.process.length)   )
+        if ((length(ocean.mask) > 0 ) & (sum(!is.na(match(c('longitude','latitude'), dims.process))) == 2))
+           amnt.na.first.guess  <- 1- apply(first.guess, MAR = dims.cycle.id + 1 ,
+                                            function(x) sum(!is.na(x[as.vector(!ocean.mask)])) / sum(!ocean.mask)   )
         slices.too.gappy[amnt.na.first.guess < 0.9] <- FALSE
       }
       slices.too.gappy[slices.ocean] <- FALSE
@@ -824,7 +827,6 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
       values.constant            <-  as.vector(apply(datacube, MAR = dims.cycle.id + 1,
                                                      mean, na.rm = TRUE))
       slices.constant[slices.without.gaps & slices.ocean & slices.too.gappy] <- FALSE
-      
       slices.process             <- !slices.constant & !slices.ocean & 
                                     !slices.too.gappy & !slices.without.gaps
       slices.excluded            <- logical(slices.n)
@@ -839,8 +841,8 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
 
       ##add slices usually not filled in case no validation data is available later
       if (sum(slices.process) > 0 && mean(amnt.na[slices.process]) > 0.8) {
-        ind.added <- sample(which(slices.without.gaps), sum(slices.process))
-        slices.process[ind.added] <- TRUE
+        ind.added                      <- order(amnt.na, rnorm(length(amnt.na)))[sum(slices.process)]
+        slices.process[ind.added]      <- TRUE
         slices.without.gaps[ind.added] <- FALSE
       }
     } else {
