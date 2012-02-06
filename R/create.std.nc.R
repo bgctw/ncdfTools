@@ -3,41 +3,60 @@ create.std.nc = function
     ##description<< This function writes an empty ncdf file with variable names, dimensions and
     ##              attributes formatted in a standardized way.
        (
-    var.name               ##<< character string: name of the target variable in the file
-    , var.units = '[]'       ##<< chracter string: units of variable (should be compatible with udunits)
+    var.name                 ##<< character string: name of the target variable in the file
+    , var.units = '[]'       ##<< character string: units of variable (should be compatible with udunits)
     , lat.values = c()
     , long.values = c()
-    , time.values = c()      ##<< POSIXct vector: time values for the time dimension
+    , time.values = c()                     ##<< POSIXct vector: time values for the time dimension
     , lat.length  = length(lat.values)      ##<< integer: length of the latitude dimension
     , long.length = length(long.values)     ##<< integer: length of the longitude dimension
     , time.length = length(time.values)     ##<< integer: length of the time dimension
-    , year.start.end = c(0,0)
+    , year.start.end = c()
     , scale_factor = 1       ##<< numeric: scale factor
     , add_offset = 0         ##<< numeric: offset
     , type.var = 'NC_DOUBLE' ##<< character string: type of the data
     , missing_value = -9999) ##<< numeric: missing data value
 {
-  file.name = paste(var.name, paste(c(lat.length, long.length, time.length),collapse='.'), 'nc', sep = '.')
+  require(RNetCDF)
+  
+  if(sum(c(lat.length,long.length,time.length) == 
+          c(length(lat.values),length(long.values), length(time.values)))!=3)
+     stop('lat(long/time.values need to have the same length as the respective length arguments!')
+  if (length(time.values) > 0 && class(time.values)[1] != 'POSIXct')
+     stop('time.values needs to be of class POSIXct!') 
+  if (time.length > 0 && length(year.start.end)!=2)
+     stop('Supply values for the start and the end year!') 
+  
+   file.name = paste(var.name, paste(c(lat.length, long.length, time.length),collapse='.'), 'nc', sep = '.')
+   
   
   file.con  <- create.nc(file.name)
   
-  if (0 == lat.length) {
+  if (0 != lat.length) {
     dim.def.nc(file.con, 'latitude', dimlength = lat.length)
     var.def.nc(file.con, 'latitude','NC_DOUBLE', 'latitude')
     ncdf.def.all.atts(file.con,'latitude',atts = list(long_name = "latitude",units = "degrees_north" ,
             standard_name = "latitude"))       
+    if (length(lat.values) > 0)
+      var.put.nc(file.con, 'latitude', lat.values)  
   }   
-  if (!is.null(long.length)) {    
+  if (0 != long.length) {    
     dim.def.nc(file.con, 'longitude', dimlength = long.length)
     var.def.nc(file.con, 'longitude','NC_DOUBLE', 'longitude')
     ncdf.def.all.atts(file.con,'longitude',atts = list(long_name = "longitude",units = "degrees_east" ,
             standard_name = "longitude"))
+    if (length(long.values) > 0)
+      var.put.nc(file.con, 'longitude', long.values)  
   }   
-  if (!is.null(lat.length)) { 
+  if (0 != time.length) { 
     dim.def.nc(file.con, 'time', dimlength = time.length)
     var.def.nc(file.con, 'time','NC_DOUBLE', 'time')
     ncdf.def.all.atts(file.con,'time',atts = list(long_name = "time",units = "days since 1584-10-14 00:00" ,
-            calendar = "gregorian"))       
+            calendar = "gregorian"))     
+    if (length(time.values) > 0) {
+      time.ncdf <- as.numeric(julian(time.values, origin = as.POSIXct("1582-10-14", tz="UTC")))
+      var.put.nc(file.con, 'time', time.ncdf)
+    }     
   }   
   
   
