@@ -60,7 +60,7 @@ create.std.nc = function
   }   
   
   
-  dims.used  <- c('longitude', 'latitude', 'time')[c(!is.null(lat.length),!is.null(long.length),!is.null(lat.length))]
+  dims.used  <- c('longitude', 'latitude', 'time')[c(0!=lat.length ,0!=long.length,0!=time.length)]
   var.def.nc <- var.def.nc(file.con, var.name, type.var, dims.used)
   ncdf.def.all.atts(file.con, var.name, atts = list(scale_factor = scale_factor, add_offset = add_offset,
           missing_value = missing_value, `_FillValue` = missing_value, units = var.units))
