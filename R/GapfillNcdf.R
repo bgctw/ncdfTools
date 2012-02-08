@@ -139,6 +139,11 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 ##value<<
 ##Nothing is returned but a ncdf file with the results is written.
 {
+  
+    file.name.cl <-  gsub('[[:punct:]]', '', file.name)
+    set.seed(as.numeric(paste(match(unlist(strsplit(file.name.cl,''))[round(seq(1,nchar(file.name.cl),length.out=5),digits=0)], 
+                           c(letters,LETTERS,0:9)) ,collapse='' )   ) ) 
+           
     #save argument values of call
     args.call.filecheck <- as.list(environment())
     args.call.global    <- call.args2string()
