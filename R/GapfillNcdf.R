@@ -323,7 +323,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           var.res.steps        <- 'not available'
         }        
       }
-      browser()
+      
       ##save first guess for next step
       if (n.steps > 1 && !is.null(gapfill.results.step$reconstruction)) {
         file.name.guess.curr              <- paste(sub('.nc$', '', file.name),
