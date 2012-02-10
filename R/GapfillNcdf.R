@@ -155,6 +155,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       seed <- c()
     }  
     
+    
     #load libraries
     if (print.status)
         cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
@@ -167,7 +168,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     require(plyr)
     if (sum(!is.na(match(c('latitude', 'longitude', 'lat', 'long'), 
                          unlist(dimensions)))) > 0)
-    library(raster)
+        library(raster)
 
     # necessary variables
     if (process.type == 'variances') {
@@ -179,7 +180,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       n.steps           <- length(amnt.artgaps)
     }
     if (missing(file.name) )
-      stop('file.name needs to be supplied!')
+        stop('file.name needs to be supplied!')
 
     #check input, check first guess, transfer and check ocean mask
     res.check     <- do.call(GapfillNcdfCheckInput, args.call.filecheck)
@@ -215,11 +216,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           if (g == 2 && step.chosen[h] != l)
             next
           tresh.fill.dc         <- tresh.fill[[ind]][[l]]                  
-
-          if (length(seed) == 1) {
-            seed <- seed + (h *(n.calc.repeat*n.dims.loop) + g*n.dims.loop + l)
-            set.seed(seed)
-          }
           
           ##prepare parallel iteration parameters
           if (process.type == 'stepwise') {
@@ -255,9 +251,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                                 pad.series = pad.series[[ind]][[l]],
                                 amnt.iters = amnt.iters.loop,
 						amnt.iters.start = amnt.iters.start.loop,
-                                print.stat   = FALSE, seed = seed,
-                                plot.results = FALSE)
-          
+                                print.stat   = FALSE,
+                                plot.results = FALSE)         
           ##get first guess
           if (h > 1 && exists('file.name.guess.curr')) {
             file.con.guess   <- open.nc(file.name.guess.curr)
@@ -338,7 +333,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         } else {
           gapfill.results.step <- gapfill.results
           var.res.steps        <- 'not available'
-        }
+        }        
       }
       
       ##save first guess for next step
@@ -437,8 +432,7 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
     print.status, first.guess, pad.series, process.cells, ocean.mask, tresh.fill,
     var.name, amnt.iters.start, amnt.iters, file.name, process.type, size.biggap, 
     amnt.artgaps, M, n.comp, dimensions, max.steps, tresh.fill.first, 
-    save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test, force.all.dims,
-    reproducible)
+    save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test, force.all.dims)
 {
   ##TODO
   # include test for MSSA and windowlength=1
@@ -631,7 +625,7 @@ GapfillNcdfSaveResults <- function(datacube, reconstruction, args.call.global,
     n.steps, keep.steps)
 {
   dims.cycle.length   <- dim(datacube)[dims.cycle.id + 1]
-  
+
   #prepare results
   data.results.final              <- datacube
   data.results.final[is.na(data.results.final)] <- 
@@ -639,23 +633,23 @@ GapfillNcdfSaveResults <- function(datacube, reconstruction, args.call.global,
   if (sum(slices.without.gaps) > 0 & process.cells == 'gappy') {
     dim(slices.without.gaps)      <- dims.cycle.length
     ind.array                     <- ind.datacube(datacube, slices.without.gaps, 
-        dims.cycle.id + 1)
+                                                  dims.cycle.id + 1)
     data.results.final[ind.array] <- datacube[ind.array]
   }
   if (sum(!is.na(match(dims.process, c('longitude','latitude')))) == 2 & 
       length(ocean.mask) > 0) {
     ind.array                     <- ind.datacube(datacube, ocean.mask, 
-        dims.process.id + 1)
+                                                  dims.process.id + 1)
     data.results.final[ind.array] <- NA
   }
-  
+
   #save results
   if (print.status)
     cat(paste(Sys.time(), ' : Writing results to file. \n', sep = ''))
   file.con.copy                   <- open.nc(file.name.copy, write = TRUE)
   var.put.nc(file.con.copy, paste(var.name, '_gapfill', sep=''), data.results.final)
   sync.nc(file.con.copy)
-  
+
   #add attributes with process information to ncdf files
   string.args  <- args.call.global
   att.put.nc(file.con.copy, 'NC_GLOBAL', 'Filled_by', 'NC_CHAR', compile.sysinfo())
@@ -665,23 +659,23 @@ GapfillNcdfSaveResults <- function(datacube, reconstruction, args.call.global,
       Sys.info()['user'], sep = '')
   if (is.element('history', ncdf.get.attinfo(file.con.copy, 'NC_GLOBAL')[, 'name'])) {
     hist.string    <- paste(att.get.nc(file.con.copy, 'NC_GLOBAL', 'history'), 
-        '; ', hist.string.append)
+                            '; ', hist.string.append)
     att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string)
   } else {
     att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string.append)
   }
   close.nc(file.con.copy)
   
-  #delete first guess files  
+  #delete first guess files
   if (!keep.steps) {
       file.name.guess.t  <- paste(sub('_gapfill.nc$', '', file.name.copy), 
-              '_first_guess_step_', 
-              formatC(2:(n.steps + 1), 2, flag = 0), '.nc', sep='')
+                                  '_first_guess_step_', 
+                                  formatC(2:(n.steps + 1), 2, flag = 0), '.nc', sep='')
       file.remove(file.name.guess.t)
   }
-  
+
   if (print.status)
-      cat(paste(Sys.time(), ' : Gapfilling successfully finished. \n', sep = ''))
+    cat(paste(Sys.time(), ' : Gapfilling successfully finished. \n', sep = ''))
 }
 
 
@@ -785,7 +779,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
               slices.without.gaps = slices.without.gaps, slices.process = slices.process, 
               max.cores = max.cores, slices.process = slices.process, slices.too.gappy = slices.too.gappy,
               slices.constant = slices.constant, values.constant = values.constant, 
-              slices.excluded = slices.excluded,  slices.test.ind = slices.test.ind))
+              slices.excluded = slices.excluded))
 }
 
 
@@ -802,8 +796,7 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
   ##FIXME
   # possibility to identify gap less MSSA blocks
 
-  ##ToDo: remove h and l from argument list and slices.test.ind
-  slices.test.ind = c()
+  ##ToDo: remove h and l from argument list
   
   #determine grid cells to process
   if (print.status)
@@ -854,7 +847,6 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
       if (ratio.test != 1) {
         slices.test.n      <- ceiling(sum(slices.process) * ratio.test)
         ind.slices.process <- sample(which(slices.process), slices.test.n)
-        slices.test.ind    <- ind.slices.process         
         slices.excluded[setdiff(which(slices.process), ind.slices.process)] <- TRUE
         slices.process[-ind.slices.process] <- FALSE
       }
@@ -873,7 +865,7 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
   return(list(iters.n = iters.n, slices.process = slices.process, 
               values.constant = values.constant, slices.constant = slices.constant, 
               slices.without.gaps = slices.without.gaps, slices.excluded = slices.excluded,
-              slices.too.gappy = slices.too.gappy, slices.test.ind = slices.test.ind))
+              slices.too.gappy = slices.too.gappy))
 }
 
 ###############################  create iteration datacube   ###################
@@ -993,7 +985,7 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
         aperm.extr.data       <- c(2,1)       
       }  
       args.call.t             <- args.call.SSA
-      args.call.t[['seed']]   <- args.call.SSA$seed + iter.nr * n + n 
+      args.call.t[['seed']]   <- iter.nr * n  
       args.call.t[['series']] <- array(datacube[ind.datacube(datacube, 
                                                              ind.act.cube, 
                                                              dims.cycle.id+1)],
@@ -1005,10 +997,6 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
                 dim =  dims.extr.data)
           }
           series.filled       <- do.call(GapfillSSA, args.call.t)
-
-          ##TODO
-          if (h == 2 && series.filled$error_occoured)
-            save(ind.act.cube, file = paste('grp_error_ind_', as.numeric(Sys.time()),'.RData', sep = ''))
           list(reconstruction = aperm(array(series.filled$reconstr, 
                                             dim = c(dims.process.length, n.series.steps[n])), 
                                       aperm.extr.data), 
