@@ -154,9 +154,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     } else {
       seed <- c()
     }  
-
-    ##ToDO
-    rand.test <- 0
     
     #load libraries
     if (print.status)
@@ -182,7 +179,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       n.steps           <- length(amnt.artgaps)
     }
     if (missing(file.name) )
-        stop('file.name needs to be supplied!')
+      stop('file.name needs to be supplied!')
 
     #check input, check first guess, transfer and check ocean mask
     res.check     <- do.call(GapfillNcdfCheckInput, args.call.filecheck)
@@ -223,10 +220,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             seed <- seed + (h *(n.calc.repeat*n.dims.loop) + g*n.dims.loop + l)
             set.seed(seed)
           }
-          
-          ##TODO
-          rand.test <- c(rand.test, rnorm(1))
-          print(rand.test)
           
           ##prepare parallel iteration parameters
           if (process.type == 'stepwise') {
@@ -346,9 +339,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           gapfill.results.step <- gapfill.results
           var.res.steps        <- 'not available'
         }
-        ##TODO: remove
-        print(var.res.steps)
-        return('Kill me!')
       }
       
       ##save first guess for next step
@@ -1015,6 +1005,10 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
                 dim =  dims.extr.data)
           }
           series.filled       <- do.call(GapfillSSA, args.call.t)
+
+          ##TODO
+          if (h == 2 && series.filled$error_occoured)
+            save(ind.act.cube, file = paste('grp_error_ind_', as.numeric(Sys.time()),'.RData', sep = ''))
           list(reconstruction = aperm(array(series.filled$reconstr, 
                                             dim = c(dims.process.length, n.series.steps[n])), 
                                       aperm.extr.data), 
