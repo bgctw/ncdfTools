@@ -204,13 +204,19 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         ind                   <- h        
       } else if (process.type == 'variances') {
         ind                   <- 1
+        if (force.all.dims && h == 1) {
+          ratio.test.t <- 1
+        } else {
+          ratio.test.t <- ratio.test 
+        }
+        if (ratio.test.t == 1) {
+          n.calc.repeat <- 1
+        } else {
+          n.calc.repeat <- 2
+        }	        
       }
       n.dims.loop <- length(dimensions[[ind]])
-      if (ratio.test == 1) {
-        n.calc.repeat <- 1
-      } else {
-        n.calc.repeat <- 2
-      }		
+	
       for (g in 1:n.calc.repeat) {
         for (l in 1:n.dims.loop) {
           if (g == 2 && step.chosen[h] != l)
@@ -268,7 +274,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                                   print.status = print.status, datapts.n = datapts.n, dims.info = dims.info,
                                   calc.parallel = calc.parallel, ocean.mask = ocean.mask, 
                                   save.debug.info = save.debug.info, h = h, l = l,  MSSA = MSSA[[ind]][[l]],
-                                  MSSA.blocksize = MSSA.blocksize, ratio.test = ratio.test, g = g), 
+                                  MSSA.blocksize = MSSA.blocksize, ratio.test.t = ratio.test.t, g = g), 
                              list(args.call.SSA = args.call.SSA))
           if (g > 1)
             args.Datacube <- c(args.Datacube, list(slices.process = slices.process,
@@ -297,24 +303,24 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               }
             }
             step.chosen[h]       <- which.min(var.res.steps[h, ])
-            if (force.all.dims) {
-              if (!exists('force.dim')) {
-                force.dim <- logical(n.dims.loop)                      
-                for (r in 1:n.dims.loop) {
-                  slices.too.gappy.t <- get(paste('gapfill.results.dim', k, sep=''))[['slices.too.gappy']]
-                  if (sum(slices.too.gappy.t) > 0)
-                    force.dim[-r] <- TRUE                 
-                }
-              }
-              if (sum(force.dim) > 0) {
-                step.chosen[h]   <- which(force.dim)[which.min(var.res.steps[h, which(force.dim)])]
-                force.dim[step.chosen[h]] <- FALSE
-              }
-            }
+ #           if (force.all.dims) {
+ #             if (!exists('force.dim')) {
+ #               force.dim <- logical(n.dims.loop)                      
+ #               for (r in 1:n.dims.loop) {
+ #                 slices.too.gappy.t <- get(paste('gapfill.results.dim', k, sep=''))[['slices.too.gappy']]
+ #                 if (sum(slices.too.gappy.t) > 0)
+ #                   force.dim[-r] <- TRUE                 
+ #               }
+ #             }
+ #             if (sum(force.dim) > 0) {
+ #               step.chosen[h]   <- which(force.dim)[which.min(var.res.steps[h, which(force.dim)])]
+ #               force.dim[step.chosen[h]] <- FALSE
+ #             }
+ #           }
             
             gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen[h], 
                                                 sep = ''))
-            if (ratio.test != 1 && g == 1) {
+            if (ratio.test.t != 1 && g == 1) {
               slices.process     <- gapfill.results.step$slices.process
               slices.constant    <- gapfill.results.step$slices.constant
               values.constant    <- gapfill.results.step$values.constant 
@@ -342,8 +348,19 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               '_first_guess_step_',formatC(h + 1, 2, flag = '0'),
                                                    '.nc', sep = '')
         file.con.guess.next               <- open.nc(file.name.guess.curr, write = TRUE)
+        data.first.guess                  <- gapfill.results.step$reconstruction
+        if (force.all.dims) {
+           dim.other          <- setdiff(1:n.dims.loop, step.chosen[h])
+           results.dim.other  <- get(paste('gapfill.results.dim', dim.other, sep = ''))
+           
+           ind.array     <- array(gapfill.results.step$slices.too.gappy, dim = results.dim.other$dims.process.length)
+           if (sum(ind.array) > 0) {
+             ind.datacube  <- ind.datacube(datacube, ind.array, dims = results.dim.other$dims.cycle.id)
+             data.first.guess[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
+           }
+        }  
         var.put.nc(file.con.guess.next, sub('[.]nc$', '', file.name.guess.curr), 
-              gapfill.results.step$reconstruction)
+              data.first.guess)
         close.nc(file.con.guess.next)
       }
       if (save.debug.info)
@@ -431,8 +448,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel, 
     print.status, first.guess, pad.series, process.cells, ocean.mask, tresh.fill,
     var.name, amnt.iters.start, amnt.iters, file.name, process.type, size.biggap, 
-    amnt.artgaps, M, n.comp, dimensions, max.steps, tresh.fill.first, 
-    save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test, force.all.dims)
+    amnt.artgaps, M, n.comp, dimensions, max.steps, tresh.fill.first, reproducible,
+    save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test.t, force.all.dims)
 {
   ##TODO
   # include test for MSSA and windowlength=1
@@ -684,7 +701,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     max.cores = 8, args.call.SSA = list(), iters.n, print.status,  datapts.n, 
     dims.info, calc.parallel = TRUE, save.debug.info, h, l,  MSSA, MSSA.blocksize, 
     first.guess = 'mean', dims.cycle, datacube, dims.cycle.id, dims.process.id, 
-    dims.process, process.cells = c('gappy','all')[1], ratio.test, g, slices.process = c(),
+    dims.process, process.cells = c('gappy','all')[1], ratio.test.t, g, slices.process = c(),
     slices.constant = c(), values.constant = c(), slices.excluded = c(), 
     slices.without.gaps= c())
 ##TODO
@@ -701,7 +718,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                         MSSA = MSSA, dims.process =  dims.process, process.cells = c('gappy','all')[1], 
                         first.guess = first.guess, ocean.mask = ocean.mask, print.status = print.status, 
 		        slices.n = slices.n, dims.process.length = dims.process.length,
-                        tresh.fill.dc = tresh.fill.dc, ratio.test = ratio.test, g = g, l = l, h = h)
+                        tresh.fill.dc = tresh.fill.dc, ratio.test.t = ratio.test.t, g = g, l = l, h = h)
   if (g == 2)
     args.identify <- c(args.identify, list(slices.excluded = slices.excluded,
                                            values.constant = values.constant,
@@ -788,7 +805,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
 GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id, datacube,
                                      MSSA, dims.process, process.cells = c('gappy','all')[1], first.guess = 'mean', 
                                      ocean.mask = c(), print.status, slices.n, dims.process.length, tresh.fill.dc,
-                                     ratio.test, g , slices.without.gaps = rep(FALSE, slices.n), h, l,
+                                     ratio.test.t, g , slices.without.gaps = rep(FALSE, slices.n), h, l,
                                      slices.too.gappy = rep(FALSE, slices.n), slices.constant = rep(FALSE, slices.n), 
                                      slices.process = rep(TRUE, slices.n), slices.ocean = rep(FALSE, slices.n),		
                                      values.constant = integer(length = slices.n),  slices.excluded = rep(FALSE, slices.n))
@@ -844,8 +861,8 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
       slices.excluded            <- logical(slices.n)
 
       ##extract only a ratio of the slices to calculate for variance testing
-      if (ratio.test != 1) {
-        slices.test.n      <- ceiling(sum(slices.process) * ratio.test)
+      if (ratio.test.t != 1) {
+        slices.test.n      <- ceiling(sum(slices.process) * ratio.test.t)
         ind.slices.process <- sample(which(slices.process), slices.test.n)
         slices.excluded[setdiff(which(slices.process), ind.slices.process)] <- TRUE
         slices.process[-ind.slices.process] <- FALSE
