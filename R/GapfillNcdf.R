@@ -351,14 +351,15 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         data.first.guess                  <- gapfill.results.step$reconstruction
         if (force.all.dims) {
            dim.other          <- setdiff(1:n.dims.loop, step.chosen[h])
-           results.dim.other  <- get(paste('gapfill.results.dim', dim.other, sep = ''))
-           
-           ind.array     <- array(gapfill.results.step$slices.too.gappy, dim = results.dim.other$dims.cycle.length)
-           if (sum(ind.array) > 0) {
-             ind.datacube  <- ind.datacube(datacube, ind.array, dims = results.dim.other$dims.cycle.id + 1)
-             data.first.guess[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
+           if (length(dim.other) != 0) {
+             results.dim.other  <- get(paste('gapfill.results.dim', dim.other, sep = ''))           
+             ind.array     <- array(gapfill.results.step$slices.too.gappy, dim = results.dim.other$dims.cycle.length)
+             if (sum(ind.array) > 0) {
+               ind.datacube  <- ind.datacube(datacube, ind.array, dims = results.dim.other$dims.cycle.id + 1)
+               data.first.guess[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
+             }
            }
-        }  
+        }    
         var.put.nc(file.con.guess.next, sub('[.]nc$', '', file.name.guess.curr), 
               data.first.guess)
         close.nc(file.con.guess.next)
