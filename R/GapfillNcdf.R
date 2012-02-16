@@ -1,4 +1,3 @@
-################################## main function #################################################
 GapfillNcdf <- structure(function(
 ##title<< fill gaps in time series or spatial fields inside a ncdf file using SSA.
 ##description<< Wrapper function to automatically fill gaps in series or spatial fields inside a ncdf file and save the results
@@ -452,6 +451,12 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
     amnt.artgaps, M, n.comp, dimensions, max.steps, tresh.fill.first, reproducible,
     save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test.t, force.all.dims)
 {
+  ##title<< helper function for GapfillNcdf
+  ##details<< helper function for GapfillNcdf that checks the consistency of the 
+  ##          input paramters.
+  ##seealso<<
+  ##\code{\link{GapfillNcdf}}
+  
   ##TODO
   # include test for MSSA and windowlength=1
   
@@ -587,6 +592,11 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
 ##################################      create files    ########################
 
 GapfillNcdfOpenFiles <- function(file.name, var.name, n.steps, print.status)
+##title<< helper function for GapfillNcdf
+##details<< helper function for GapfillNcdf that prepares the output files 
+##seealso<<
+##\code{\link{GapfillNcdf}}
+
 #open ncdf files
 {
   if (print.status)
@@ -641,6 +651,11 @@ GapfillNcdfSaveResults <- function(datacube, reconstruction, args.call.global,
     slices.without.gaps, dims.cycle.id, ocean.mask, dims.process.id, var.name, 
     dims.process, slices.process, file.name.copy, print.status, process.cells, 
     n.steps, keep.steps)
+##title<< helper function for GapfillNcdf
+##details<< helper function for GapfillNcdf that saves the results ncdf file. 
+##seealso<<
+##\code{\link{GapfillNcdf}}  
+
 {
   dims.cycle.length   <- dim(datacube)[dims.cycle.id + 1]
 
@@ -705,6 +720,11 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     dims.process, process.cells = c('gappy','all')[1], ratio.test.t, g, slices.process = c(),
     slices.constant = c(), values.constant = c(), slices.excluded = c(), 
     slices.without.gaps= c())
+##title<< helper function for GapfillNcdf
+##details<< helper function for GapfillNcdf that handles the main datacube transformations. 
+##seealso<<
+##\code{\link{GapfillNcdf}}    
+  
 ##TODO
 #remove h, save.debug.info
 {
@@ -810,6 +830,11 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
                                      slices.too.gappy = rep(FALSE, slices.n), slices.constant = rep(FALSE, slices.n), 
                                      slices.process = rep(TRUE, slices.n), slices.ocean = rep(FALSE, slices.n),		
                                      values.constant = integer(length = slices.n),  slices.excluded = rep(FALSE, slices.n))
+##title<< helper function for GapfillNcdf
+##details<< helper function for GapfillNcdf that identifies the grid cells to process. 
+##seealso<<
+##\code{\link{GapfillNcdf}}       
+
 {
   ##FIXME
   # possibility to identify gap less MSSA blocks
@@ -890,7 +915,12 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
 
 
 GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length, 
-    dims.cycle.id, slices.process, max.cores, slices.n, MSSA, MSSA.blocksize) 
+    dims.cycle.id, slices.process, max.cores, slices.n, MSSA, MSSA.blocksize)
+##title<< helper function for GapfillNcdf
+##details<< helper function for GapfillNcdf that creates the index array used
+##          in the foreach iterations to extract data.     
+##seealso<<
+##\code{\link{GapfillNcdf}}      
 {
   ##TODO
   #make indices independent from dimension order
@@ -946,7 +976,13 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
 
 
 ##################  combine data from foreach iteration ########################
-rbindMod <- function(...) {
+rbindMod <- function(...) 
+##title<< helper function for GapfillNcdf
+##details<< helper function for GapfillNcdf that combines the foreach output
+##          in a convenient way
+##seealso<<
+##\code{\link{GapfillNcdf}}, \code{\link{foreach}}   
+{
     cat(paste(Sys.time(), ' : Assembling data from parallelized computations.\n', 
               sep=''))
     assign('dummy', list(...))
@@ -965,7 +1001,13 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
                                    dims.process.id, iters.n, dims.cycle.length, 
                                    dims.cycle.id, iter.gridind, ind.process.cube, 
                                    first.guess, datapts.n, args.call.SSA, 
-                                   dims.process.length, MSSA, MSSA.blocksize, h) {
+                                   dims.process.length, MSSA, MSSA.blocksize, h)
+##title<< helper function for GapfillNcdf
+##details<< helper function for GapfillNcdf performs each individual series/grid 
+##          extracion and handing it over to GapfillSSA
+##seealso<<
+##\code{\link{GapfillNcdf}}, \code{\link{foreach}}                                     
+{
   ##TODO
   #remove h
   iter.ind         <- iter.gridind[iter.nr, ]
