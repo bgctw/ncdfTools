@@ -29,7 +29,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                       ##<< list of integer vectors: index of the iteration to start with (outer, inner). If this
                       ##   value is >1, the reconstruction (!) part is started with this iteration. Currently
                       ##   it is only possible to set this to values >1 if amnt.artgaps and size.biggap == 0.
-, n.comp = lapply(amnt.iters, FUN = function(x){x[[1]][[1]][1] * 2})
+, n.comp = lapply(amnt.iters, FUN = function(x)x[[1]][[1]][1] * 2)
                       ##<< list of single integers: amount of eigentriples to extract (default (if no values are
                       ##   supplied) is 2*amnt.iters[1] (see ?GapfillSSA for details)
 , pad.series = rep(list(   rep(list(c(0, 0)), times = length(dimensions[[1]]))) , times = length(dimensions))
@@ -449,7 +449,8 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
     print.status, first.guess, pad.series, process.cells, ocean.mask, tresh.fill,
     var.name, amnt.iters.start, amnt.iters, file.name, process.type, size.biggap, 
     amnt.artgaps, M, n.comp, dimensions, max.steps, tresh.fill.first, reproducible,
-    save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test.t, force.all.dims)
+    save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test.t, force.all.dims,
+    debug)
 {
   ##title<< helper function for GapfillNcdf
   ##details<< helper function for GapfillNcdf that checks the consistency of the 
