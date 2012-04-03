@@ -141,6 +141,9 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 ##value<<
 ##Nothing is returned but a ncdf file with the results is written.
 {
+    ##TODO extract iloop convergence information for all loops
+    
+     
     #save argument values of call
     args.call.filecheck <- as.list(environment())
     args.call.global    <- call.args2string()
@@ -153,8 +156,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     } else {
       seed <- c()
     }  
-    
-    
+       
     #load libraries
     if (print.status)
         cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
@@ -167,7 +169,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     require(plyr)
     if (sum(!is.na(match(c('latitude', 'longitude', 'lat', 'long'), 
                          unlist(dimensions)))) > 0)
-        library(raster)
+    library(raster)
 
     # necessary variables
     if (process.type == 'variances') {
@@ -180,7 +182,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     }
     if (missing(file.name) )
         stop('file.name needs to be supplied!')
-
+    
     #check input, check first guess, transfer and check ocean mask
     res.check     <- do.call(GapfillNcdfCheckInput, args.call.filecheck)
     var.name      <- res.check[[1]]
@@ -302,21 +304,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               }
             }
             step.chosen[h]       <- which.min(var.res.steps[h, ])
- #           if (force.all.dims) {
- #             if (!exists('force.dim')) {
- #               force.dim <- logical(n.dims.loop)                      
- #               for (r in 1:n.dims.loop) {
- #                 slices.too.gappy.t <- get(paste('gapfill.results.dim', k, sep=''))[['slices.too.gappy']]
- #                 if (sum(slices.too.gappy.t) > 0)
- #                   force.dim[-r] <- TRUE                 
- #               }
- #             }
- #             if (sum(force.dim) > 0) {
- #               step.chosen[h]   <- which(force.dim)[which.min(var.res.steps[h, which(force.dim)])]
- #               force.dim[step.chosen[h]] <- FALSE
- #             }
- #           }
-            
             gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen[h], 
                                                 sep = ''))
             if (ratio.test.t != 1 && g == 1) {
@@ -331,7 +318,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               cat(paste(Sys.time(), ' : Chose dimension(s) ',
                         paste(dimensions[[ind]][[step.chosen[h]]], collapse = ' and '), 
                         ' as first guess for next step.\n', sep = ''))
-          } else {
+         } else {
             gapfill.results.step   <- gapfill.results
             gapfill.results.step$reconstruction[!is.na(recstr.test)] <- recstr.test[!is.na(recstr.test)] 
           }
@@ -993,7 +980,9 @@ rbindMod <- function(...)
                              nrow = cube.cols, byrow = TRUE)
     variances      <- matrix(unlist(lapply(dummy, function(x)as.vector(t(x[[2]])))),
                              ncol = vars.amnt, byrow = TRUE)
-    return(list(reconstruction = reconstruction, variances = variances))
+    iloops.converged<- unlist(lapply(dummy, function(x)as.vector(t(x[[3]]))))
+    return(list(reconstruction = reconstruction, variances = variances, 
+                iloops.converged = iloops.converged))
 }
 
 
@@ -1025,6 +1014,8 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
   }  
   data.results.iter<- array(NA, dim = c(n.series.core , datapts.n))
   variances        <- array(NA, dim = c(diff(iter.ind) + 1, args.call.SSA[['n.comp']]))
+  iloops.converged  <- array(NA, dim = c(diff(iter.ind) + 1))
+  
   for (n in 1:(diff(iter.ind) + 1)) {
     ind.total = rep(FALSE, iters.n)
     ind.total[(iter.ind[1] : iter.ind[2])[n]] = TRUE 
@@ -1061,7 +1052,8 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
           list(reconstruction = aperm(array(series.filled$reconstr, 
                                             dim = c(dims.process.length, n.series.steps[n])), 
                                       aperm.extr.data), 
-               variances = series.filled$variances)
+               variances = series.filled$variances, 
+               iloop_converged=sum(!(series.filled$iloop_converged)))
         })
     if (class(data.results.iter.t) == 'try-error') {
       print(paste('Error occoured at iteration ', iter.nr, ' and loop ', n, '!', sep = ''))
@@ -1079,6 +1071,8 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
     data.results.iter[ind.results, ]  <- array(data.results.iter.t$reconstruction, 
                                                dim = c(n.series.steps[n], datapts.n))
     variances[n, ]                    <- as.vector(data.results.iter.t$variances)
+    iloops.converged[n]               <- data.results.iter.t$iloop_converged
   }
-  return(list(reconstruction = data.results.iter, variances = variances))
+  return(list(reconstruction = data.results.iter, variances = variances, 
+              lioops.converged = iloops.converged))
 }
