@@ -1,0 +1,77 @@
+ncdf.get.varinfo  <- function(
+##title<<  display information about all ncdf variables
+##description<< returns different summary information about all variables in a NCDF file.
+    file.con            ##<< a NetCDF object pointing to the respective ncdf file
+    , order.var = c('id', 'name')[2]
+                        ##<< character vector: whether to sort the variables according
+                        ##   to their name (default) or id
+    , info.ext = FALSE  ##<< logical: whether to compute ranges/means etc. for the variables.
+                        ##  Setting this to TRUE may take a while to compute with large files.
+)
+##seealso<<
+##\code{\link{ncdf.get.diminfo}}, \code{\link{ncdf.get.varinfo}}
+
+##author<<
+## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+{
+    if (!class(file.con) == 'NetCDF')
+        stop(paste('file.con needs to be a connection to an open netCDF file and of class',
+                   'NetCDF (library(RNetCDF))', sep=''))
+
+    #determine dimnames and number of vars/dims
+    n.vars    <- file.inq.nc(file.con)$nvars
+    n.dims    <- file.inq.nc(file.con)$ndims
+    dim.names <- character(length = n.dims)
+    dim.ids   <-  0:(n.dims - 1)
+    for (h in dim.ids)
+        dim.names[h+1] <- dim.inq.nc(file.con, h)$name
+
+    #determine characteristics for each single variable
+    dim.names.var <- matrix(NA, n.vars, n.dims)
+    colnames(dim.names.var)<- paste(1:n.dims, '.dim', sep = '')
+    varname.var   <- character(length = n.vars)
+    n.dims.var    <- integer(length = n.vars)
+    units.var     <- character(length = n.vars)
+    dimids.var    <- matrix(NA, n.vars, n.dims)
+    colnames(dimids.var)<-paste('dim.id.', 1:n.dims, sep = '')
+    type.var      <- character(length = n.vars)
+    n.values.var  <- integer(length = n.vars)
+    range.var     <- character(length = n.vars)
+
+    #loop through all variables
+    for (i in 1:n.vars)
+    {
+        varname.var[i]       <- var.inq.nc(file.con, i - 1)$name
+        n.dims.var[i]        <- var.inq.nc(file.con, i - 1)$ndims
+        type.var[i]          <- var.inq.nc(file.con, i - 1)$type
+        dimids.var[i, 1:var.inq.nc(file.con, i - 1)$ndims] <- var.inq.nc(file.con, i - 1)$dimids
+        if (info.ext)
+        {
+            data.dummy       <- var.get.nc(file.con, i - 1)
+            range.var[i]     <- paste(round(range(data.dummy, na.rm = TRUE),
+                                                digits = 2), collapse = '-')
+            n.values.var[i]  <- sum(!is.na(data.dummy))
+        }
+        dims.cols            <- match(var.inq.nc(file.con, i - 1)$dimids, dim.ids)
+        dim.names.var[i, dims.cols] <- dim.names[dims.cols]
+        att.unit.id          <- grep('Unit', ncdf.get.attinfo(file.con, i - 1)[, 1], ignore.case = TRUE)
+        if (length(att.unit.id) == 1)
+            units.var[i]     <- att.get.nc(file.con, i-1, att.unit.id - 1)
+    }
+
+    #compile info into 1 dataframe
+    ##value<<
+    ## a dataframe with the different information in its colums and each variable in one row.
+    varinfo.out <- data.frame(id=0:(n.vars - 1),
+                              name = varname.var,
+                              unit = units.var,
+                              n.dims = n.dims.var,
+                              type = type.var,
+                              n.values = n.values.var,
+                              range = range.var,
+                              stringsAsFactors = FALSE)
+    varinfo.out <- cbind(varinfo.out, dim.names.var, dimids.var)
+    col.order   <- match(order.var, colnames(varinfo.out))
+    varinfo.out <- varinfo.out[order(varinfo.out[, col.order]), ]
+    return(varinfo.out)
+}

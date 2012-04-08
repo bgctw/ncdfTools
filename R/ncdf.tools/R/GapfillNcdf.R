@@ -15,8 +15,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 , MSSA =  rep(list(   rep(list(FALSE), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of logicals: Whether to perform MSSA for this dimension (see description 
                       ##   for details). Has to have the same structure as dimensions.
-, MSSA.blocksize = 1  ##<< integer: size of the quadratical block used for MSSA.  
-, gaps.cv        = 0
+, MSSA.blocksize = 1  ##<< integer: size of the quadratical block used for MSSA.                      
 , amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of numeric vectors: the relative ratio (length gaps/series length) of
                       ##  artificial gaps to include to determine the iteration with the best
@@ -142,9 +141,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 ##value<<
 ##Nothing is returned but a ncdf file with the results is written.
 {
-    ##TODO extract iloop convergence information for all loops
-    
-     
     #save argument values of call
     args.call.filecheck <- as.list(environment())
     args.call.global    <- call.args2string()
@@ -157,7 +153,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     } else {
       seed <- c()
     }  
-       
+    
+    
     #load libraries
     if (print.status)
         cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
@@ -170,7 +167,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     require(plyr)
     if (sum(!is.na(match(c('latitude', 'longitude', 'lat', 'long'), 
                          unlist(dimensions)))) > 0)
-    library(raster)
+        library(raster)
 
     # necessary variables
     if (process.type == 'variances') {
@@ -183,7 +180,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     }
     if (missing(file.name) )
         stop('file.name needs to be supplied!')
-    
+
     #check input, check first guess, transfer and check ocean mask
     res.check     <- do.call(GapfillNcdfCheckInput, args.call.filecheck)
     var.name      <- res.check[[1]]
@@ -199,201 +196,180 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     # start parallel processing workers
     if (calc.parallel)
         RegisterParallel(package.parallel, max.cores)
-      
-    if (gaps.cv != 0) {
-      processes <- c('cv', 'final')
-    } else if (gaps.cv == 0) {
-      processes <- c('final') 
-    }
-            
-    for (process in processes) {
-      # insert gaps for cross validation      
-      if (process == 'cv') {
-        if (print.status)
-          cat(paste(Sys.time(), ' : Starting cross validation loop. \n', sep = ''))
-        ind.artgaps.out  <- array(FALSE, dim = dim(datacube))        
-        if (gaps.cv == 0) {
-          art.gaps.values            <- NULL      
-          next
+    for (h in 1:n.steps) {
+      if (print.status)
+            cat(paste(Sys.time(), ' : Starting step ', h, '\n',sep = ''))
+      if (process.type == 'stepwise') {
+        ind                   <- h        
+      } else if (process.type == 'variances') {
+        ind                   <- 1
+        if (force.all.dims && h == 1) {
+          ratio.test.t <- 1
         } else {
-          indices.t        <- sample(which(!is.na(datacube)), floor(gaps.cv * sum(!is.na(ind.artgaps.out))))
-          ind.artgaps.out[indices.t] <- TRUE
-          art.gaps.values            <- datacube[ind.artgaps.out]
-          datacube[ind.artgaps.out]  <- NA
+          ratio.test.t <- ratio.test 
         }
-      } else if (process == 'final') {
-        if (print.status)
-          cat(paste(Sys.time(), ' : Starting final filling loop. \n', sep = ''))
-        datacube[ind.artgaps.out] <- art.gaps.values
+        if (ratio.test.t == 1) {
+          n.calc.repeat <- 1
+        } else {
+          n.calc.repeat <- 2
+        }	        
       }
-      
-      for (h in 1:n.steps) {
-        if (print.status)
-          cat(paste(Sys.time(), ' : Starting step ', h, '\n',sep = ''))
-        ## determine different iteration control parameters
-        if (process.type == 'stepwise') {
-          ind                   <- h     
-          n.dims.loop <- length(dimensions[[ind]])             
-        } else if (process.type == 'variances') {
-          ind                   <- 1
-          n.dims.loop           <- length(dimensions[[ind]])
-          if (process == 'final') {
-            dims.calc           <- step.chosen[h]
-            n.calc.repeat       <- 1
-            ratio.test.t        <- 1            
-          } else if (process == 'cv') {
-            dims.calc           <- 1:n.dims.loop
-            if (force.all.dims && h == 1) {
-              ratio.test.t <- 1
-            } else {
-              ratio.test.t <- ratio.test 
-            }
-          }                  
-          if (ratio.test.t == 1) {
-            n.calc.repeat <- 1
-          } else {
-            n.calc.repeat <- 2
-          }	        
+      n.dims.loop <- length(dimensions[[ind]])
+	
+      for (g in 1:n.calc.repeat) {
+        for (l in 1:n.dims.loop) {
+          if (g == 2 && step.chosen[h] != l)
+            next
+          tresh.fill.dc         <- tresh.fill[[ind]][[l]]                  
+          
+          ##prepare parallel iteration parameters
+          if (process.type == 'stepwise') {
+            amnt.iters.loop       <- amnt.iters[[h]][[1]]
+            amnt.iters.start.loop <- amnt.iters.start[[h]][[1]]
+          } else if (process.type == 'variances') {
+            if (h == 1)
+              tresh.fill.dc         <- tresh.fill.first[[ind]][[l]]
+            amnt.iters.loop       <- c(h, amnt.iters[[1]][[l]][2])
+            amnt.iters.start.loop <- c(max(c(1, h - 1)), 1)
+          }
+          if (print.status)
+            cat(paste(Sys.time(), ' : Starting process for filling dimension: ',
+                      paste(dimensions[[ind]][[l]], collapse=','), ' \n', sep = ''))
+          dims.process        <- dimensions[[ind]][[l]]
+          dims.process.id     <- dims.info[match(dims.process, dims.info$name), 1]
+          dims.process.length <- dims.info[match(dims.process, dims.info$name), 3]
+          dims.cycle          <- dims.info[ - match(dims.process, dims.info$name), 2]
+          dims.cycle.id       <- dims.info[match(dims.cycle, dims.info$name), 1]
+          dims.cycle.amnt     <- length(dims.cycle.id)
+          dims.cycle.length   <- dims.info[match(dims.cycle, dims.info$name), 3]
+          datapts.n           <- prod(dims.info[match(dims.process, dims.info$name), 3])
+          slices.n            <- prod(dims.cycle.length)
+          diminfo.step <- list(dims.process = dims.process, dims.process.id = dims.process.id,
+                               dims.process.length = dims.process.length, dims.cycle.id = dims.cycle.id,
+                               dims.cycle.length = dims.cycle.length)
+
+          ##determine call settings for SSA
+          args.call.SSA <- list(amnt.artgaps = amnt.artgaps[[ind]][[l]],
+                                M = M[[ind]][[l]],
+                                size.biggap = size.biggap[[ind]][[l]],
+                                n.comp = n.comp[[ind]][[l]],
+                                pad.series = pad.series[[ind]][[l]],
+                                amnt.iters = amnt.iters.loop,
+						amnt.iters.start = amnt.iters.start.loop,
+                                print.stat   = FALSE,
+                                plot.results = FALSE)         
+          ##get first guess
+          if (h > 1 && exists('file.name.guess.curr')) {
+            file.con.guess   <- open.nc(file.name.guess.curr)
+            first.guess      <- var.get.nc(file.con.guess, sub('[.]nc', '', file.name.guess.curr))
+            close.nc(file.con.guess)
+          }
+          ##run calculation
+          ##TODO try to stop foreach loop at first error message!
+          args.Datacube <- c(list(datacube = datacube, max.cores = max.cores,
+                                  tresh.fill.dc = tresh.fill.dc,first.guess = first.guess,
+                                  dims.process.id = dims.process.id, dims.cycle.id = dims.cycle.id,
+                                  dims.process = dims.process, dims.cycle = dims.cycle, 
+                                  print.status = print.status, datapts.n = datapts.n, dims.info = dims.info,
+                                  calc.parallel = calc.parallel, ocean.mask = ocean.mask, 
+                                  save.debug.info = save.debug.info, h = h, l = l,  MSSA = MSSA[[ind]][[l]],
+                                  MSSA.blocksize = MSSA.blocksize, ratio.test.t = ratio.test.t, g = g), 
+                             list(args.call.SSA = args.call.SSA))
+          if (g > 1)
+            args.Datacube <- c(args.Datacube, list(slices.process = slices.process,
+                                                   slices.constant = slices.constant,
+                                                   values.constant = values.constant, 
+                                                   slices.excluded = slices.excluded,
+                                                   slices.without.gaps = slices.without.gaps))
+          gapfill.results   <- do.call(GapfillNcdfDatacube, args.Datacube)
+          gapfill.results   <- c(gapfill.results, diminfo.step)
+          if (process.type == 'variances')
+            assign(paste('gapfill.results.dim', l, sep=''), gapfill.results)
         }
-	      
-        for (g in 1:n.calc.repeat) {
-          for (l in dims.calc) {
-            if (g == 2 && step.chosen[h] != l)
-              next
-            tresh.fill.dc         <- tresh.fill[[ind]][[l]]                  
+
+        ##test which dimension to be used for the next step
+        if (process.type == 'variances') {
+          if (g == 1) {
+            if (!exists('var.res.steps'))
+              var.res.steps <- matrix(NA,ncol = n.dims.loop, nrow = n.steps)
+            for (k in 1:n.dims.loop) {
+              recstr.t            <- get(paste('gapfill.results.dim', k, sep=''))[['reconstruction']]
+              if (!is.null(recstr.t)) {
+                var.res.steps[h, k] <- var(datacube[!is.na(recstr.t) & !is.na(datacube)] -
+                        recstr.t[!is.na(recstr.t)  & !is.na(datacube)])
+              } else {
+                var.res.steps[h, k] <- Inf
+              }
+            }
+            step.chosen[h]       <- which.min(var.res.steps[h, ])
+ #           if (force.all.dims) {
+ #             if (!exists('force.dim')) {
+ #               force.dim <- logical(n.dims.loop)                      
+ #               for (r in 1:n.dims.loop) {
+ #                 slices.too.gappy.t <- get(paste('gapfill.results.dim', k, sep=''))[['slices.too.gappy']]
+ #                 if (sum(slices.too.gappy.t) > 0)
+ #                   force.dim[-r] <- TRUE                 
+ #               }
+ #             }
+ #             if (sum(force.dim) > 0) {
+ #               step.chosen[h]   <- which(force.dim)[which.min(var.res.steps[h, which(force.dim)])]
+ #               force.dim[step.chosen[h]] <- FALSE
+ #             }
+ #           }
             
-            ##prepare parallel iteration parameters
-            if (process.type == 'stepwise') {
-              amnt.iters.loop       <- amnt.iters[[h]][[1]]
-              amnt.iters.start.loop <- amnt.iters.start[[h]][[1]]
-            } else if (process.type == 'variances') {
-              if (h == 1)
-                tresh.fill.dc         <- tresh.fill.first[[ind]][[l]]
-              amnt.iters.loop       <- c(h, amnt.iters[[1]][[l]][2])
-              amnt.iters.start.loop <- c(max(c(1, h - 1)), 1)
+            gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen[h], 
+                                                sep = ''))
+            if (ratio.test.t != 1 && g == 1) {
+              slices.process     <- gapfill.results.step$slices.process
+              slices.constant    <- gapfill.results.step$slices.constant
+              values.constant    <- gapfill.results.step$values.constant 
+              slices.excluded    <- gapfill.results.step$slices.excluded
+              slices.without.gaps<- gapfill.results.step$slices.without.gaps
+              recstr.test        <- gapfill.results.step$reconstruction
             }
             if (print.status)
-              cat(paste(Sys.time(), ' : Starting process for filling dimension: ',
-                      paste(dimensions[[ind]][[l]], collapse=','), ' \n', sep = ''))
-            dims.process        <- dimensions[[ind]][[l]]
-            dims.process.id     <- dims.info[match(dims.process, dims.info$name), 1]
-            dims.process.length <- dims.info[match(dims.process, dims.info$name), 3]
-            dims.cycle          <- dims.info[ - match(dims.process, dims.info$name), 2]
-            dims.cycle.id       <- dims.info[match(dims.cycle, dims.info$name), 1]
-            dims.cycle.amnt     <- length(dims.cycle.id)
-            dims.cycle.length   <- dims.info[match(dims.cycle, dims.info$name), 3]
-            datapts.n           <- prod(dims.info[match(dims.process, dims.info$name), 3])
-            slices.n            <- prod(dims.cycle.length)
-            diminfo.step <- list(dims.process = dims.process, dims.process.id = dims.process.id,
-                dims.process.length = dims.process.length, dims.cycle.id = dims.cycle.id,
-                dims.cycle.length = dims.cycle.length)
-            
-            ##determine call settings for SSA
-            args.call.SSA <- list(amnt.artgaps = amnt.artgaps[[ind]][[l]],
-                M = M[[ind]][[l]],
-                size.biggap = size.biggap[[ind]][[l]],
-                n.comp = n.comp[[ind]][[l]],
-                pad.series = pad.series[[ind]][[l]],
-                amnt.iters = amnt.iters.loop,
-						    amnt.iters.start = amnt.iters.start.loop,
-                print.stat   = FALSE,
-                plot.results = FALSE)         
-            ##get first guess
-            if (h > 1 && exists('file.name.guess.curr')) {
-              file.con.guess   <- open.nc(file.name.guess.curr)
-              first.guess      <- var.get.nc(file.con.guess, sub('[.]nc', '', file.name.guess.curr))
-              close.nc(file.con.guess)
-            }
-            ##run calculation
-            ##TODO try to stop foreach loop at first error message!
-            args.Datacube <- c(list(datacube = datacube, max.cores = max.cores,
-                    tresh.fill.dc = tresh.fill.dc,first.guess = first.guess,
-                    dims.process.id = dims.process.id, dims.cycle.id = dims.cycle.id,
-                    dims.process = dims.process, dims.cycle = dims.cycle, 
-                    print.status = print.status, datapts.n = datapts.n, dims.info = dims.info,
-                    calc.parallel = calc.parallel, ocean.mask = ocean.mask, 
-                    save.debug.info = save.debug.info, h = h, l = l,  MSSA = MSSA[[ind]][[l]],
-                    MSSA.blocksize = MSSA.blocksize, ratio.test.t = ratio.test.t, g = g), 
-                list(args.call.SSA = args.call.SSA))
-            if (g > 1)
-              args.Datacube <- c(args.Datacube, list(slices.process = slices.process,
-                      slices.constant = slices.constant,
-                      values.constant = values.constant, 
-                      slices.excluded = slices.excluded,
-                      slices.without.gaps = slices.without.gaps))
-            gapfill.results   <- do.call(GapfillNcdfDatacube, args.Datacube)
-            gapfill.results   <- c(gapfill.results, diminfo.step)
-            if (process.type == 'variances')
-              assign(paste('gapfill.results.dim', l, sep=''), gapfill.results)
-          }
-          
-          ##test which dimension to be used for the next step
-          if (process.type == 'variances' & ((length(processes) == 2 && process == 'cv') | (length(processes) == 1 && process == 'final') )) {
-            if (g == 1) {
-              if (!exists('var.res.steps'))
-                var.res.steps <- matrix(NA,ncol = n.dims.loop, nrow = n.steps)
-              for (k in 1:n.dims.loop) {
-                recstr.t            <- get(paste('gapfill.results.dim', k, sep=''))[['reconstruction']]
-                if (!is.null(recstr.t)) {
-                  var.res.steps[h, k] <- var(art.gaps.values - recstr.t[ind.artgaps.out], na.rm = TRUE)
-                } else {
-                  var.res.steps[h, k] <- Inf
-                }
-              }
-              step.chosen[h]       <- which.min(var.res.steps[h, ])
-              gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen[h], 
-                      sep = ''))
-              if (ratio.test.t != 1) {
-                slices.process     <- gapfill.results.step$slices.process
-                slices.constant    <- gapfill.results.step$slices.constant
-                values.constant    <- gapfill.results.step$values.constant 
-                slices.excluded    <- gapfill.results.step$slices.excluded
-                slices.without.gaps<- gapfill.results.step$slices.without.gaps
-                recstr.test        <- gapfill.results.step$reconstruction
-              }
-              if (print.status)
-                cat(paste(Sys.time(), ' : Chose dimension(s) ',
+              cat(paste(Sys.time(), ' : Chose dimension(s) ',
                         paste(dimensions[[ind]][[step.chosen[h]]], collapse = ' and '), 
                         ' as first guess for next step.\n', sep = ''))
-            } else {
-              gapfill.results.step   <- gapfill.results
-              gapfill.results.step$reconstruction[!is.na(recstr.test)] <- recstr.test[!is.na(recstr.test)] 
-            }
           } else {
-            gapfill.results.step <- gapfill.results
-            var.res.steps        <- 'not available'
-          }        
-        }
-        
-        ##save first guess for next step
-        if (n.steps > 1 && !is.null(gapfill.results.step$reconstruction)) {
-          file.name.guess.curr              <- paste(sub('.nc$', '', file.name),
-              '_first_guess_step_',formatC(h + 1, 2, flag = '0'),
-              '.nc', sep = '')
-          file.con.guess.next               <- open.nc(file.name.guess.curr, write = TRUE)
-          data.first.guess                  <- gapfill.results.step$reconstruction
-          if (force.all.dims) {
-            dim.other          <- setdiff(1:n.dims.loop, step.chosen[h])2
-            if (length(dim.other) != 0) {
-              results.dim.other  <- get(paste('gapfill.results.dim', dim.other, sep = ''))           
-              ind.array     <- array(gapfill.results.step$slices.too.gappy, dim = results.dim.other$dims.cycle.length)
-              if (sum(ind.array) > 0) {
-                ind.datacube  <- ind.datacube(datacube, ind.array, dims = results.dim.other$dims.cycle.id + 1)
-                data.first.guess[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
-              }
-            }
-          }    
-          var.put.nc(file.con.guess.next, sub('[.]nc$', '', file.name.guess.curr), 
-              data.first.guess)
-          close.nc(file.con.guess.next)
-        }
-        if (save.debug.info)
-          dump.frames(dumpto = paste(file.name, '_dumpframe_endstep_', h, 
-                  '.rda', sep = ''), to.file = TRUE)
-        ##TODO: add break criterium to get out of h loop
-        ##      check what happens if GapfillSSA stops further iterations due to limiting groups of eigentriples
+            gapfill.results.step   <- gapfill.results
+            gapfill.results.step$reconstruction[!is.na(recstr.test)] <- recstr.test[!is.na(recstr.test)] 
+          }
+        } else {
+          gapfill.results.step <- gapfill.results
+          var.res.steps        <- 'not available'
+        }        
       }
+      
+      ##save first guess for next step
+      if (n.steps > 1 && !is.null(gapfill.results.step$reconstruction)) {
+        file.name.guess.curr              <- paste(sub('.nc$', '', file.name),
+              '_first_guess_step_',formatC(h + 1, 2, flag = '0'),
+                                                   '.nc', sep = '')
+        file.con.guess.next               <- open.nc(file.name.guess.curr, write = TRUE)
+        data.first.guess                  <- gapfill.results.step$reconstruction
+        if (force.all.dims) {
+           dim.other          <- setdiff(1:n.dims.loop, step.chosen[h])
+           if (length(dim.other) != 0) {
+             results.dim.other  <- get(paste('gapfill.results.dim', dim.other, sep = ''))           
+             ind.array     <- array(gapfill.results.step$slices.too.gappy, dim = results.dim.other$dims.cycle.length)
+             if (sum(ind.array) > 0) {
+               ind.datacube  <- ind.datacube(datacube, ind.array, dims = results.dim.other$dims.cycle.id + 1)
+               data.first.guess[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
+             }
+           }
+        }    
+        var.put.nc(file.con.guess.next, sub('[.]nc$', '', file.name.guess.curr), 
+              data.first.guess)
+        close.nc(file.con.guess.next)
+      }
+      if (save.debug.info)
+        dump.frames(dumpto = paste(file.name, '_dumpframe_endstep_', h, 
+                      '.rda', sep = ''), to.file = TRUE)
+      ##TODO: add break criterium to get out of h loop
+      ##      check what happens if GapfillSSA stops further iterations due to limiting groups of eigentriples
     }
+    
     # stop parallel workers
     if (package.parallel == 'doSMP')
       stopWorkers(w)
@@ -473,8 +449,7 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
     print.status, first.guess, pad.series, process.cells, ocean.mask, tresh.fill,
     var.name, amnt.iters.start, amnt.iters, file.name, process.type, size.biggap, 
     amnt.artgaps, M, n.comp, dimensions, max.steps, tresh.fill.first, reproducible,
-    save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test.t, force.all.dims,
-    debug, gaps.cv)
+    save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test.t, force.all.dims)
 {
   ##title<< helper function for GapfillNcdf
   ##details<< helper function for GapfillNcdf that checks the consistency of the 
@@ -1017,9 +992,7 @@ rbindMod <- function(...)
                              nrow = cube.cols, byrow = TRUE)
     variances      <- matrix(unlist(lapply(dummy, function(x)as.vector(t(x[[2]])))),
                              ncol = vars.amnt, byrow = TRUE)
-    iloops.converged<- unlist(lapply(dummy, function(x)as.vector(t(x[[3]]))))
-    return(list(reconstruction = reconstruction, variances = variances, 
-                iloops.converged = iloops.converged))
+    return(list(reconstruction = reconstruction, variances = variances))
 }
 
 
@@ -1051,8 +1024,6 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
   }  
   data.results.iter<- array(NA, dim = c(n.series.core , datapts.n))
   variances        <- array(NA, dim = c(diff(iter.ind) + 1, args.call.SSA[['n.comp']]))
-  iloops.converged  <- array(NA, dim = c(diff(iter.ind) + 1))
-  
   for (n in 1:(diff(iter.ind) + 1)) {
     ind.total = rep(FALSE, iters.n)
     ind.total[(iter.ind[1] : iter.ind[2])[n]] = TRUE 
@@ -1086,7 +1057,10 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
                 dim =  dims.extr.data)
           }
           series.filled       <- do.call(GapfillSSA, args.call.t)
-          list(reconstruction = aperm(array(series.filled$reconstr, dim = c(dims.process.length, n.series.steps[n])), aperm.extr.data), variances = series.filled$variances, iloop_converged=sum(!(series.filled$iloop_converged)))
+          list(reconstruction = aperm(array(series.filled$reconstr, 
+                                            dim = c(dims.process.length, n.series.steps[n])), 
+                                      aperm.extr.data), 
+               variances = series.filled$variances)
         })
     if (class(data.results.iter.t) == 'try-error') {
       print(paste('Error occoured at iteration ', iter.nr, ' and loop ', n, '!', sep = ''))
@@ -1101,10 +1075,9 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
     }
     ind.results <- (1 : n.series.steps[n]) + (((n>1) * 
             (sum( n.series.steps[1 : max(c(n - 1, 1))]))))  
-    data.results.iter[ind.results, ]  <- array(data.results.iter.t$reconstruction, dim = c(n.series.steps[n], datapts.n))
+    data.results.iter[ind.results, ]  <- array(data.results.iter.t$reconstruction, 
+                                               dim = c(n.series.steps[n], datapts.n))
     variances[n, ]                    <- as.vector(data.results.iter.t$variances)
-    iloops.converged[n]               <- data.results.iter.t$iloop_converged
   }
-  return(list(reconstruction = data.results.iter, variances = variances, 
-              lioops.converged = iloops.converged))
+  return(list(reconstruction = data.results.iter, variances = variances))
 }
