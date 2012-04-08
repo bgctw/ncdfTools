@@ -373,7 +373,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           file.con.guess.next               <- open.nc(file.name.guess.curr, write = TRUE)
           data.first.guess                  <- gapfill.results.step$reconstruction
           if (force.all.dims) {
-            dim.other          <- setdiff(1:n.dims.loop, step.chosen[h])2
+            dim.other          <- setdiff(1:n.dims.loop, step.chosen[h])
             if (length(dim.other) != 0) {
               results.dim.other  <- get(paste('gapfill.results.dim', dim.other, sep = ''))           
               ind.array     <- array(gapfill.results.step$slices.too.gappy, dim = results.dim.other$dims.cycle.length)
