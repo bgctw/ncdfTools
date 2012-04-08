@@ -361,7 +361,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             }
           } else {
             gapfill.results.step <- gapfill.results
-            var.res.steps        <- 'not available'
+            if (!exists('var.res.steps'))
+              var.res.steps        <- 'not available'
           }        
         }
         
