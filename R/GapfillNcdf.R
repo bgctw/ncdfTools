@@ -262,6 +262,11 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               next
             tresh.fill.dc         <- tresh.fill[[ind]][[l]]                  
             
+            ## ToDo remove
+            iterinf <- list(process = process, h = h, g = g, l = l, ratio.test.t = ratio.test.t, n.dims.loop = n.dims.loop, 
+                            n.calc.repeat = n.calc.repeat, dims.calc = dims.calc)
+            print(iterinf)
+            
             ##prepare parallel iteration parameters
             if (process.type == 'stepwise') {
               amnt.iters.loop       <- amnt.iters[[h]][[1]]
@@ -1009,8 +1014,9 @@ rbindMod <- function(...)
 ##seealso<<
 ##\code{\link{GapfillNcdf}}, \code{\link{foreach}}   
 {
-    cat(paste(Sys.time(), ' : Assembling data from parallelized computations.\n', 
-              sep=''))
+    if (print.stat)  
+      cat(paste(Sys.time(), ' : Assembling data from parallelized computations.\n', 
+                sep=''))
     assign('dummy', list(...))
     vars.amnt <- dim(dummy[[1]][['variances']])[2]
     cube.cols <- sum(sapply(dummy,function(x)dim(x[['reconstruction']])[1]))
