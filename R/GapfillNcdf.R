@@ -1014,9 +1014,8 @@ rbindMod <- function(...)
 ##seealso<<
 ##\code{\link{GapfillNcdf}}, \code{\link{foreach}}   
 {
-    if (print.stat)  
-      cat(paste(Sys.time(), ' : Assembling data from parallelized computations.\n', 
-                sep=''))
+    cat(paste(Sys.time(), ' : Assembling data from parallelized computations.\n', 
+        sep=''))
     assign('dummy', list(...))
     vars.amnt <- dim(dummy[[1]][['variances']])[2]
     cube.cols <- sum(sapply(dummy,function(x)dim(x[['reconstruction']])[1]))
