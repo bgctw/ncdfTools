@@ -390,7 +390,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               if (sum(ind.array) > 0) {
                 ind.datacube  <- ind.datacube(datacube, ind.array,
                                               dims = results.dim.other$dims.cycle.id + 1)
-                data.first.guess[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
+                if (!is.null(results.dim.other$reconstruction))
+                  data.first.guess[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
               }
             }
           }    
