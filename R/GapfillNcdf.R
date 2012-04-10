@@ -216,7 +216,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           art.gaps.values            <- NULL      
           next
         } else {
-          indices.t        <- sample(which(!is.na(datacube)), floor(gaps.cv * sum(!is.na(ind.artgaps.out))))
+          indices.t                  <- sample(which(!is.na(datacube)),
+                                               floor(gaps.cv * sum(!is.na(datacube))))
           ind.artgaps.out[indices.t] <- TRUE
           art.gaps.values            <- datacube[ind.artgaps.out]
           datacube[ind.artgaps.out]  <- NA
@@ -263,7 +264,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             tresh.fill.dc         <- tresh.fill[[ind]][[l]]                  
             
             ## ToDo remove
-            iterinf <- list(process = process, h = h, g = g, l = l, ratio.test.t = ratio.test.t, n.dims.loop = n.dims.loop, 
+            iterinf <- list(process = process, h = h, g = g, l = l, ratio.test.t = ratio.test.t,
+                            n.dims.loop = n.dims.loop, 
                             n.calc.repeat = n.calc.repeat, dims.calc = dims.calc)
             print(iterinf)
             
@@ -338,7 +340,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               if (!exists('var.res.steps'))
                 var.res.steps <- matrix(NA,ncol = n.dims.loop, nrow = n.steps)
               for (k in 1:n.dims.loop) {
-                recstr.t            <- get(paste('gapfill.results.dim', k, sep=''))[['reconstruction']]
+                recstr.t      <- get(paste('gapfill.results.dim', k, sep=''))[['reconstruction']]
                 if (!is.null(recstr.t)) {
                   var.res.steps[h, k] <- var(art.gaps.values - recstr.t[ind.artgaps.out], na.rm = TRUE)
                 } else {
@@ -362,7 +364,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                         ' as first guess for next step.\n', sep = ''))
             } else {
               gapfill.results.step   <- gapfill.results
-              gapfill.results.step$reconstruction[!is.na(recstr.test)] <- recstr.test[!is.na(recstr.test)] 
+              gapfill.results.step$reconstruction[!is.na(recstr.test)] <-
+                                                              recstr.test[!is.na(recstr.test)] 
             }
           } else {
             gapfill.results.step <- gapfill.results
@@ -382,9 +385,11 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             dim.other          <- setdiff(1:n.dims.loop, step.chosen[h])
             if (length(dim.other) != 0) {
               results.dim.other  <- get(paste('gapfill.results.dim', dim.other, sep = ''))           
-              ind.array     <- array(gapfill.results.step$slices.too.gappy, dim = results.dim.other$dims.cycle.length)
+              ind.array     <- array(gapfill.results.step$slices.too.gappy,
+                                     dim = results.dim.other$dims.cycle.length)
               if (sum(ind.array) > 0) {
-                ind.datacube  <- ind.datacube(datacube, ind.array, dims = results.dim.other$dims.cycle.id + 1)
+                ind.datacube  <- ind.datacube(datacube, ind.array,
+                                              dims = results.dim.other$dims.cycle.id + 1)
                 data.first.guess[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
               }
             }
