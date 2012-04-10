@@ -177,7 +177,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       n.steps           <- max.steps
       var.steps         <- array(NA, dim = c(max.steps, max(unlist(n.comp)), 
                                  length(dimensions[[1]])))
-      step.chosen       <- integer(length = max.steps)
+      step.chosen       <- matrix(NA, 2, max.steps)
+      dimnames(step.chosen) <- list(c('dim','step'), paste('step', 1:max.steps))
     } else {
       n.steps           <- length(amnt.artgaps)
     }
@@ -239,7 +240,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           ind                   <- 1
           n.dims.loop           <- length(dimensions[[ind]])
           if (process == 'final') {
-            dims.calc           <- step.chosen[h]
+            dims.calc           <- step.chosen['dim', h]
             n.calc.repeat       <- 1
             ratio.test.t        <- 1            
           } else if (process == 'cv') {
@@ -256,10 +257,14 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             n.calc.repeat <- 2
           }	        
         }
-	      
+        if (!exists('pred.measures')) {
+          pred.measures <- array(NA, dim = c(3, n.steps, n.dims.loop))
+          dimnames(pred.measures) <- list(c('var.res.steps','RMSE','MEF'),paste('step',1:n.steps))
+        }
+        
         for (g in 1:n.calc.repeat) {
           for (l in dims.calc) {
-            if (g == 2 && step.chosen[h] != l)
+            if (g == 2 && step.chosen['dim', h] != l)
               next
             tresh.fill.dc         <- tresh.fill[[ind]][[l]]                  
             
@@ -306,9 +311,9 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                 print.stat   = FALSE,
                 plot.results = FALSE)         
             ##get first guess
-            if (h > 1 && exists('file.name.guess.curr')) {
-              file.con.guess   <- open.nc(file.name.guess.curr)
-              first.guess      <- var.get.nc(file.con.guess, sub('[.]nc', '', file.name.guess.curr))
+            if (h > 1 && exists('file.name.guess.next')) {
+              file.con.guess   <- open.nc(file.name.guess.next)
+              first.guess      <- var.get.nc(file.con.guess, sub('[.]nc', '', file.name.guess.next))
               close.nc(file.con.guess)
             }
             ##run calculation
@@ -333,22 +338,27 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             if (process.type == 'variances')
               assign(paste('gapfill.results.dim', l, sep=''), gapfill.results)
           }
-          
+          ##ToDo remove
+          browser()
           ##test which dimension to be used for the next step
           if (process.type == 'variances' & ((length(processes) == 2 && process == 'cv') | (length(processes) == 1 && process == 'final') )) {
             if (g == 1) {
-              if (!exists('var.res.steps'))
-                var.res.steps <- matrix(NA,ncol = n.dims.loop, nrow = n.steps)
+
               for (k in 1:n.dims.loop) {
-                recstr.t      <- get(paste('gapfill.results.dim', k, sep=''))[['reconstruction']]
+                recstr.t      <- get(paste('gapfill.results.dim', k, sep = ''))[['reconstruction']]
                 if (!is.null(recstr.t)) {
-                  var.res.steps[h, k] <- var(art.gaps.values - recstr.t[ind.artgaps.out], na.rm = TRUE)
+                  pred.measures['var.res.steps',h ,k ] <- var(art.gaps.values - recstr.t[ind.artgaps.out], na.rm = TRUE)
+                  if (process == 'cv') {
+                    ind.test <- !is.na(recstr.t[ind.artgaps.out])
+                    pred.measures['RMSE',h ,k ]        <-  RMSE(art.gaps.values[ind.test], recstr.t[ind.artgaps.out][ind.test])
+                    #pred.measures['MEF',h ,k ]         <-  MEF(art.gaps.values[ind.test], recstr.t[ind.artgaps.out][ind.test])
+                  }
                 } else {
-                  var.res.steps[h, k] <- Inf
+                  pred.measures['var.res.steps',h ,k ] <- Inf
                 }
               }
-              step.chosen[h]       <- which.min(var.res.steps[h, ])
-              gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen[h], 
+              step.chosen[, h]<- which(pred.measures['var.res.steps', , ] == min(pred.measures['var.res.steps', , ], na.rm=TRUE), arr.ind=TRUE)
+              gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen['dim', h], 
                       sep = ''))
               if (ratio.test.t != 1) {
                 slices.process     <- gapfill.results.step$slices.process
@@ -360,7 +370,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               }
               if (print.status)
                 cat(paste(Sys.time(), ' : Chose dimension(s) ',
-                        paste(dimensions[[ind]][[step.chosen[h]]], collapse = ' and '), 
+                        paste(dimensions[[ind]][[step.chosen['dim', h]]], collapse = ' and '), 
                         ' as first guess for next step.\n', sep = ''))
             } else {
               gapfill.results.step   <- gapfill.results
@@ -369,8 +379,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             }
           } else {
             gapfill.results.step <- gapfill.results
-            if (!exists('var.res.steps'))
-              var.res.steps        <- 'not available'
           }        
         }
         
@@ -382,7 +390,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           file.con.guess.next               <- open.nc(file.name.guess.curr, write = TRUE)
           data.first.guess                  <- gapfill.results.step$reconstruction
           if (force.all.dims) {
-            dim.other          <- setdiff(1:n.dims.loop, step.chosen[h])
+            dim.other          <- setdiff(1:n.dims.loop, step.chosen['dim', h])
             if (length(dim.other) != 0) {
               results.dim.other  <- get(paste('gapfill.results.dim', dim.other, sep = ''))           
               ind.array     <- array(gapfill.results.step$slices.too.gappy,
@@ -398,6 +406,9 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           var.put.nc(file.con.guess.next, sub('[.]nc$', '', file.name.guess.curr), 
               data.first.guess)
           close.nc(file.con.guess.next)
+          step.use.frst.guess  <- step.chosen['step', max(which(!is.na(step.chosen['step',])))]
+          file.name.guess.next <- paste(sub('.nc$', '', file.name), '_first_guess_step_',
+                                        formatC(step.use.frst.guess + 1, 2, flag = '0'), '.nc', sep = '')
         }
         if (save.debug.info)
           dump.frames(dumpto = paste(file.name, '_dumpframe_endstep_', h, 
@@ -423,7 +434,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         file.name.copy = file.name.copy, keep.steps = keep.steps, 
         print.status = print.status, n.steps = n.steps)
     if (process.type == 'variances')
-      return(list(var.res.steps = var.res.steps, step.chosen = step.chosen))
+      return(list(pred.measures = pred.measures, step.chosen = step.chosen))
 }, ex = function(){
   #prerequesites: go to dir with ncdf file and specify file.name
   setwd('')
