@@ -338,10 +338,10 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             if (process.type == 'variances')
               assign(paste('gapfill.results.dim', l, sep=''), gapfill.results)
           }
-          ##ToDo remove
-          browser()
+
           ##test which dimension to be used for the next step
-          if (process.type == 'variances' & ((length(processes) == 2 && process == 'cv') | (length(processes) == 1 && process == 'final') )) {
+          if (process.type == 'variances' & ((length(processes) == 2 && process == 'cv') |
+                (length(processes) == 1 && process == 'final') )) {
             if (g == 1) {
 
               for (k in 1:n.dims.loop) {
@@ -350,14 +350,15 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                   pred.measures['var.res.steps',h ,k ] <- var(art.gaps.values - recstr.t[ind.artgaps.out], na.rm = TRUE)
                   if (process == 'cv') {
                     ind.test <- !is.na(recstr.t[ind.artgaps.out])
-                    pred.measures['RMSE',h ,k ]        <-  RMSE(art.gaps.values[ind.test], recstr.t[ind.artgaps.out][ind.test])
-                    #pred.measures['MEF',h ,k ]         <-  MEF(art.gaps.values[ind.test], recstr.t[ind.artgaps.out][ind.test])
+                    pred.measures['RMSE',h ,k ] <-  RMSE(art.gaps.values[ind.test], recstr.t[ind.artgaps.out][ind.test])
+                    pred.measures['MEF',h ,k ]  <-  MEF(art.gaps.values[ind.test], recstr.t[ind.artgaps.out][ind.test])
                   }
                 } else {
                   pred.measures['var.res.steps',h ,k ] <- Inf
                 }
               }
-              step.chosen[, h]<- which(pred.measures['var.res.steps', , ] == min(pred.measures['var.res.steps', , ], na.rm=TRUE), arr.ind=TRUE)
+              step.chosen[, h] <- which(pred.measures['var.res.steps', , ] ==
+                                        min(pred.measures['var.res.steps', , ], na.rm=TRUE), arr.ind=TRUE)[2:1]
               gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen['dim', h], 
                       sep = ''))
               if (ratio.test.t != 1) {
@@ -1109,7 +1110,10 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
                 dim =  dims.extr.data)
           }
           series.filled       <- do.call(GapfillSSA, args.call.t)
-          list(reconstruction = aperm(array(series.filled$reconstr, dim = c(dims.process.length, n.series.steps[n])), aperm.extr.data), variances = series.filled$variances, iloop_converged=sum(!(series.filled$iloop_converged)))
+          list(reconstruction = aperm(array(series.filled$reconstr,
+                                            dim = c(dims.process.length, n.series.steps[n])),
+                                      aperm.extr.data), variances = series.filled$variances,
+               iloop_converged = sum(!(series.filled$iloop_converged)))
         })
     if (class(data.results.iter.t) == 'try-error') {
       print(paste('Error occoured at iteration ', iter.nr, ' and loop ', n, '!', sep = ''))
