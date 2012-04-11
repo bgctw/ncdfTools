@@ -259,7 +259,9 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         }
         if (!exists('pred.measures')) {
           pred.measures <- array(NA, dim = c(3, n.steps, n.dims.loop))
-          dimnames(pred.measures) <- list(c('var.res.steps','RMSE','MEF'),paste('step',1:n.steps))
+          dimnames(pred.measures) <- list(c('var.res.steps','RMSE','MEF'), 
+                                          paste('step',1:n.steps), 
+                                          sapply(call.args$dimensions[[1]], function(x) paste(x, collapse='-')))
         }
         
         for (g in 1:n.calc.repeat) {
@@ -1128,7 +1130,8 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
     }
     ind.results <- (1 : n.series.steps[n]) + (((n>1) * 
             (sum( n.series.steps[1 : max(c(n - 1, 1))]))))  
-    data.results.iter[ind.results, ]  <- array(data.results.iter.t$reconstruction, dim = c(n.series.steps[n], datapts.n))
+    data.results.iter[ind.results, ]  <- array(data.results.iter.t$reconstruction, 
+                                               dim = c(n.series.steps[n], datapts.n))
     variances[n, ]                    <- as.vector(data.results.iter.t$variances)
     iloops.converged[n]               <- data.results.iter.t$iloop_converged
   }
