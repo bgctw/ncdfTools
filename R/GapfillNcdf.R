@@ -359,8 +359,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                   pred.measures['var.res.steps',h ,k ] <- Inf
                 }
               }
-              step.chosen[, h] <- which(pred.measures['var.res.steps', , ] ==
-                                        min(pred.measures['var.res.steps', , ], na.rm=TRUE), arr.ind=TRUE)[2:1]
+              step.chosen[, h] <- which(array(pred.measures['var.res.steps', , ], dim = c(n.steps, n.dims.loop) ) ==  min(pred.measures['var.res.steps', , ], na.rm=TRUE), arr.ind=TRUE)[2:1]
               gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen['dim', h], 
                       sep = ''))
               if (ratio.test.t != 1) {
