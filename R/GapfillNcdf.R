@@ -1022,7 +1022,7 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
     ind.process.cube[iter.grid.process] <- TRUE
     ind.process.cube       <- array(ind.process.cube[slices.process], 
                                     dim = c(iters.n, dims.cycle.length))
-    index.MSSAseries     <- 1:slices.n[slices.process]
+    index.MSSAseries     <- (1:slices.n)[slices.process]
   }
   max.cores              <- min(c(iters.n, max.cores))
   iters.per.cyc          <- rep(floor(iters.n / max.cores), times = max.cores)
