@@ -985,7 +985,6 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
 {
   ##TODO
   #make indices independent from dimension order
-  browser()
   index.MSSAseries   <- integer()
   index.MSSAnr       <- array(1:prod(dims.cycle.length), dim = dims.cycle.length)
   if (MSSA) {
