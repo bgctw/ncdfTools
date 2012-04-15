@@ -144,7 +144,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 ##Nothing is returned but a ncdf file with the results is written.
 {
     ##TODO extract iloop convergence information for all loops
-    
+    ##TODO indicate fraction of gaps for each time series
+    ##TODO break down world into blocks
      
     #save argument values of call
     args.call.filecheck <- as.list(environment())
@@ -500,7 +501,7 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
     var.name, amnt.iters.start, amnt.iters, file.name, process.type, size.biggap, 
     amnt.artgaps, M, n.comp, dimensions, max.steps, tresh.fill.first, reproducible,
     save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test.t, force.all.dims,
-    debug, gaps.cv)
+    debug, gaps.cv,  MSSA.blck.trsh)
 {
   ##title<< helper function for GapfillNcdf
   ##details<< helper function for GapfillNcdf that checks the consistency of the 
