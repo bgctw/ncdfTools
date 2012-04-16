@@ -209,16 +209,15 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       processes <- c('cv', 'final')
     } else if (gaps.cv == 0) {
       processes <- c('final') 
-      art.gaps.values            <- NULL      
-      
+      art.gaps.values            <- NULL            
     }
+    ind.artgaps.out  <- array(FALSE, dim = dim(datacube))        
             
     for (process in processes) {
       # insert gaps for cross validation      
       if (process == 'cv') {
         if (print.status)
           cat(paste(Sys.time(), ' : Starting cross validation loop. \n', sep = ''))
-        ind.artgaps.out  <- array(FALSE, dim = dim(datacube))        
         
         indices.t                  <- sample(which(!is.na(datacube)),
             floor(gaps.cv * sum(!is.na(datacube))))
@@ -228,7 +227,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       } else if (process == 'final') {
         if (print.status)
           cat(paste(Sys.time(), ' : Starting final filling loop. \n', sep = ''))
-        datacube[ind.artgaps.out] <- art.gaps.values
+        datacube[ind.artgaps.out]  <- art.gaps.values
       }
       
       for (h in 1:n.steps) {
