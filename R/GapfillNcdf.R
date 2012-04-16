@@ -144,8 +144,13 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 ##Nothing is returned but a ncdf file with the results is written.
 {
     ##TODO extract iloop convergence information for all loops
+    ##TODO test inner loop convergence scheme for scenarios 
     ##TODO indicate fraction of gaps for each time series
     ##TODO break down world into blocks
+    ##TODO integrate onlytime into one dimensional variances scheme
+    ##TODO facilitate one step filling process with global RMSE calculation
+    ##TODO save convergence information in ncdf files
+    ##TODO check for too gappy series at single dimension setting
      
     #save argument values of call
     args.call.filecheck <- as.list(environment())
@@ -329,7 +334,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                     calc.parallel = calc.parallel, ocean.mask = ocean.mask, 
                     save.debug.info = save.debug.info, h = h, l = l,  MSSA = MSSA[[ind]][[l]],
                     MSSA.blocksize = MSSA.blocksize, ratio.test.t = ratio.test.t, g = g,
-                    MSSA.blck.trsh = MSSA.blck.trsh), 
+                    MSSA.blck.trsh = MSSA.blck.trsh, file.name = file.name), 
                 list(args.call.SSA = args.call.SSA))
             if (g > 1)
               args.Datacube <- c(args.Datacube, list(slices.process = slices.process,
@@ -522,6 +527,12 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
   ##TODO
   #check for tresh.fill.first
   #check input file
+  ##TODO add checks
+  ## - single dimension variances and thresh.fill.first, tresh.fill
+
+
+
+  
   if (!file.exists(file.name))
     stop('Input ncdf file not found. Check name!')
   check.passed = ncdf.check.file(file.name = file.name, 
@@ -839,7 +850,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
               iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
               print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
               dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-              MSSA.blocksize = MSSA.blocksize, h = h)
+              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)
     } else {
        results.parallel = foreach(i = 1:1
               , .combine =  rbindMod
@@ -848,7 +859,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
               iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
               print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
               dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-              MSSA.blocksize = MSSA.blocksize, h = h)            
+              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)            
     }
     data.results.valid.cells <- results.parallel$reconstruction
     data.variances           <- results.parallel$variances
@@ -1084,7 +1095,7 @@ rbindMod <- function(...)
 GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube, 
                                    dims.process.id, iters.n, dims.cycle.length, 
                                    dims.cycle.id, iter.gridind, ind.process.cube, 
-                                   first.guess, datapts.n, args.call.SSA, 
+                                   first.guess, datapts.n, args.call.SSA, file.name, 
                                    dims.process.length, MSSA, MSSA.blocksize, h)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf performs each individual series/grid 
