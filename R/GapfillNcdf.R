@@ -154,7 +154,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     #set seed based on file name
     if (reproducible) {
        file.name.cl <-  gsub('[[:punct:]]', '', file.name)
-       seed         <-  as.numeric(paste(match(unlist(strsplit(file.name.cl,''))[round(seq(1,nchar(file.name.cl),length.out=5),digits=0)], 
+       ind.rev      <-  round(seq(1,nchar(file.name.cl),length.out=5),digits=0)
+       seed         <-  as.numeric(paste(match(unlist(strsplit(file.name.cl,''))[ind.rev], 
                                    c(letters,LETTERS,0:9)) ,collapse='' )   ) 
     } else {
       seed <- c()
@@ -351,17 +352,23 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               for (k in 1:n.dims.loop) {
                 recstr.t      <- get(paste('gapfill.results.dim', k, sep = ''))[['reconstruction']]
                 if (!is.null(recstr.t)) {
-                  pred.measures['var.res.steps',h ,k ] <- var(art.gaps.values - recstr.t[ind.artgaps.out], na.rm = TRUE)
+                  pred.measures['var.res.steps',h ,k ] <-
+                    var(art.gaps.values - recstr.t[ind.artgaps.out], na.rm = TRUE)
                   if (process == 'cv') {
                     ind.test <- !is.na(recstr.t[ind.artgaps.out])
-                    pred.measures['RMSE',h ,k ] <-  RMSE(art.gaps.values[ind.test], recstr.t[ind.artgaps.out][ind.test])
-                    pred.measures['MEF',h ,k ]  <-  MEF(art.gaps.values[ind.test], recstr.t[ind.artgaps.out][ind.test])
+                    pred.measures['RMSE',h ,k ] <-  RMSE(art.gaps.values[ind.test],
+                                                         recstr.t[ind.artgaps.out][ind.test])
+                    pred.measures['MEF',h ,k ]  <-  MEF(art.gaps.values[ind.test],
+                                                        recstr.t[ind.artgaps.out][ind.test])
                   }
                 } else {
                   pred.measures['var.res.steps',h ,k ] <- Inf
                 }
               }
-              step.chosen[, h] <- which(array(pred.measures['var.res.steps', , ], dim = c(n.steps, n.dims.loop) ) ==  min(pred.measures['var.res.steps', , ], na.rm=TRUE), arr.ind=TRUE)[2:1]
+              step.chosen[, h] <- which(array(pred.measures['var.res.steps', , ],
+                                              dim = c(n.steps, n.dims.loop) ) ==
+                                        min(pred.measures['var.res.steps', , ], na.rm = TRUE),
+                                        arr.ind = TRUE)[2:1]
               gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen['dim', h], 
                       sep = ''))
               if (ratio.test.t != 1) {
@@ -393,15 +400,17 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               '.nc', sep = '')
           file.con.guess.next               <- open.nc(file.name.guess.curr, write = TRUE)
           data.first.guess                  <- gapfill.results.step$reconstruction
+          ##TODO remove
+          browser()
           if (force.all.dims) {
             dim.other          <- setdiff(1:n.dims.loop, step.chosen['dim', h])
             if (length(dim.other) != 0) {
               results.dim.other  <- get(paste('gapfill.results.dim', dim.other, sep = ''))           
               ind.array     <- array(gapfill.results.step$slices.too.gappy,
-                                     dim = results.dim.other$dims.cycle.length)
+                                     dim = results.dim.other$dims.process.length)
               if (sum(ind.array) > 0) {
                 ind.datacube  <- ind.datacube(datacube, ind.array,
-                                              dims = results.dim.other$dims.cycle.id + 1)
+                                              dims = results.dim.other$dims.process.id + 1)
                 if (!is.null(results.dim.other$reconstruction))
                   data.first.guess[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
               }
