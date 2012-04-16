@@ -13,7 +13,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                       ##   to do 2 dimensional spatial gap filling. See the description for details on how to
                       ##   perform spatio-temporal gap filling.
 , MSSA =  rep(list(   rep(list(FALSE), times = length(dimensions[[1]]))) , times = length(dimensions))
-                      ##<< list of logicaind.process.cubels: Whether to perform MSSA for this dimension (see description 
+                      ##<< list of logicls: Whether to perform MSSA for this dimension (see description 
                       ##   for details). Has to have the same structure as dimensions.
 , MSSA.blocksize = 1  ##<< integer: size of the quadratical block used for MSSA.  
 , gaps.cv        = 0
