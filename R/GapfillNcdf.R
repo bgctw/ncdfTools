@@ -348,7 +348,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           if (process.type == 'variances' & ((length(processes) == 2 && process == 'cv') |
                 (length(processes) == 1 && process == 'final') )) {
             if (g == 1) {
-
               for (k in 1:n.dims.loop) {
                 recstr.t      <- get(paste('gapfill.results.dim', k, sep = ''))[['reconstruction']]
                 if (!is.null(recstr.t)) {
@@ -400,8 +399,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               '.nc', sep = '')
           file.con.guess.next               <- open.nc(file.name.guess.curr, write = TRUE)
           data.first.guess                  <- gapfill.results.step$reconstruction
-          ##TODO remove
-          browser()
+          #use first guess from other dimensions in case of too gappy series
           if (force.all.dims) {
             dim.other          <- setdiff(1:n.dims.loop, step.chosen['dim', h])
             if (length(dim.other) != 0) {
@@ -415,7 +413,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                   data.first.guess[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
               }
             }
-          }    
+          }
+          #save first guess data
           var.put.nc(file.con.guess.next, sub('[.]nc$', '', file.name.guess.curr), 
               data.first.guess)
           close.nc(file.con.guess.next)
