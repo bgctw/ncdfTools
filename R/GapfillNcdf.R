@@ -196,6 +196,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     } else {
       n.steps           <- length(amnt.artgaps)
     }
+    ##TODO put to check arguments
     if (missing(file.name) )
         stop('file.name needs to be supplied!')
     
@@ -794,7 +795,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     first.guess = 'mean', dims.cycle, datacube, dims.cycle.id, dims.process.id, 
     dims.process, process.cells = c('gappy','all')[1], ratio.test.t, g, slices.process = c(),
     slices.constant = c(), values.constant = c(), slices.excluded = c(), 
-    slices.without.gaps= c(), MSSA.blck.trsh = MSSA.blck.trsh)
+    slices.without.gaps= c(), MSSA.blck.trsh = MSSA.blck.trsh, file.name)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that handles the main datacube transformations. 
 ##seealso<<
@@ -920,6 +921,7 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
 
   ##ToDo
   #determine grid cells to process
+
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
   
