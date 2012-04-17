@@ -240,6 +240,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         if (print.status)
           cat(paste(Sys.time(), ' : Starting final filling loop. \n', sep = ''))
         datacube[ind.artgaps.out]  <- art.gaps.values
+        if (length(processes) == 2)
+           n.steps  <- max(step.chosen['step',])
       }
 
       for (h in 1:n.steps) {
