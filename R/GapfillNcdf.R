@@ -156,7 +156,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     #save argument values of call
     args.call.filecheck <- as.list(environment())
     args.call.global    <- call.args2string()
-    if (print.stat & !interactive()) {
+    if (print.status & !interactive()) {
       print('Arguments supplied to function call:')
       print(args.call.filecheck)
     }
