@@ -151,10 +151,15 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     ##TODO facilitate one step filling process with global RMSE calculation
     ##TODO save convergence information in ncdf files
     ##TODO check for too gappy series at single dimension setting
+    ##TODO create possibilty for non convergence and indicate this in results
      
     #save argument values of call
     args.call.filecheck <- as.list(environment())
     args.call.global    <- call.args2string()
+    if (print.stat & interactive()) {
+      print('Arguments supplied to function call:')
+      print(args.call.filecheck)
+    }
     
     #set seed based on file name
     if (reproducible) {
@@ -234,7 +239,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           cat(paste(Sys.time(), ' : Starting final filling loop. \n', sep = ''))
         datacube[ind.artgaps.out]  <- art.gaps.values
       }
-      
+      -Side/MDI/jbuttlar/Software/Own_Packages/ncdf.tools> 
+          26:/Net/Groups/C-Side/MDI/j
       for (h in 1:n.steps) {
         if (print.status)
           cat(paste(Sys.time(), ' : Starting step ', h, '\n',sep = ''))
