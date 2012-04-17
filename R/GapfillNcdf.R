@@ -152,6 +152,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     ##TODO save convergence information in ncdf files
     ##TODO check for too gappy series at single dimension setting
     ##TODO create possibilty for non convergence and indicate this in results
+    ##TODO facilitate run without cross validation repetition
+    ##TODO test stuff with different dimension orders in the file and in settings
      
     #save argument values of call
     args.call.filecheck <- as.list(environment())
@@ -215,8 +217,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     # start parallel processing workers
     if (calc.parallel)
         RegisterParallel(package.parallel, max.cores)
-      
-    if (gaps.cv != 0 & dimensions[[1]]) {
+    if (gaps.cv != 0) {
       processes <- c('cv', 'final')
     } else if (gaps.cv == 0) {
       processes <- c('final') 
@@ -401,8 +402,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             gapfill.results.step <- gapfill.results
           }        
         }
-        
-        ##save first guess for next step
+       
+        ##determine first guess for next step
         if (n.steps > 1 && !is.null(gapfill.results.step$reconstruction)) {
           file.name.guess.curr              <- paste(sub('.nc$', '', file.name),
               '_first_guess_step_',formatC(h + 1, 2, flag = '0'),
@@ -878,7 +879,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
       data.results.all.cells[index.MSSAseries, ]<- data.results.valid.cells
     data.results.all.cells[slices.constant, ] <- rep(values.constant[slices.constant], 
                                                      each = datapts.n)
-    
+    browser()
     #reshape results array to match original data cube
     data.results.rshp          <- data.results.all.cells
     dim(data.results.rshp)     <- c(dims.cycle.length, dims.process.length)
@@ -1144,28 +1145,33 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       n.series.steps[n]       <- sum(ind.act.cube)
       dims.extr.data          <- dims.process.length
       aperm.extr.data         <- 1:(length(dims.process.id) + 1)
+      args.call.t             <- args.call.SSA
+      args.call.t[['seed']]   <- iter.nr * n       
       if (MSSA) {
         dims.extr.data        <- c(dims.extr.data, n.series.steps[n])
-        aperm.extr.data       <- c(2,1)       
-      }  
-      args.call.t             <- args.call.SSA
-      args.call.t[['seed']]   <- iter.nr * n  
-      args.call.t[['series']] <- array(datacube[ind.datacube(datacube, 
+        aperm.extr.data       <- c(2,1)
+        perm.before           <- 1:2
+      } else {
+        perm.before           <- order(dims.process.id)
+      }
+      series.noperm           <- array(datacube[ind.datacube(datacube, 
                                                              ind.act.cube, 
                                                              dims.cycle.id+1)],
                                        dim =  dims.extr.data)
-          if (!(class(first.guess) == 'character' && first.guess == 'mean')) {
-            args.call.t[['first.guess']]   <- 
-                  array(first.guess[ind.datacube(first.guess, ind.act.cube,
-                                                 dims.cycle.id+1)], 
-                dim =  dims.extr.data)
-          }
-          series.filled       <- do.call(GapfillSSA, args.call.t)
-          list(reconstruction = aperm(array(series.filled$reconstr,
-                                            dim = c(dims.process.length, n.series.steps[n])),
-                                      aperm.extr.data), variances = series.filled$variances,
-               iloop_converged = sum(!(series.filled$iloop_converged)))
-        })
+      args.call.t[['series']] <- aperm(series.noperm, perm = perm.before)
+      if (!(class(first.guess) == 'character' && first.guess == 'mean')) {
+        fg.noperm  <- array(first.guess[ind.datacube(first.guess, ind.act.cube,
+                                                     dims.cycle.id+1)], 
+                            dim =  dims.extr.data)
+        args.call.t[['first.guess']] <- aperm(fg.noperm, perm = perm.before)         
+      }
+   
+      series.filled       <- do.call(GapfillSSA, args.call.t)
+      list(reconstruction = aperm(array(series.filled$reconstr,
+             dim = c(dims.process.length, n.series.steps[n])),
+             aperm.extr.data), variances = series.filled$variances,
+           iloop_converged = sum(!(series.filled$iloop_converged)))
+    })
     if (class(data.results.iter.t) == 'try-error') {
       print(paste('Error occoured at iteration ', iter.nr, ' and loop ', n, '!', sep = ''))
       print(data.results.iter.t)
