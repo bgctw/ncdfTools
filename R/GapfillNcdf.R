@@ -156,7 +156,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     #save argument values of call
     args.call.filecheck <- as.list(environment())
     args.call.global    <- call.args2string()
-    if (print.stat & interactive()) {
+    if (print.stat & !interactive()) {
       print('Arguments supplied to function call:')
       print(args.call.filecheck)
     }
@@ -216,7 +216,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     if (calc.parallel)
         RegisterParallel(package.parallel, max.cores)
       
-    if (gaps.cv != 0) {
+    if (gaps.cv != 0 & dimensions[[1]]) {
       processes <- c('cv', 'final')
     } else if (gaps.cv == 0) {
       processes <- c('final') 
