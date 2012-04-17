@@ -879,7 +879,6 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
       data.results.all.cells[index.MSSAseries, ]<- data.results.valid.cells
     data.results.all.cells[slices.constant, ] <- rep(values.constant[slices.constant], 
                                                      each = datapts.n)
-    browser()
     #reshape results array to match original data cube
     data.results.rshp          <- data.results.all.cells
     dim(data.results.rshp)     <- c(dims.cycle.length, dims.process.length)
