@@ -239,8 +239,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           cat(paste(Sys.time(), ' : Starting final filling loop. \n', sep = ''))
         datacube[ind.artgaps.out]  <- art.gaps.values
       }
-      -Side/MDI/jbuttlar/Software/Own_Packages/ncdf.tools> 
-          26:/Net/Groups/C-Side/MDI/j
+
       for (h in 1:n.steps) {
         if (print.status)
           cat(paste(Sys.time(), ' : Starting step ', h, '\n',sep = ''))
