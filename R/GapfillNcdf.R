@@ -229,8 +229,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       # insert gaps for cross validation      
       if (process == 'cv') {
         if (print.status)
-          cat(paste(Sys.time(), ' : Starting cross validation loop. \n', sep = ''))
-        
+          cat(paste(Sys.time(), ' : Starting cross validation loop. \n', sep = ''))        
         indices.t                  <- sample(which(!is.na(datacube)),
             floor(gaps.cv * sum(!is.na(datacube))))
         ind.artgaps.out[indices.t] <- TRUE
@@ -255,9 +254,13 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           ind                   <- 1
           n.dims.loop           <- length(dimensions[[ind]])
           if (process == 'final') {
-            dims.calc           <- step.chosen['dim', h]
+            if (length(processes) == 2) {
+              dims.calc           <- step.chosen['dim', h]
+            } else if (length(processes) == 1) {
+              dims.calc           <- 1
+            }
             n.calc.repeat       <- 1
-            ratio.test.t        <- 1            
+            ratio.test.t        <- 1
           } else if (process == 'cv') {
             dims.calc           <- 1:n.dims.loop
             if (force.all.dims && h == 1) {
@@ -538,6 +541,7 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
   #check input file
   ##TODO add checks
   ## - single dimension variances and thresh.fill.first, tresh.fill
+  ## - facilitate old school SSA via gaps.cv, max.steps = 1, amnt.artgaps !=0 and length(dimensions) == 1
 
 
 
@@ -734,7 +738,6 @@ GapfillNcdfSaveResults <- function(datacube, reconstruction, args.call.global,
 ##details<< helper function for GapfillNcdf that saves the results ncdf file. 
 ##seealso<<
 ##\code{\link{GapfillNcdf}}  
-
 {
   dims.cycle.length   <- dim(datacube)[dims.cycle.id + 1]
 
@@ -815,10 +818,12 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
   #identify valid grids
   args.identify <- list(dims.cycle = dims.cycle, dims.cycle.id = dims.cycle.id,
                         dims.process.id = dims.process.id, datacube = datacube,
-                        MSSA = MSSA, dims.process =  dims.process, process.cells = c('gappy','all')[1], 
-                        first.guess = first.guess, ocean.mask = ocean.mask, print.status = print.status, 
+                        MSSA = MSSA, dims.process =  dims.process,
+                        process.cells = c('gappy','all')[1], first.guess = first.guess,
+                        ocean.mask = ocean.mask, print.status = print.status, 
 		        slices.n = slices.n, dims.process.length = dims.process.length,
-                        tresh.fill.dc = tresh.fill.dc, ratio.test.t = ratio.test.t, g = g, l = l, h = h)
+                        tresh.fill.dc = tresh.fill.dc, ratio.test.t = ratio.test.t,
+                        g = g, l = l, h = h)
   if (g == 2)
     args.identify <- c(args.identify, list(slices.excluded = slices.excluded,
                                            values.constant = values.constant,
