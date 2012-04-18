@@ -154,6 +154,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     ##TODO create possibilty for non convergence and indicate this in results
     ##TODO facilitate run without cross validation repetition
     ##TODO test stuff with different dimension orders in the file and in settings
+    ##TODO substitute all length(processes)==2 tests with something more intuitive
+    ##TODO put understandable documentation to if clauses
      
     #save argument values of call
     args.call.filecheck <- as.list(environment())
@@ -361,14 +363,19 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           }
 
           ##test which dimension to be used for the next step
+          ##TODO whole step can be excluded for "one step" processes
           if (process.type == 'variances' & ((length(processes) == 2 && process == 'cv') |
                 (length(processes) == 1 && process == 'final') )) {
             if (g == 1) {
               for (k in 1:n.dims.loop) {
                 recstr.t      <- get(paste('gapfill.results.dim', k, sep = ''))[['reconstruction']]
                 if (!is.null(recstr.t)) {
-                  pred.measures['var.res.steps',h ,k ] <-
-                    var(art.gaps.values - recstr.t[ind.artgaps.out], na.rm = TRUE)
+                  pred.per.t    <- var(art.gaps.values - recstr.t[ind.artgaps.out], na.rm = TRUE)
+                  if (length(processes) == 2) {
+                    pred.measures['var.res.steps',h ,k ] <- pred.per.t
+                  } else if (length(processes) == 1) {                     # if single step process with "inner" cross validation
+                    pred.measures['var.res.steps',h ,k ] <- 0
+                  }  
                   if (process == 'cv') {
                     ind.test <- !is.na(recstr.t[ind.artgaps.out])
                     pred.measures['RMSE',h ,k ] <-  RMSE(art.gaps.values[ind.test],
@@ -376,7 +383,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                     pred.measures['MEF',h ,k ]  <-  MEF(art.gaps.values[ind.test],
                                                         recstr.t[ind.artgaps.out][ind.test])
                   }
-                } else {
+                } else if (is.null(recstr.t)) {
                   pred.measures['var.res.steps',h ,k ] <- Inf
                 }
               }
@@ -438,9 +445,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           file.name.guess.next <- paste(sub('.nc$', '', file.name), '_first_guess_step_',
                                         formatC(step.use.frst.guess + 1, 2, flag = '0'), '.nc', sep = '')
         }
-        if (save.debug.info)
-          dump.frames(dumpto = paste(file.name, '_dumpframe_endstep_', h, 
-                  '.rda', sep = ''), to.file = TRUE)
         ##TODO: add break criterium to get out of h loop
         ##      check what happens if GapfillSSA stops further iterations due to limiting groups of eigentriples
       }
