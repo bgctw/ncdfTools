@@ -156,6 +156,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     ##TODO test stuff with different dimension orders in the file and in settings
     ##TODO substitute all length(processes)==2 tests with something more intuitive
     ##TODO put understandable documentation to if clauses
+    ##TODO remove first guess stuff 
      
     #save argument values of call
     args.call.filecheck <- as.list(environment())
@@ -416,7 +417,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         }
        
         ##determine first guess for next step
-        if (n.steps > 1 && !is.null(gapfill.results.step$reconstruction)) {
+        if (!is.null(gapfill.results.step$reconstruction)) {
           file.name.guess.curr              <- paste(sub('.nc$', '', file.name),
               '_first_guess_step_',formatC(h + 1, 2, flag = '0'),
               '.nc', sep = '')
@@ -683,7 +684,7 @@ GapfillNcdfOpenFiles <- function(file.name, var.name, n.steps, print.status)
 ##details<< helper function for GapfillNcdf that prepares the output files 
 ##seealso<<
 ##\code{\link{GapfillNcdf}}
-
+  
 #open ncdf files
 {
   if (print.status)
@@ -695,21 +696,19 @@ GapfillNcdfOpenFiles <- function(file.name, var.name, n.steps, print.status)
     stop('Creating file for results failed!')
   
   #prepare first guess files
-  if (n.steps > 1) {
-    for (b in 2:(n.steps + 1)) {
-      file.name.guess.t  <- paste(sub('.nc$', '', file.name), '_first_guess_step_',
-          formatC(b, 2, flag = 0), '.nc', sep='')
-      copied             <- file.copy(from = file.name, to = file.name.guess.t, 
-                                      overwrite = TRUE)
-      con.tmp            <- open.nc(file.name.guess.t, write = TRUE)
-      data.tmp           <- var.get.nc(con.tmp, var.name)
-      data.tmp[]         <- NA
-      var.rename.nc(con.tmp, sub('[.]nc$', '', file.name), sub('[.]nc$', '', 
-                    file.name.guess.t))
-      var.put.nc(con.tmp, sub('[.]nc$', '', file.name.guess.t), data.tmp)
-      close.nc(con.tmp)
-      Sys.chmod(file.name.guess.t, mode = "0777")
-    }
+  for (b in 2:(n.steps + 1)) {
+    file.name.guess.t  <- paste(sub('.nc$', '', file.name), '_first_guess_step_',
+                                formatC(b, 2, flag = 0), '.nc', sep='')
+    copied             <- file.copy(from = file.name, to = file.name.guess.t, 
+                                    overwrite = TRUE)
+    con.tmp            <- open.nc(file.name.guess.t, write = TRUE)
+    data.tmp           <- var.get.nc(con.tmp, var.name)
+    data.tmp[]         <- NA
+    var.rename.nc(con.tmp, sub('[.]nc$', '', file.name), sub('[.]nc$', '', 
+                                                             file.name.guess.t))
+    var.put.nc(con.tmp, sub('[.]nc$', '', file.name.guess.t), data.tmp)
+    close.nc(con.tmp)
+    Sys.chmod(file.name.guess.t, mode = "0777")
   }
   
   #prepare results ncdf file
