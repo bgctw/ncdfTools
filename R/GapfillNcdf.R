@@ -156,7 +156,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     ##TODO test stuff with different dimension orders in the file and in settings
     ##TODO substitute all length(processes)==2 tests with something more intuitive
     ##TODO put understandable documentation to if clauses
-    ##TODO remove first guess stuff 
+    ##TODO remove first guess stuff
+    ##TODO incorporate non convergence information in final datacube
      
     #save argument values of call
     args.call.filecheck <- as.list(environment())

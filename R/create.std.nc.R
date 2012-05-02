@@ -1,9 +1,10 @@
 create.std.nc = function
     ##title<< create an empty ncdf file with standardized attributes and dimensions
     ##description<< This function writes an empty ncdf file with variable names, dimensions and
-    ##              attributes formatted in a standardized way.
+    ##              attributes formated in a standardized way.
        (
     var.name                 ##<< character string: name of the target variable in the file
+    , file.name = c()    
     , var.units = '[]'       ##<< character string: units of variable (should be compatible with udunits)
     , lat.values = c()
     , long.values = c()
@@ -18,17 +19,21 @@ create.std.nc = function
     , missing_value = -9999) ##<< numeric: missing data value
 {
   require(RNetCDF)
+  if (length(year.start.end) == 0 & length(time.values) != 0)
+    year.start.end  <- as.integer(format(time.values[c(1,length(time.values))], '%Y'))
   
   if(sum(c(lat.length,long.length,time.length) == 
           c(length(lat.values),length(long.values), length(time.values)))!=3)
      stop('lat(long/time.values need to have the same length as the respective length arguments!')
-  if (length(time.values) > 0 && class(time.values)[1] != 'POSIXct')
+  if (length(time.values) > 0 && !is.element(class(time.values)[1],c('POSIXlt', 'POSIXct')))
      stop('time.values needs to be of class POSIXct!') 
   if (time.length > 0 && length(year.start.end)!=2)
      stop('Supply values for the start and the end year!') 
-  
-   file.name = paste(var.name, paste(c(lat.length, long.length, time.length),collapse='.'), 'nc', sep = '.')
-   
+  if(length(file.name) == 0) {
+     file.name = paste(var.name, paste(c(lat.length, long.length, time.length),collapse='.'), 'nc', sep = '.')
+  } else if (!grepl('[.]nc',file.name)){
+    file.name <- paste(file.name, '.nc', sep='')
+  } 
   
   file.con  <- create.nc(file.name)
   
@@ -60,7 +65,7 @@ create.std.nc = function
   }   
   
   
-  dims.used  <- c('longitude', 'latitude', 'time')[c(0!=lat.length ,0!=long.length,0!=time.length)]
+  dims.used  <- c('latitude', 'longitude', 'time')[c(0!=lat.length ,0!=long.length,0!=time.length)]
   var.def.nc <- var.def.nc(file.con, var.name, type.var, dims.used)
   ncdf.def.all.atts(file.con, var.name, atts = list(scale_factor = scale_factor, add_offset = add_offset,
           missing_value = missing_value, `_FillValue` = missing_value, units = var.units))
