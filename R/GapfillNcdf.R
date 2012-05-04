@@ -859,6 +859,16 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     if (print.status)
       cat(paste(Sys.time(), ' : Starting calculation: Filling ', sum(slices.process),
               ' time series/grids of size ', datapts.n, '. \n', sep = ''))
+
+
+     a<-list(iter.nr = i, datacube = datacube,
+              dims.process.id = dims.process.id, datapts.n = datapts.n, args.call.SSA = args.call.SSA,
+              iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
+              print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
+              dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
+              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)
+    save(a,file='delete.me.222.RData')
+    
     if (calc.parallel) {
       results.parallel = foreach(i = 1:max.cores
               , .combine = rbindMod
@@ -935,7 +945,6 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
 
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
-  
   if (!MSSA) {  
     if (g == 1) {
       amnt.na                 <- apply(datacube, MAR = dims.cycle.id + 1 ,
@@ -1056,16 +1065,12 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
       } 
     }  
   } else if (!MSSA) {
-    ind.process.cube           <- array(FALSE,dim = c(slices.n, dims.cycle.length))        
     args.expand.grid     <- alist()
-    for (d in 1:length(dims.cycle.id + 1)) args.expand.grid[[d]] <- 
-          1:dim(datacube)[dims.cycle.id[d] + 1]    
+    for (d in 1:length(dims.cycle.id + 1))
+      args.expand.grid[[d]] <- 1:dim(datacube)[dims.cycle.id[d] + 1]    
     iter.grid.all <- cbind(1:slices.n, as.matrix(do.call("expand.grid",
                                                          args.expand.grid)))
-    iter.grid.process    <- iter.grid.all[slices.process, ]   
-    ind.process.cube[iter.grid.process] <- TRUE
-    ind.process.cube       <- array(ind.process.cube[slices.process], 
-                                    dim = c(iters.n, dims.cycle.length))
+    ind.process.cube      <- iter.grid.all[slices.process, ]   
     index.MSSAseries     <- (1:slices.n)[slices.process]
   }
   max.cores              <- min(c(iters.n, max.cores))
@@ -1121,8 +1126,6 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
 ##seealso<<
 ##\code{\link{GapfillNcdf}}, \code{\link{foreach}}                                     
 {
-  ##TODO
-  #remove h
   iter.ind         <- iter.gridind[iter.nr, ]
   datapts.n        <- prod(dim(datacube)[dims.process.id + 1])
   n.series.steps   <- numeric()
@@ -1148,26 +1151,29 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
         if (print.status)
           cat(paste(Sys.time(), ' : Finished ~',
                     round(n / (diff(iter.ind) + 1) * 100), '%. \n', sep=''))
-      ind.act.cube <- array(ind.process.cube[ind.datacube(ind.process.cube, 
-                                                          ind.total, 1)],
-                            dim = dims.cycle.length)
-      ##TODO check how this behaves in non MSSA mode
-      n.series.steps[n]       <- sum(ind.act.cube)
-      dims.extr.data          <- dims.process.length
-      aperm.extr.data         <- 1:(length(dims.process.id) + 1)
+
+
       args.call.t             <- args.call.SSA
-      args.call.t[['seed']]   <- iter.nr * n       
+      args.call.t[['seed']]   <- iter.nr * n      
+      dims.extr.data          <- dims.process.length
+      aperm.extr.data         <- 1:(length(dims.process.id) + 1) 
       if (MSSA) {
+        ind.act.cube          <- array(ind.process.cube[ind.datacube(ind.process.cube, 
+                                                                     ind.total, 1)],
+                                       dim = dims.cycle.length)
+        n.series.steps[n]     <- sum(ind.act.cube)
         dims.extr.data        <- c(dims.extr.data, n.series.steps[n])
         aperm.extr.data       <- c(2,1)
         perm.before           <- 1:2
+        ind.extr              <- ind.datacube(datacube, ind.act.cube, dims.cycle.id+1)
       } else {
         perm.before           <- order(dims.process.id)
+        ind.matrix            <- array(FALSE, dims.cycle.length)
+        ind.matrix[ind.process.cube[n,1], ind.process.cube[n,2]] <- TRUE
+        ind.extr              <- ind.datacube(datacube, ind.matrix, dims.cycle.id + 1)
+        n.series.steps[n]     <- 1
       }
-      series.noperm           <- array(datacube[ind.datacube(datacube, 
-                                                             ind.act.cube, 
-                                                             dims.cycle.id+1)],
-                                       dim =  dims.extr.data)
+      series.noperm           <- array(datacube[ind.extr], dim =  dims.extr.data)
       args.call.t[['series']] <- aperm(series.noperm, perm = perm.before)
       if (!(class(first.guess) == 'character' && first.guess == 'mean')) {
         fg.noperm  <- array(first.guess[ind.datacube(first.guess, ind.act.cube,
