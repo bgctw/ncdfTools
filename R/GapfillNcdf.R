@@ -943,6 +943,8 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
   ##ToDo
   #determine grid cells to process
 
+  browser()
+
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
   if (!MSSA) {  
@@ -1126,25 +1128,25 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
 ##seealso<<
 ##\code{\link{GapfillNcdf}}, \code{\link{foreach}}                                     
 {
-  iter.ind         <- iter.gridind[iter.nr, ]
-  datapts.n        <- prod(dim(datacube)[dims.process.id + 1])
-  n.series.steps   <- numeric()
+  iter.ind          <- iter.gridind[iter.nr, ]
+  datapts.n         <- prod(dim(datacube)[dims.process.id + 1])
+  n.series.steps    <- numeric()
 
   if (MSSA)  {
-    ind.t          <- rep(FALSE, times = dim(ind.process.cube)[1])
+    ind.t           <- rep(FALSE, times = dim(ind.process.cube)[1])
     ind.t[iter.ind[1]:iter.ind[2]]       <- TRUE
-    n.series.core  <- sum(ind.process.cube[ind.datacube(ind.process.cube, 
+    n.series.core   <- sum(ind.process.cube[ind.datacube(ind.process.cube, 
                                                         ind.t, dims = 1)])
   } else {
-    n.series.core  <- (diff(iter.ind) + 1)
+    n.series.core   <- (diff(iter.ind) + 1)
   }  
-  data.results.iter<- array(NA, dim = c(n.series.core , datapts.n))
-  variances        <- array(NA, dim = c(diff(iter.ind) + 1, args.call.SSA[['n.comp']]))
+  data.results.iter <- array(NA, dim = c(n.series.core , datapts.n))
+  variances         <- array(NA, dim = c(diff(iter.ind) + 1, args.call.SSA[['n.comp']]))
   iloops.converged  <- array(NA, dim = c(diff(iter.ind) + 1))
   
   for (n in 1:(diff(iter.ind) + 1)) {
-    ind.total = rep(FALSE, iters.n)
-    ind.total[(iter.ind[1] : iter.ind[2])[n]] = TRUE 
+    ind.total       <- rep(FALSE, iters.n)
+    ind.total[(iter.ind[1] : iter.ind[2])[n]] <- TRUE 
     data.results.iter.t = try({
       if (iter.nr == 1 &&( diff(iter.ind) < 20  || 
             (n %% (ceiling((diff(iter.ind)) / 20)) == 0)))
@@ -1169,7 +1171,7 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       } else {
         perm.before           <- order(dims.process.id)
         ind.matrix            <- array(FALSE, dims.cycle.length)
-        ind.matrix[ind.process.cube[n,1], ind.process.cube[n,2]] <- TRUE
+        ind.matrix[ind.process.cube[n, 2], ind.process.cube[n, 3]] <- TRUE
         ind.extr              <- ind.datacube(datacube, ind.matrix, dims.cycle.id + 1)
         n.series.steps[n]     <- 1
       }
