@@ -158,6 +158,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     ##TODO put understandable documentation to if clauses
     ##TODO remove first guess stuff
     ##TODO incorporate non convergence information in final datacube
+    ##TODO facilitate easy run of different settings (e.g. with different default settings)
      
     #save argument values of call
     args.call.filecheck <- as.list(environment())
@@ -548,7 +549,8 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
   ##TODO add checks
   ## - single dimension variances and thresh.fill.first, tresh.fill
   ## - facilitate old school SSA via gaps.cv, max.steps = 1, amnt.artgaps !=0 and length(dimensions) == 1
-
+  ##TODO check intererelation between ratio.test and gaps.cv
+  
 
 
   
@@ -943,8 +945,6 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
   ##ToDo
   #determine grid cells to process
 
-  browser()
-
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
   if (!MSSA) {  
@@ -1032,6 +1032,7 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
 {
   ##TODO
   #make indices independent from dimension order
+  
   index.MSSAseries   <- integer()
   index.MSSAnr       <- array(1:prod(dims.cycle.length), dim = dims.cycle.length)
   if (MSSA) {
@@ -1171,7 +1172,9 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       } else {
         perm.before           <- order(dims.process.id)
         ind.matrix            <- array(FALSE, dims.cycle.length)
-        ind.matrix[ind.process.cube[n, 2], ind.process.cube[n, 3]] <- TRUE
+        ind.matrix.list       <- matrix(ind.process.cube[n, -1], byrow=TRUE,
+                                        ncol = length(dims.cycle.length))
+        ind.matrix[ind.matrix.list] <- TRUE
         ind.extr              <- ind.datacube(datacube, ind.matrix, dims.cycle.id + 1)
         n.series.steps[n]     <- 1
       }

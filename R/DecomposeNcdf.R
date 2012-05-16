@@ -25,6 +25,7 @@ DecomposeNcdf = structure(function(
                           ##       the parallel computing backend. Preferably use doMC as the algorithm has been
                           ##  extensively tested with this package.!
     , max.cores = 16      ##<< integer: maximum number of cores to use.
+    , check.files = TRUE
   )
   ##details<<
 
@@ -89,9 +90,11 @@ DecomposeNcdf = structure(function(
         stop('file.name and borders.wl need to be supplied!')
     if (!file.exists(file.name))
         stop('Input ncdf file not found. Check name')
-    check.passed = ncdf.check.file(file.name = file.name, dims = 'time', type = 'relaxed')
-    if (!check.passed)
-        stop('NCDF file not consistent with CF ncdf conventions!')
+    if (check.files) {  
+       check.passed = ncdf.check.file(file.name = file.name, dims = 'time', type = 'relaxed')
+       if (!check.passed)
+          stop('NCDF file not consistent with CF ncdf conventions!')
+    }    
     if (!class(borders.wl)=='list')
         stop('Wrong class for borders.wl! Needs to be a list!')
     file.con.orig <- open.nc(file.name)
