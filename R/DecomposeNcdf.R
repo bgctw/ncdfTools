@@ -95,10 +95,10 @@ DecomposeNcdf = structure(function(
        if (!check.passed)
           stop('NCDF file not consistent with CF ncdf conventions!')
     }    
-    if (!class(borders.wl)=='list')
+    if (!class(borders.wl) == 'list')
         stop('Wrong class for borders.wl! Needs to be a list!')
     file.con.orig <- open.nc(file.name)
-    if (var.name=='auto') {
+    if (var.name == 'auto') {
         var.decomp.name <- setdiff(ncdf.get.varinfo(file.con.orig)$name,
                 c(ncdf.get.diminfo(file.con.orig)$name,'doy','year','flag.orig'))
         vars.copy <- c()
@@ -113,10 +113,10 @@ DecomposeNcdf = structure(function(
     }
 #    if(package.parallel=='doSMP')
 #        stop('Please use doMC for parallel computing as doSMP is not yet functional/tested.')
-    if (!(ncdf.get.diminfo(file.con.orig)$name[file.inq.nc(file.con.orig)$ndims] =='time'))
-        stop(paste('File has no dimension called time (case sensitive!) or time dimension is',
-                        ' not the last dimension!'))
+    if (!(is.element('time', ncdf.get.diminfo(file.con.orig)$name)))
+        stop(paste('File has no dimension called time (case sensitive)!'))
 
+    browser()
     #open ncdf files
     if (print.status)
         cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep=''))
@@ -126,15 +126,15 @@ DecomposeNcdf = structure(function(
 
     #set default parameters
     if (!calc.parallel)
-        max.cores=1
+        max.core                  <- 1
     n.bands                       <- length(unlist(borders.wl))-length(borders.wl)
     n.steps                       <- length(borders.wl)
     n.timesteps                   <- dim.inq.nc(file.con.orig, 'time')$length
-    if (length(M)==0)
-        M              <- rep(round(n.timesteps / 2,  digits=0), times=n.steps)
-    if (length(harmonics)==0)
+    if (length(M) == 0)
+        M              <- rep(round(n.timesteps / 2,  digits = 0), times = n.steps)
+    if (length(harmonics) == 0)
         harmonics      <- rep(8, times = n.steps)
-    if (length(n.comp)==0)
+    if (length(n.comp) == 0)
         n.comp         <- rep(50, times = n.steps)
 
     #determine call settings for SSA
@@ -168,22 +168,22 @@ DecomposeNcdf = structure(function(
                '[timesteps]')
     att.put.nc(file.con.copy, 'borders.low', 'unit', 'NC_CHAR',
                '[timesteps]')
-    if (length(vars.copy)>0)
+    if (length(vars.copy) > 0)
         for (var.copy.t in vars.copy)
             ncdf.var.copy(file.con.orig,file.con.copy,var.copy.t)
     n.dims            <- file.inq.nc(file.con.copy)$ndims
     close.nc(file.con.copy)
-    dims.info         <- ncdf.get.diminfo(file.con.orig)
+    dims.ids.data     <- var.inq.nc(file.con.orig, var.decomp.name)$dimids + 1   
+    dims.info         <- ncdf.get.diminfo(file.con.orig)[dims.ids.data,]
 
     #prepare parallel iteration parameters
-    dims.cycle.id     <- dims.info[-match('time', dims.info$name), 1]
+    dims.cycle.id     <- sort(setdiff(dims.ids.data, match('time', dims.info$name) ) - 1)
     dims.cycle.n      <- length(dims.cycle.id)
-    dims.cycle.length <- dims.info[-match('time', dims.info$name), 3]
+    dims.cycle.length <- dim(data.all)[dims.cycle.id + 1]
     n.timesteps       <- dims.info[match('time', dims.info$name), 3]
-    dims.cycle.amnt   <- length(dims.cycle.id)
 
     #determine slices to process
-    data.all <- var.get.nc(file.con.orig,var.decomp.name)
+    data.all   <- var.get.nc(file.con.orig, var.decomp.name)
     if (print.status)
         cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
 
@@ -207,7 +207,7 @@ DecomposeNcdf = structure(function(
 
     #create 'iterator'
     args.expand.grid       <- alist()
-    for (i in 1:dims.cycle.amnt)
+    for (i in 1:dims.cycle.n)
         args.expand.grid[[i]] <- 1:dims.cycle.length[i]
     iter.grid.all          <- as.matrix(do.call("expand.grid", args.expand.grid))
     n.slices               <- dim(iter.grid.all)[1]
