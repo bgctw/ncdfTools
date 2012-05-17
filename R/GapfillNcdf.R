@@ -1178,12 +1178,10 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
         ind.extr              <- ind.datacube(datacube, ind.matrix, dims.cycle.id + 1)
         n.series.steps[n]     <- 1
       }
-      series.noperm           <- array(datacube[ind.extr], dim =  dims.extr.data)
-      args.call.t[['series']] <- aperm(series.noperm, perm = perm.before)
+      series.noperm                  <- array(datacube[ind.extr], dim =  dims.extr.data)
+      args.call.t[['series']]        <- aperm(series.noperm, perm = perm.before)
       if (!(class(first.guess) == 'character' && first.guess == 'mean')) {
-        fg.noperm  <- array(first.guess[ind.datacube(first.guess, ind.act.cube,
-                                                     dims.cycle.id+1)], 
-                            dim =  dims.extr.data)
+        fg.noperm                    <- array(first.guess[ind.extr], dim =  dims.extr.data)
         args.call.t[['first.guess']] <- aperm(fg.noperm, perm = perm.before)         
       }
    
