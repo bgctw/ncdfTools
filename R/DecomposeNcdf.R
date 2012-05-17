@@ -13,7 +13,7 @@ DecomposeNcdf = structure(function(
     , n.comp = c()        ##<< SSA calculation parameter: see the documentation of FilterTSeriesSSA!
     , pad.series = c(0,0) ##<< SSA calculation parameter: see the documentation of FilterTSeriesSSA!
     , center.series = TRUE##<< SSA calculation parameter: see the documentation of FilterTSeriesSSA!
-    , repeat.extr=rep(1,times=length(borders.wl))##<< SSA calculation parameter: see the documentation of FilterTSeriesSSA!
+    , repeat.extr = rep(1,times=length(borders.wl))##<< SSA calculation parameter: see the documentation of FilterTSeriesSSA!
     , var.name = 'auto'   ##<< character string: name of the variable to fill. If set to 'auto' (default), the name
                           ##   is taken from the file as the variable with a different name than the dimensions. An
                           ##   error is produced here in cases where more than one such variables exist.
@@ -26,6 +26,7 @@ DecomposeNcdf = structure(function(
                           ##  extensively tested with this package.!
     , max.cores = 16      ##<< integer: maximum number of cores to use.
     , check.files = TRUE
+    , ...                 ##<< additional arguments transferred to FilterTSeriesSSA.
   )
   ##details<<
 
@@ -116,7 +117,6 @@ DecomposeNcdf = structure(function(
     if (!(is.element('time', ncdf.get.diminfo(file.con.orig)$name)))
         stop(paste('File has no dimension called time (case sensitive)!'))
 
-    browser()
     #open ncdf files
     if (print.status)
         cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep=''))
@@ -138,7 +138,7 @@ DecomposeNcdf = structure(function(
         n.comp         <- rep(50, times = n.steps)
 
     #determine call settings for SSA
-    args.call                     <- list()
+    args.call                     <- list(...)
     args.call[['borders.wl']]     <- borders.wl
     args.call[['M']]              <- M
     args.call[['harmonics']]      <- harmonics
@@ -152,7 +152,7 @@ DecomposeNcdf = structure(function(
     borders.low                   <- rapply(borders.wl, function(x){x[-length(x)]})
     borders.up                    <- rapply(borders.wl, function(x){x[-1]})
     dim.name                      <- 'spectral_bands'
-
+    
     #prepare results file
     ncdf.add.dim(file.con.orig, file.con.copy, var.name=var.decomp.name,
                  dim.name, dim.values, length(dim.values), 0)
@@ -178,6 +178,7 @@ DecomposeNcdf = structure(function(
 
     #prepare parallel iteration parameters
     dims.cycle.id     <- sort(setdiff(dims.ids.data, match('time', dims.info$name) ) - 1)
+    dim.process.id    <- match('time', dims.info$name) - 1
     dims.cycle.n      <- length(dims.cycle.id)
     data.all          <- var.get.nc(file.con.orig, var.decomp.name)
     dims.cycle.length <- dim(data.all)[dims.cycle.id + 1]
@@ -212,8 +213,8 @@ DecomposeNcdf = structure(function(
     iter.grid.all          <- as.matrix(do.call("expand.grid", args.expand.grid))
     n.slices               <- dim(iter.grid.all)[1]
     n.iters                <- sum(slices.process)
-    iter.grid              <- matrix(1, nrow = n.iters, ncol=dim(dims.info)[1] + 1)
-    colnames(iter.grid)    <- c('iter.nr', dims.info$name)
+    iter.grid              <- matrix(1, nrow = n.iters, ncol = length(dims.cycle.id) + 1)
+    colnames(iter.grid)    <- c('iter.nr', dims.info$name[dims.cycle.id + 1])
     iter.grid[,'iter.nr']  <- 1:n.iters
     iter.grid[, dims.cycle.id + 2] <- iter.grid.all[slices.process, ]
     iters.per.cyc          <- rep(floor(n.iters/max.cores), times = max.cores)
@@ -230,16 +231,16 @@ DecomposeNcdf = structure(function(
 
     #define process during iteration
     calcs.iter = function(iter.nr, file.name, n.timesteps, n.bands, dims.cycle.n,
-                          iter.grid, args.call, var.decomp.name)
+                          iter.grid, args.call, var.decomp.name, dim.process.id, dims.cycle.id)
     {
         require(RNetCDF)
         #require(spectral.methods)
         #require(ncdf.tools)
 
         file.con.t                 <- open.nc(file.name)
-        iter.ind                   <- iter.gridind[iter.nr,]
-        data.results.iter          <- array(NA,dim=c(n.timesteps,n.bands,diff(iter.ind)+1))
-        browser()
+        data.all.t                 <- var.get.nc(file.con.t, var.decomp.name)
+        iter.ind                   <- iter.gridind[iter.nr, ]
+        data.results.iter          <- array(NA,dim=c(n.timesteps, n.bands, diff(iter.ind) + 1))
         for (j in 1:(diff(iter.ind) + 1))
         {
             ind.total = (iter.ind[1]:iter.ind[2])[j]
@@ -248,11 +249,12 @@ DecomposeNcdf = structure(function(
                         if (iter.nr == 1 &&( diff(iter.ind) < 20  || (j%%(ceiling((diff(iter.ind)) / 20)) == 0)))
                             if (print.status)
                                 cat(paste(Sys.time(), ' : Finished ~', round(j / (diff(iter.ind) + 1) * 100), '%. \n', sep=''))
-                        iter.index.start        <- c(iter.grid[ind.total,2:3], 1)
-                        iter.index.stop         <- c(rep(1, times=dims.cycle.n), n.timesteps)
+                        ind.extract <- list(data.all.t)
+                        for (i in 1:length(dims.cycle.id))
+                           ind.extract[[dims.cycle.id[i] + 2]] <- iter.grid[ind.total, i + 1]
+                        ind.extract[[dim.process.id + 2]] <- TRUE
                         args.call.t             <- args.call
-                        args.call.t[['series']] <- var.get.nc(file.con.t, var.decomp.name, start= iter.index.start,
-                                count = iter.index.stop)
+                        args.call.t[['series']] <- do.call('[', ind.extract)
                         series.decomp           <- do.call(FilterTSeriesSSA, args.call.t)
                         t(series.decomp$dec.series)
                     })
@@ -291,14 +293,16 @@ DecomposeNcdf = structure(function(
                                                        file.name = file.name , n.timesteps = n.timesteps,
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
-                                                       var.decomp.name = var.decomp.name)
+                                                       var.decomp.name = var.decomp.name,
+                                                       dim.process.id = dim.process.id, dims.cycle.id = dims.cycle.id)
     } else {
         data.results.valid.cells <- foreach(i = 1:max.cores
                                 ,  .combine = abind.mod,  .multicombine = TRUE) %do% calcs.iter(iter.nr = i,
                                                        file.name = file.name , n.timesteps = n.timesteps,
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
-                                                       var.decomp.name = var.decomp.name)
+                                                       var.decomp.name = var.decomp.name, dim.process.id = dim.process.id,
+                                                        dims.cycle.id = dims.cycle.id)
     }
     if (package.parallel=='doSMP')
         stopWorkers(w)
