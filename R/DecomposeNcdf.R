@@ -316,28 +316,28 @@ DecomposeNcdf = structure(function(
     data.results.all.cells.trans               <- aperm(data.results.all.cells, perm=c(3, 1, 2))
     file.con.copy                              <- open.nc(file.name.copy, write=TRUE)
     data.results.final                         <- array(as.vector(data.results.all.cells.trans),
-                                                        dim=ncdf.get.diminfo(file.con.copy)$length)
+                                                        dim = c(dims.cycle.length, n.timesteps, n.bands))
+    aperm.array                                <- c(order(c(dims.cycle.id, dim.process.id)), n.dims)
+    data.results.final                         <- aperm(data.results.final, aperm.array)
     if (sum(slices.gappy) > 0) {
-        ind.gappy                                  <- ind.datacube(data.all, slices.gappy, dims.cycle.id + 1)
-        data.results.final[ind.gappy]              <- data.all[ind.gappy]
+        ind.gappy                              <- ind.datacube(data.all, slices.gappy, dims.cycle.id + 1)
+        data.results.final[ind.gappy]          <- data.all[ind.gappy]
     }
 
     #save results
-    if(sum(is.infinite(data.results.final))>0)
+    if(sum(is.infinite(data.results.final)) > 0)
         save.image(paste('workspace_before_writing_', file.name, '.RData', sep=''))
     if (print.status)
         cat(paste(Sys.time(), ' : Writing results to file. \n', sep=''))
-    var.put.nc(file.con.copy, var.decomp.name, data.results.final,
-               start=rep(1, times=n.dims),
-               count=ncdf.get.diminfo(file.con.copy)$length)
+    var.put.nc(file.con.copy, var.decomp.name, data.results.final)
 
     #add attributes with process information to ncdf files
     all.args     <- formals(FilterTSeriesSSA)
-    all.args[match(names(args.call),names(all.args))] <- args.call
-    red.args     <- all.args[c('borders.wl','M','n.comp','harmonics','tolerance.harmonics',
-                        'var.thresh.ratio','grouping','pad.series','SSA.methods','repeat.extr')]
+    all.args[match(names(args.call), names(all.args))] <- args.call
+    red.args     <- all.args[c('borders.wl', 'M', 'n.comp', 'harmonics', 'tolerance.harmonics',
+                        'var.thresh.ratio', 'grouping', 'pad.series', 'SSA.methods', 'repeat.extr')]
     string.args  <- paste(paste(names(red.args),sapply(red.args,function(x)paste(x,collapse=', '))
-                                   ,sep=': '),collapse='; ')
+                                   ,sep=': '), collapse='; ')
     att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposed_by', 'NC_CHAR', compile.sysinfo())
     att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposed_on', 'NC_CHAR', as.character(Sys.time()))
     att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposition_settings', 'NC_CHAR', string.args)
