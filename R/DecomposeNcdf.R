@@ -126,7 +126,7 @@ DecomposeNcdf = structure(function(
 
     #set default parameters
     if (!calc.parallel)
-        max.core                  <- 1
+        max.cores                 <- 1
     n.bands                       <- length(unlist(borders.wl))-length(borders.wl)
     n.steps                       <- length(borders.wl)
     n.timesteps                   <- dim.inq.nc(file.con.orig, 'time')$length
@@ -179,11 +179,11 @@ DecomposeNcdf = structure(function(
     #prepare parallel iteration parameters
     dims.cycle.id     <- sort(setdiff(dims.ids.data, match('time', dims.info$name) ) - 1)
     dims.cycle.n      <- length(dims.cycle.id)
+    data.all          <- var.get.nc(file.con.orig, var.decomp.name)
     dims.cycle.length <- dim(data.all)[dims.cycle.id + 1]
     n.timesteps       <- dims.info[match('time', dims.info$name), 3]
 
     #determine slices to process
-    data.all   <- var.get.nc(file.con.orig, var.decomp.name)
     if (print.status)
         cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
 
@@ -221,11 +221,11 @@ DecomposeNcdf = structure(function(
         iters.per.cyc[1:((n.iters %% max.cores))] <- floor(n.iters / max.cores) + 1
     iter.gridind           <- matrix(NA, ncol = 2, nrow = max.cores)
     colnames(iter.gridind) <- c('first.iter','last.iter')
-    if (max.cores>1)  {
+    if (max.cores > 1)  {
         iter.gridind[, 1]  <- (cumsum(iters.per.cyc) + 1) - iters.per.cyc
         iter.gridind[, 2]  <- cumsum(iters.per.cyc)
     } else {
-        iter.gridind[, 1]  <- c(1, n.iters)
+        iter.gridind[1, ]  <- c(1, n.iters)
     }
 
     #define process during iteration
@@ -239,6 +239,7 @@ DecomposeNcdf = structure(function(
         file.con.t                 <- open.nc(file.name)
         iter.ind                   <- iter.gridind[iter.nr,]
         data.results.iter          <- array(NA,dim=c(n.timesteps,n.bands,diff(iter.ind)+1))
+        browser()
         for (j in 1:(diff(iter.ind) + 1))
         {
             ind.total = (iter.ind[1]:iter.ind[2])[j]
@@ -285,15 +286,15 @@ DecomposeNcdf = structure(function(
         cat(paste(Sys.time(), ' : Starting calculation: Decomposing ', sum(slices.process),
                   ' timeseries of length ', n.timesteps, '. \n', sep=''))
     if (calc.parallel) {
-        data.results.valid.cells=foreach(i=1:max.cores
-                                ,  .combine=abind.mod, .multicombine = TRUE) %dopar% calcs.iter(iter.nr = i,
+        data.results.valid.cells <- foreach(i = 1:max.cores
+                                ,  .combine = abind.mod, .multicombine = TRUE) %dopar% calcs.iter(iter.nr = i,
                                                        file.name = file.name , n.timesteps = n.timesteps,
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
                                                        var.decomp.name = var.decomp.name)
     } else {
-        data.results.2valid.cells=foreach(i=1:max.cores
-                                ,  .combine=abind.mod,  .multicombine = TRUE) %do% calcs.iter(iter.nr = i,
+        data.results.valid.cells <- foreach(i = 1:max.cores
+                                ,  .combine = abind.mod,  .multicombine = TRUE) %do% calcs.iter(iter.nr = i,
                                                        file.name = file.name , n.timesteps = n.timesteps,
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
@@ -302,6 +303,7 @@ DecomposeNcdf = structure(function(
     if (package.parallel=='doSMP')
         stopWorkers(w)
 
+    
     #transpose results
     if (print.status)
         cat(paste(Sys.time(), ' : Transposing results. \n', sep=''))
