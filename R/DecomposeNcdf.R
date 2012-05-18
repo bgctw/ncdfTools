@@ -79,12 +79,12 @@ DecomposeNcdf = structure(function(
     #load libraries
     if (print.status)
         cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
-    require(foreach)
-    require(spectral.methods)
-    require(RNetCDF)
-    require(ncdf.tools)
-    require(Rssa)
-    require(abind)
+    require(foreach, warn.conflicts = FALSE, quietly = TRUE)
+    require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
+    require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
+    require(ncdf.tools, warn.conflicts = FALSE, quietly = TRUE)
+    require(Rssa, warn.conflicts = FALSE, quietly = TRUE)
+    require(abind, warn.conflicts = FALSE, quietly = TRUE)
 
     #check input
     if (missing(file.name) | missing(borders.wl))
