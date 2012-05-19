@@ -194,7 +194,9 @@ DecomposeNcdf = structure(function(
     slices.valid                <- amnt.na == 0
     slices.gappy                <- !slices.empty & !slices.valid
     slices.constant             <- as.vector(apply(data.all, MAR = dims.cycle.id+1,
-                                                function(x){length(unique(na.omit(x))) == 1}))
+                                             function(x){sum(abs(x -mean(x)) < tresh.const) == length(x)}))
+
+    
     if (sum(slices.constant)>0)
         warning(paste(sum(slices.constant),' constant slices were found. Spectral decomp. for these is ommited!', sep=''))
 
