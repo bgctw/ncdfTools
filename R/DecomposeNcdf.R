@@ -77,6 +77,9 @@ DecomposeNcdf = structure(function(
   ##Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     ##TODO add mechanism to get constant values in datacube after calculation.
+    ##TODO Try zero line crossings for frequency determination
+    ##TODO Make method reproducible (seed etc)
+    ##TODO Add way to handle non convergence
   
     #load libraries
     if (print.status)
