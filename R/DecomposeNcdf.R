@@ -21,6 +21,8 @@ DecomposeNcdf = structure(function(
     , calc.parallel = TRUE##<< logical: whether to use parallel computing. Needs package doMC or doSMP to process.
     , tresh.const = 1e-12 ##<< numeric: value below which abs(values) are assumed to be constant and excluded
                           ##   from the decomposition
+    , ratio.const = 0.05  ##<< numeric: max ratio of the time series that is allowed to be above tresh.const for the time series
+                          ##   still to be not cosidered constant.
     , package.parallel = 'doMC' ##<< character: one of 'doSMP' or 'doMC': package to use for linking foreach to
                           ##       the parallel computing backend. Preferably use doMC as the algorithm has been
                           ##  extensively tested with this package.!
@@ -199,7 +201,8 @@ DecomposeNcdf = structure(function(
     slices.valid                <- amnt.na == 0
     slices.gappy                <- !slices.empty & !slices.valid
     slices.constant             <- as.vector(apply(data.all, MAR = dims.cycle.id + 1,
-                                             function(x){sum(abs(x - mean(x, na.rm = TRUE)) < tresh.const) == length(x)}))
+                                             function(x){sum(abs(x) <  tresh.const) >= (1-ratio.const)*length(x)}))
+    slices.const.tr <- array(slices.constant, dim = dim(data.all)[1:2])
     slices.constant[is.na(slices.constant) & slices.empty] <- FALSE
 
     
