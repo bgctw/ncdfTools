@@ -76,6 +76,8 @@ DecomposeNcdf = structure(function(
   ##author<<
   ##Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
+    ##TODO add mechanism to get constant values in datacube after calculation.
+  
     #load libraries
     if (print.status)
         cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
@@ -203,7 +205,8 @@ DecomposeNcdf = structure(function(
 
     if (sum(slices.gappy) > 0)
         warning(paste(sum(slices.gappy),' series with gaps were found. Spectral decomp. for these is not possible!',sep=''))
-    slices.process              <- as.vector(slices.valid)
+    slices.process                  <- as.vector(slices.valid)
+    slices.process[slices.constant] <- FALSE
     if (sum(slices.process) == 0)
         stop(paste('No series/slices available for filling. Most probably only',
                    ' totally gappy and totally gap-free slices/series exist.', sep=''))
