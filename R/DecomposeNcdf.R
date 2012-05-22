@@ -203,10 +203,8 @@ DecomposeNcdf = structure(function(
     slices.zero                 <- as.vector(apply(data.all, MAR = dims.cycle.id + 1,
                                              function(x){sum(abs(x) <  tresh.const) >= (1-ratio.const)*length(x)}))
     slices.zero[is.na(slices.zero) & slices.empty] <- FALSE
-    slices.const                <- apply(data.all, MAR = dims.cycle.id + 1, function(x){diff(range(x, na.rm = TRUE)) == 0})
-    
-
-    
+    slices.constant             <- apply(data.all, MAR = dims.cycle.id + 1, function(x){diff(range(x, na.rm = TRUE)) == 0})
+   
     if (sum(slices.constant) > 0)
         warning(paste(sum(slices.constant),' constant slices were found. Spectral decomp. for these is ommited!', sep=''))
     if (sum(slices.zero) > 0)
@@ -218,7 +216,6 @@ DecomposeNcdf = structure(function(
     if (sum(slices.process) == 0)
         stop(paste('No series/slices available for filling. Most probably only',
                    ' totally gappy and totally gap-free slices/series exist.', sep=''))
-
 
     #create 'iterator'
     args.expand.grid       <- alist()
