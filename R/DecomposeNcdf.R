@@ -200,19 +200,21 @@ DecomposeNcdf = structure(function(
     slices.empty                <- amnt.na == 1
     slices.valid                <- amnt.na == 0
     slices.gappy                <- !slices.empty & !slices.valid
-    slices.constant             <- as.vector(apply(data.all, MAR = dims.cycle.id + 1,
+    slices.zero                 <- as.vector(apply(data.all, MAR = dims.cycle.id + 1,
                                              function(x){sum(abs(x) <  tresh.const) >= (1-ratio.const)*length(x)}))
-    slices.const.tr <- array(slices.constant, dim = dim(data.all)[1:2])
-    slices.constant[is.na(slices.constant) & slices.empty] <- FALSE
+    slices.zero[is.na(slices.zero) & slices.empty] <- FALSE
+    slices.const                <- apply(data.all, MAR = dims.cycle.id + 1, function(x){diff(range(x, na.rm = TRUE)) == 0})
+    
 
     
     if (sum(slices.constant) > 0)
         warning(paste(sum(slices.constant),' constant slices were found. Spectral decomp. for these is ommited!', sep=''))
-
+    if (sum(slices.zero) > 0)
+        warning(paste(sum(slices.zero),' (nearly) zero slices were found. Spectral decomp. for these is ommited!', sep=''))
     if (sum(slices.gappy) > 0)
         warning(paste(sum(slices.gappy),' series with gaps were found. Spectral decomp. for these is not possible!',sep=''))
     slices.process                  <- as.vector(slices.valid)
-    slices.process[slices.constant] <- FALSE
+    slices.process[slices.constant | slices.zero] <- FALSE
     if (sum(slices.process) == 0)
         stop(paste('No series/slices available for filling. Most probably only',
                    ' totally gappy and totally gap-free slices/series exist.', sep=''))
