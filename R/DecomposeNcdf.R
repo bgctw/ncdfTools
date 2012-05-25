@@ -110,9 +110,16 @@ DecomposeNcdf = structure(function(
         var.decomp.name <- setdiff(ncdf.get.varinfo(file.con.orig)$name,
                 c(ncdf.get.diminfo(file.con.orig)$name,'doy','year','flag.orig'))
         vars.copy <- c()
-        if (length(var.decomp.name) > 1)
-            stop('More than one non-dimensional/coordinate variable available in file!')
-    } else {
+        if (length(var.decomp.name)) {
+          var.decomp.lengths <- ncdf.get.varinfo(file.con.orig)[match(var.decomp.name, ncdf.get.varinfo(file.con.orig)$name), 'n.dims']
+          var.decomp.longest <- which(var.decomp.lengths == max(var.decomp.lengths))
+          if (length( var.decomp.longest) == 1) {
+              var.decomp.name <- var.decomp.name[var.decomp.longest]
+          } else {
+            stop('More than one non-dimensional/coordinate variable available in file!') 
+          }          
+        }  
+      } else {
         var.decomp.name=var.name
         if (!is.element(var.name,ncdf.get.varinfo(file.con.orig)$name))
             stop('Specified variable name does not exist in ncdf file!')
