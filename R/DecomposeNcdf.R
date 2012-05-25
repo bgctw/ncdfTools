@@ -120,7 +120,7 @@ DecomposeNcdf = structure(function(
           }          
         }  
       } else {
-        var.decomp.name=var.name
+        var.decomp.name <- var.name
         if (!is.element(var.name,ncdf.get.varinfo(file.con.orig)$name))
             stop('Specified variable name does not exist in ncdf file!')
         vars.noncopy <- c(var.decomp.name,ncdf.get.diminfo(file.con.orig)$name)
@@ -168,7 +168,7 @@ DecomposeNcdf = structure(function(
     dim.name                      <- 'spectral_bands'
     
     #prepare results file
-    ncdf.add.dim(file.con.orig, file.con.copy, var.name=var.decomp.name,
+    ncdf.add.dim(file.con.orig, file.con.copy, var.name = var.decomp.name,
                  dim.name, dim.values, length(dim.values), 0)
     var.def.nc(file.con.copy, 'borders.low', 'NC_DOUBLE',  'spectral_bands')
     var.def.nc(file.con.copy, 'borders.up', 'NC_DOUBLE', 'spectral_bands')
@@ -191,26 +191,27 @@ DecomposeNcdf = structure(function(
     dims.info         <- ncdf.get.diminfo(file.con.orig)[dims.ids.data,]
 
     #prepare parallel iteration parameters
-    dims.cycle.id     <- sort(setdiff(dims.ids.data, match('time', dims.info$name) ) - 1)
-    dim.process.id    <- match('time', dims.info$name) - 1
+    dims.cycle.id     <- sort(setdiff(1:length(dims.ids.data), match('time', dims.info$name) ))
+    dims.cycle.name   <- dims.info[dims.cycle.id,'name']
+    dim.process.id    <- match('time', dims.info$name)
     dims.cycle.n      <- length(dims.cycle.id)
     data.all          <- var.get.nc(file.con.orig, var.decomp.name)
-    dims.cycle.length <- dim(data.all)[dims.cycle.id + 1]
+    dims.cycle.length <- dim(data.all)[dims.cycle.id]
     n.timesteps       <- dims.info[match('time', dims.info$name), 3]
 
     #determine slices to process
     if (print.status)
         cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
 
-    amnt.na                     <- apply(data.all, MAR = dims.cycle.id + 1,
-                                        function(x)sum(is.na(x)) / n.timesteps   )
+    amnt.na                     <- apply(data.all, MAR = dims.cycle.id,
+                                        function(x)sum(is.na(x)) / n.timesteps )
     slices.empty                <- amnt.na == 1
     slices.valid                <- amnt.na == 0
     slices.gappy                <- !slices.empty & !slices.valid
-    slices.zero                 <- as.vector(apply(data.all, MAR = dims.cycle.id + 1,
+    slices.zero                 <- as.vector(apply(data.all, MAR = dims.cycle.id,
                                              function(x){sum(abs(x) <  tresh.const) >= (1-ratio.const)*length(x)}))
     slices.zero[is.na(slices.zero) & slices.empty] <- FALSE
-    slices.constant             <- apply(data.all, MAR = dims.cycle.id + 1, function(x){diff(range(x, na.rm = TRUE)) == 0})
+    slices.constant             <- apply(data.all, MAR = dims.cycle.id, function(x){diff(range(x, na.rm = TRUE)) == 0})
    
     if (sum(slices.constant) > 0)
         warning(paste(sum(slices.constant),' constant slices were found. Spectral decomp. for these is ommited!', sep=''))
@@ -232,9 +233,9 @@ DecomposeNcdf = structure(function(
     n.slices               <- dim(iter.grid.all)[1]
     n.iters                <- sum(slices.process)
     iter.grid              <- matrix(1, nrow = n.iters, ncol = length(dims.cycle.id) + 1)
-    colnames(iter.grid)    <- c('iter.nr', dims.info$name[dims.cycle.id + 1])
+    colnames(iter.grid)    <- c('iter.nr', dims.cycle.name)
     iter.grid[,'iter.nr']  <- 1:n.iters
-    iter.grid[, dims.cycle.id + 2] <- iter.grid.all[slices.process, ]
+    iter.grid[, dims.cycle.id + 1] <- iter.grid.all[slices.process, ]
     iters.per.cyc          <- rep(floor(n.iters/max.cores), times = max.cores)
     if (!(n.iters %% max.cores) == 0)
         iters.per.cyc[1:((n.iters %% max.cores))] <- floor(n.iters / max.cores) + 1
@@ -269,8 +270,8 @@ DecomposeNcdf = structure(function(
                                 cat(paste(Sys.time(), ' : Finished ~', round(j / (diff(iter.ind) + 1) * 100), '%. \n', sep=''))
                         ind.extract <- list(data.all.t)
                         for (i in 1:length(dims.cycle.id))
-                           ind.extract[[dims.cycle.id[i] + 2]] <- iter.grid[ind.total, i + 1]
-                        ind.extract[[dim.process.id + 2]] <- TRUE
+                           ind.extract[[dims.cycle.id[i] + 1]] <- iter.grid[ind.total, i + 1]
+                        ind.extract[[dim.process.id + 1]] <- TRUE
                         args.call.t             <- args.call
                         args.call.t[['series']] <- do.call('[', ind.extract)
                         series.decomp           <- do.call(FilterTSeriesSSA, args.call.t)
@@ -338,7 +339,7 @@ DecomposeNcdf = structure(function(
     aperm.array                                <- c(order(c(dims.cycle.id, dim.process.id)), n.dims)
     data.results.final                         <- aperm(data.results.final, aperm.array)
     if (sum(slices.gappy) > 0) {
-        ind.gappy                              <- ind.datacube(data.all, slices.gappy, dims.cycle.id + 1)
+        ind.gappy                              <- ind.datacube(data.all, slices.gappy, dims.cycle.id)
         data.results.final[ind.gappy]          <- data.all[ind.gappy]
     }
 
