@@ -29,8 +29,10 @@ ncdf.fileatts.copy <- function(
             dim.name   <- dim.inq.nc(file.con.orig, i - 1)$name
             dim.length <- dim.inq.nc(file.con.orig, i - 1)$length
             dim.def.nc(file.con.copy, dim.name, dim.length)
-            var.def.nc(file.con.copy, dim.name, 'NC_DOUBLE', i - 1)
-            var.put.nc(file.con.copy, dim.name, var.get.nc(file.con.orig, dim.name))
-            ncdf.att.copy(file.con.orig, dim.name, dim.name, file.con.copy)
-        }
-}
+            if (is.element(dim.name, ncdf.get.varinfo(file.con.orig)$name)) {
+               var.def.nc(file.con.copy, dim.name, 'NC_DOUBLE', i - 1)
+               var.put.nc(file.con.copy, dim.name, var.get.nc(file.con.orig, dim.name))  
+               ncdf.att.copy(file.con.orig, dim.name, dim.name, file.con.copy)
+             }
+          }
+  }
