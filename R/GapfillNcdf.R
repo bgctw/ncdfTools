@@ -14,7 +14,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                       ##   perform spatio-temporal gap filling.
 , MSSA =  rep(list(   rep(list(FALSE), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of logicls: Whether to perform MSSA for this dimension (see description 
-                      ##   for details). Has to have the same structure as dimensions.
+                      ##   for details). Has to have the sam ind.extr e structure as dimensions.
 , MSSA.blocksize = 1  ##<< integer: size of the quadratical block used for MSSA.  
 , gaps.cv        = 0
 , MSSA.blck.trsh = 0                                  
@@ -228,8 +228,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       processes <- c('final') 
       art.gaps.values            <- NULL            
     }
-    ind.artgaps.out  <- array(FALSE, dim = dim(datacube))        
-            
+    ind.artgaps.out  <- array(FALSE, dim = dim(datacube))
+   
     for (process in processes) {
       # insert gaps for cross validation      
       if (process == 'cv') {
@@ -631,12 +631,14 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
                ' dimensions in the ncdf file!', sep = ''))
 
   # check consitency of inputs
+  if (max.cores == 1)
+    calc.parallel <- FALSE
   n.steps           <- length(amnt.artgaps)
   if (!is.element(process.cells,c('gappy', 'all')))
     stop('process.cells has to be one of \'all\' or \'gappy\'!')
   if (!is.element(process.type,c('stepwise', 'variances')))
     stop('process.type has to be one of \'stepwise\' or \'variances\'!')
-  if (max.cores>1 & !calc.parallel)
+  if (max.cores > 1 & !calc.parallel)
     stop('More than one core can only be used if calc.parallel==TRUE!')
   if(all(unlist(c(tresh.fill, tresh.fill.first)) < 0 | unlist(c(tresh.fill, tresh.fill.first)) > 1))
     stop('All values in tresh.fill (and tresh.fill.first) need to be between 0 and 1!')
@@ -674,7 +676,7 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
             !(all(unlist(amnt.artgaps) == 0))))
   }
   close.nc(file.con.orig)
-  return(invisible(list(var.name, ocean.mask)))
+  return(invisible(list(var.name = var.name, ocean.mask = ocean.mask, calc.parallel = calc.parallel)))
 
 }
 
@@ -861,15 +863,6 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     if (print.status)
       cat(paste(Sys.time(), ' : Starting calculation: Filling ', sum(slices.process),
               ' time series/grids of size ', datapts.n, '. \n', sep = ''))
-
-
-     a<-list(iter.nr = i, datacube = datacube,
-              dims.process.id = dims.process.id, datapts.n = datapts.n, args.call.SSA = args.call.SSA,
-              iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
-              print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
-              dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)
-    save(a,file='delete.me.222.RData')
     
     if (calc.parallel) {
       results.parallel = foreach(i = 1:max.cores
@@ -893,7 +886,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     }
     data.results.valid.cells <- results.parallel$reconstruction
     data.variances           <- results.parallel$variances
-    
+
     #fill all values to results array
     if (print.status)
       cat(paste(Sys.time(), ' : Transposing results. \n', sep = ''))
@@ -903,8 +896,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     data.results.all.cells[slices.constant, ] <- rep(values.constant[slices.constant], 
                                                      each = datapts.n)
     #reshape results array to match original data cube
-    data.results.rshp          <- data.results.all.cells
-    dim(data.results.rshp)     <- c(dims.cycle.length, dims.process.length)
+    data.results.rshp          <- array(data.results.all.cells, dim = c(dims.cycle.length, dims.process.length))
     dims.order.results         <- c(dims.cycle, dims.process)
     perm.array                 <- match(dims.info[, 'name'], dims.order.results)
     data.results.step          <- aperm(data.results.rshp, perm.array)
@@ -1069,7 +1061,7 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
     }  
   } else if (!MSSA) {
     args.expand.grid     <- alist()
-    for (d in 1:length(dims.cycle.id + 1))
+    for (d in 1:length(dims.cycle.id))
       args.expand.grid[[d]] <- 1:dim(datacube)[dims.cycle.id[d] + 1]    
     iter.grid.all <- cbind(1:slices.n, as.matrix(do.call("expand.grid",
                                                          args.expand.grid)))
@@ -1114,6 +1106,8 @@ rbindMod <- function(...)
     iloops.converged<- unlist(lapply(dummy, function(x)as.vector(t(x[[3]]))))
     return(list(reconstruction = reconstruction, variances = variances, 
                 iloops.converged = iloops.converged))
+
+    
 }
 
 
@@ -1133,7 +1127,7 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
   datapts.n         <- prod(dim(datacube)[dims.process.id + 1])
   n.series.steps    <- numeric()
 
-  if (MSSA)  {
+  if (MSSA){
     ind.t           <- rep(FALSE, times = dim(ind.process.cube)[1])
     ind.t[iter.ind[1]:iter.ind[2]]       <- TRUE
     n.series.core   <- sum(ind.process.cube[ind.datacube(ind.process.cube, 
@@ -1155,7 +1149,6 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
           cat(paste(Sys.time(), ' : Finished ~',
                     round(n / (diff(iter.ind) + 1) * 100), '%. \n', sep=''))
 
-
       args.call.t             <- args.call.SSA
       args.call.t[['seed']]   <- iter.nr * n      
       dims.extr.data          <- dims.process.length
@@ -1172,7 +1165,7 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       } else {
         perm.before           <- order(dims.process.id)
         ind.matrix            <- array(FALSE, dims.cycle.length)
-        ind.matrix.list       <- matrix(ind.process.cube[n, -1], byrow=TRUE,
+        ind.matrix.list       <- matrix(ind.process.cube[(iter.ind[1] : iter.ind[2])[n], -1], byrow=TRUE,
                                         ncol = length(dims.cycle.length))
         ind.matrix[ind.matrix.list] <- TRUE
         ind.extr              <- ind.datacube(datacube, ind.matrix, dims.cycle.id + 1)
