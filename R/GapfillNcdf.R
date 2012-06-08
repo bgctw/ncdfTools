@@ -1097,13 +1097,26 @@ rbindMod <- function(...)
     cat(paste(Sys.time(), ' : Assembling data from parallelized computations.\n', 
         sep=''))
     assign('dummy', list(...))
-    vars.amnt <- dim(dummy[[1]][['variances']])[2]
-    cube.cols <- sum(sapply(dummy,function(x)dim(x[['reconstruction']])[1]))
-    reconstruction <- matrix(unlist(lapply(dummy, function(x)as.vector(t(x[[1]])))),
-                             nrow = cube.cols, byrow = TRUE)
-    variances      <- matrix(unlist(lapply(dummy, function(x)as.vector(t(x[[2]])))),
-                             ncol = vars.amnt, byrow = TRUE)
-    iloops.converged<- unlist(lapply(dummy, function(x)as.vector(t(x[[3]]))))
+    results <- try({
+      vars.amnt <- dim(dummy[[1]][['variances']])[2]
+      cube.cols <- sum(sapply(dummy,function(x)dim(x[['reconstruction']])[1]))
+      reconstruction <- matrix(unlist(lapply(dummy, function(x)as.vector(t(x[[1]])))),
+                               nrow = cube.cols, byrow = TRUE)
+      variances      <- matrix(unlist(lapply(dummy, function(x)as.vector(t(x[[2]])))),
+                               ncol = vars.amnt, byrow = TRUE)
+      iloops.converged<- unlist(lapply(dummy, function(x)as.vector(t(x[[3]]))))
+      'finished'
+    })
+    if (class(results) == 'try-error') {
+      print(paste('Error occoured at data assembling.', sep = ''))
+      error.from.calc                 <- data.results.iter.t
+      data.results.iter.t             <- matrix(Inf, ncol = datapts.n, nrow = 1)
+      system.info                     <- sessionInfo()
+      file.name.t                     <- paste('workspace_error_', file.name, '_assembling', sep = '')
+      print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
+      dump.frames(to.file = TRUE, dumpto = file.name.t)
+      stop()
+    }
     return(list(reconstruction = reconstruction, variances = variances, 
                 iloops.converged = iloops.converged))
 
