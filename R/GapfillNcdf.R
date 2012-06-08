@@ -1199,7 +1199,7 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
                                                  (sum( n.series.steps[1 : max(c(n - 1, 1))]))))  
       data.results.iter[ind.results, ]  <- array(reconstruction, dim = c(n.series.steps[n], datapts.n))
       variances[n, ]                    <- as.vector(series.filled$variances)
-      iloops.converged[n]               <- sum(!(series.filled$iloop_converged)))     
+      iloops.converged[n]               <- sum(!(series.filled$iloop_converged))     
       'completed'
     })  
     if (class(data.results.iter.t) == 'try-error') {
