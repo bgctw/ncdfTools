@@ -1179,11 +1179,16 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       }
    
       series.filled       <- do.call(GapfillSSA, args.call.t)
-      list(reconstruction = aperm(array(series.filled$reconstr,
-             dim = c(dims.process.length, n.series.steps[n])),
-             aperm.extr.data), variances = series.filled$variances,
-           iloop_converged = sum(!(series.filled$iloop_converged)))
-    })
+      reconstruction      <- aperm(array(series.filled$reconstr,
+                                         dim = c(dims.process.length, n.series.steps[n])),
+                                   aperm.extr.data)
+      ind.results <- (1 : n.series.steps[n]) + (((n>1) * 
+                                                 (sum( n.series.steps[1 : max(c(n - 1, 1))]))))  
+      data.results.iter[ind.results, ]  <- array(reconstruction, dim = c(n.series.steps[n], datapts.n))
+      variances[n, ]                    <- as.vector(series.filled$variances)
+      iloops.converged[n]               <- sum(!(series.filled$iloop_converged)))     
+      'completed'
+    })  
     if (class(data.results.iter.t) == 'try-error') {
       print(paste('Error occoured at iteration ', iter.nr, ' and loop ', n, '!', sep = ''))
       print(data.results.iter.t)
@@ -1194,13 +1199,8 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
                                                iter.nr, '_', n, sep = '')
       print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
       dump.frames(to.file = TRUE, dumpto = file.name.t)
+      stop()
     }
-    ind.results <- (1 : n.series.steps[n]) + (((n>1) * 
-            (sum( n.series.steps[1 : max(c(n - 1, 1))]))))  
-    data.results.iter[ind.results, ]  <- array(data.results.iter.t$reconstruction, 
-                                               dim = c(n.series.steps[n], datapts.n))
-    variances[n, ]                    <- as.vector(data.results.iter.t$variances)
-    iloops.converged[n]               <- data.results.iter.t$iloop_converged
   }
   return(list(reconstruction = data.results.iter, variances = variances, 
               lioops.converged = iloops.converged))
