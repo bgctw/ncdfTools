@@ -185,7 +185,6 @@ DecomposeNcdf = structure(function(
     if (length(vars.copy) > 0)
         for (var.copy.t in vars.copy)
             ncdf.var.copy(file.con.orig,file.con.copy,var.copy.t)
-    n.dims            <- ncdf.get.varinfo(file.con.orig)$n.dims[ ncdf.get.varinfo(file.con.orig)$name == var.decomp.name]
     close.nc(file.con.copy)
     dims.ids.data     <- var.inq.nc(file.con.orig, var.decomp.name)$dimids + 1   
     dims.info         <- ncdf.get.diminfo(file.con.orig)[dims.ids.data,]
@@ -336,7 +335,7 @@ DecomposeNcdf = structure(function(
     file.con.copy                              <- open.nc(file.name.copy, write=TRUE)
     data.results.final                         <- array(as.vector(data.results.all.cells.trans),
                                                         dim = c(dims.cycle.length, n.timesteps, n.bands))
-    aperm.array                                <- c(order(c(dims.cycle.id, dim.process.id)), n.dims + 1)
+    aperm.array                                <- c(order(c(dims.cycle.id, dim.process.id)), length(c(dims.cycle.id, dim.process.id)) + 1)
     data.results.final                         <- aperm(data.results.final, aperm.array)
     if (sum(slices.gappy) > 0) {
         ind.gappy                              <- ind.datacube(data.all, slices.gappy, dims.cycle.id)
