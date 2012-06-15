@@ -9,6 +9,7 @@ data.bin2ncdf = function
     , dimensions                           ##<< character vector: names of the dimensions in binary file
     , dimension.values                     ##<< list: each list element has to contain the coordinate values for
                                            ##   respective dimension
+    , signed = TRUE
     , var.name                             ##<< character string: short name of the variable in binary file
     , long_name = var.name                 ##<< character string: long name of the variable in binary file
     , var.units = '[]'                      ##<< character string: units of variable
@@ -26,11 +27,11 @@ data.bin2ncdf = function
     cat('Loading data ...\n')
     dims.lengths <- sapply(dimension.values,length)
     to.read      <- file(file.input, "rb")
-    data.raw     <- readBin(to.read, type, n = prod(dims.lengths), endian = "little", size=length, signed=FALSE)
+    data.raw     <- readBin(to.read, type, n = prod(dims.lengths), endian = "little", size=length, signed = signed)
     close(to.read)
     cat('Transforming data ...\n')
     data.array   <- array(data.raw,dim=dims.lengths)
-    data.array[data.array==na.value]=NA
+    data.array[data.array==na.value.in]=NA
     data.array   <- (data.array * scale.factor.in/scale.factor.out) + (offset.in -offset.out)
     cat('Creating ncdf file ...\n')
     file.name    <- paste(var.name,dims.lengths[dimensions=='longitude'],

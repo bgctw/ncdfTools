@@ -25,28 +25,27 @@ date.R2ncdf = function(
   }
   if (!is.element('time',ncdf.get.diminfo(file.con)$name))
     stop('No time dimension present in specified ncdf file.')
-  if (date.vec=='auto')
+  if (class(date.vec) ==  "character"  && date.vec=='auto')
   {
-    units=ncdf.get.attinfo(file.con,'time')[,'value'][ncdf.get.attinfo(file.con,'time')[,'name']=='units']
-    orig.test <- try({as.POSIXct(sub('^.*since ','',units),tz='UTC')},silent=TRUE)
+    units = ncdf.get.attinfo(file.con, 'time')[ , 'value'][ncdf.get.attinfo(file.con, 'time')[, 'name'] == 'units']
+    orig.test <- try({as.POSIXct(as.POSIXlt(sub('^.*since ', '', units), tz = 'UTC'))}, silent=TRUE)
     if ((class(orig.test)=='try-error') || !(sub(' since.*$','',units)=='days'))
       stop('date format in ncdf file is in a non implemented format. Supply date vector by hand.')
     date.vec.conv <- as.numeric(var.get.nc(file.con,'time') + julian(orig.test,as.POSIXct(origin)))
   } else {
-    date.vec.conv <- as.numeric(julian(date.vec, origin = as.POSIXct(origin, tz="UTC")))
+      date.vec.conv <- as.numeric(julian(date.vec, origin = as.POSIXlt(origin, tz="UTC")))
   }   
   
   if (write.to.ncdf) {
     if (!is.element('time',ncdf.get.varinfo(file.con)$name))
-    {
       var.def.nc(file.con,'time', NC_float, 'time')
-    }
-    var.put.nc(file.con,'time',date.vec.conv)
-    atts.def <- list(long_name='time',calendar='gregorian',units=paste('days since ',origin,sep=''))
-    ncdf.def.all.atts(file.con,'time',atts.def)
+    
+    var.put.nc(file.con, 'time', date.vec.conv)
+    atts.def <- list(long_name = 'time', calendar = 'gregorian', units = paste('days since ', origin, sep = ''))
+    ncdf.def.all.atts(file.con, 'time', atts.def)
     history.string <- paste('time vector converted by ',Sys.info()['user'],' on ',Sys.time(),sep='')
-    if (is.element('history',ncdf.get.attinfo(file.con,'NC_GLOBAL')[,'name'])) 
-      history.string <- paste(att.get.nc(file.con,'NC_GLOBAL','history'),'; ',history.string,sep='')
+    if (is.element('history', ncdf.get.attinfo(file.con, 'NC_GLOBAL')[, 'name'])) 
+      history.string <- paste(att.get.nc(file.con, 'NC_GLOBAL', 'history'), '; ', history.string, sep = '')
     att.put.nc(file.con,'NC_GLOBAL','history','NC_CHAR'
         , paste(att.get.nc(file.con,'NC_GLOBAL','history'),'; ',history.string,sep=''))
     sync.nc(file.con)
