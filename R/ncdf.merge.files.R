@@ -20,17 +20,19 @@ ncdf.merge.files <- function(
   if (length(time.range.out) == 2) {
     files.remove <- c(which(date.end.in < time.range.out[1]),
                       which(date.start.in > time.range.out[2]))
-    file.names    <- file.names[-files.remove]
-    date.end.in   <- date.end.in[-files.remove]
-    date.start.in <- date.start.in[-files.remove]
+    if (length(files.remove) > 0 ) {
+      file.names    <- file.names[-files.remove]
+      date.end.in   <- date.end.in[-files.remove]
+      date.start.in <- date.start.in[-files.remove]
+    }  
   }  
   
-  if (!is.null(time.diff))
+  if (!is.null(time.diff)) {
     if( sum(!(date.start.in[-1] - date.end.in[-length(date.end.in)] <= time.diff)) > 0 ) {
       paste('Time period missing!')
       return('Time period missing!')
     }  
-  
+  }
   
   date.start.out <- date.start.in[1]
   date.end.out <- date.end.in[length(date.end.in)]
