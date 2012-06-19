@@ -1,7 +1,7 @@
 ncdf.cut.files <- function(
    file.names
    , time.range.out = c()
-   , time.range.file = c()
+   , time.range.file =  c()
    , fun.start = function(x){}
    , fun.end = function(x){}
    , format = '')
