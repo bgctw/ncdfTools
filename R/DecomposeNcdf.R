@@ -168,8 +168,8 @@ DecomposeNcdf = structure(function(
     dim.name                      <- 'spectral_bands'
     
     #prepare results file
-    ncdf.add.dim(file.con.orig, file.con.copy, var.name = var.decomp.name,
-                 dim.name, dim.values, length(dim.values), 0)
+    ncdf.fileatts.copy(file.con.orig, file.con.copy)    
+    dim.def.nc(file.con.copy, 'spectral_bands', length(dim.values) )
     var.def.nc(file.con.copy, 'borders.low', 'NC_DOUBLE',  'spectral_bands')
     var.def.nc(file.con.copy, 'borders.up', 'NC_DOUBLE', 'spectral_bands')
     var.put.nc(file.con.copy, 'borders.low', borders.low)
@@ -182,9 +182,15 @@ DecomposeNcdf = structure(function(
                '[timesteps]')
     att.put.nc(file.con.copy, 'borders.low', 'unit', 'NC_CHAR',
                '[timesteps]')
-    if (length(vars.copy) > 0)
-        for (var.copy.t in vars.copy)
-            ncdf.var.copy(file.con.orig,file.con.copy,var.copy.t)
+
+    
+    var.def.nc(file.con.copy, var.decomp.name, 'NC_DOUBLE',
+               c(var.inq.nc(file.con.orig, var.decomp.name)$dimids,
+                 dim.inq.nc(file.con.copy, 'spectral_bands')$id))
+   
+#    if (length(vars.copy) > 0)
+#        for (var.copy.t in vars.copy)
+#            ncdf.var.copy(file.con.orig,file.con.copy,var.copy.t)
     close.nc(file.con.copy)
     dims.ids.data     <- var.inq.nc(file.con.orig, var.decomp.name)$dimids + 1   
     dims.info         <- ncdf.get.diminfo(file.con.orig)[dims.ids.data,]

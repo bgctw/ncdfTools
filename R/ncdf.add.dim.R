@@ -45,7 +45,7 @@ ncdf.add.dim <- function(
         var.put.nc(file.con.copy, dim.name, dim.values)
     }
     id.new.dim  <- dim.inq.nc(file.con.copy, dim.name)$id
-
+    
     #create variable
     var.name    <- sort(var.name)
     vars.orig   <- ncdf.get.varinfo(file.con.orig)[match(var.name, ncdf.get.varinfo(file.con.orig)$name), ]
