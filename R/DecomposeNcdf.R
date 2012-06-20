@@ -203,17 +203,22 @@ DecomposeNcdf = structure(function(
     #determine slices to process
     if (print.status)
         cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
-
-    amnt.na                     <- apply(data.all, MAR = dims.cycle.id,
-                                        function(x)sum(is.na(x)) / n.timesteps )
+    fun.na <- function(x){sum(is.na(x)) / n.timesteps}
+    amnt.na                     <- apply(data.all, MAR = dims.cycle.id,fun.na)
     slices.empty                <- amnt.na == 1
     slices.valid                <- amnt.na == 0
     slices.gappy                <- !slices.empty & !slices.valid
-    slices.zero                 <- as.vector(apply(data.all, MAR = dims.cycle.id,
-                                             function(x){sum(abs(x) <  tresh.const) >= (1-ratio.const)*length(x)}))
+    fun.zero <- function(x){sum(abs(x) <  tresh.const) >= (1-ratio.const)*length(x)}
+    slices.zero                 <- as.vector(apply(data.all, MAR = dims.cycle.id,fun.zero))
     slices.zero[is.na(slices.zero) & slices.empty] <- FALSE
-    slices.constant             <- apply(data.all, MAR = dims.cycle.id, function(x){diff(range(x, na.rm = TRUE)) == 0})
-   
+    fun.constant <- function(x){
+      if (sum(is.na(x)) == length(x)) {
+        return(FALSE)
+      } else {
+        return(diff(range(x, na.rm = TRUE)) == 0)
+      }  
+    }
+    slices.constant             <- apply(data.all, MAR = dims.cycle.id, fun.constant)
     if (sum(slices.constant) > 0)
        cat(paste(Sys.time(), ' : ', sum(slices.constant),' constant slices were found. ',
                  ' Spectral decomp. for these is ommited!', sep=''))
