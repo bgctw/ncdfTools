@@ -132,8 +132,8 @@ DecomposeNcdf = structure(function(
         stop(paste('File has no dimension called time (case sensitive)!'))
 
     data.all          <- var.get.nc(file.con.orig, var.decomp.name)
-    if(sum(is.na(data.all)) > 0)
-      stop('File contains missing values! Decomposition not possible.')
+#    if(sum(is.na(data.all)) > 0)
+#      stop('File contains missing values! Decomposition not possible.')
 
     
     #open ncdf files
