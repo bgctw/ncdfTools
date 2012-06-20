@@ -131,6 +131,11 @@ DecomposeNcdf = structure(function(
     if (!(is.element('time', ncdf.get.diminfo(file.con.orig)$name)))
         stop(paste('File has no dimension called time (case sensitive)!'))
 
+    data.all          <- var.get.nc(file.con.orig, var.decomp.name)
+    if(sum(is.na(data.all)) > 0)
+      stop('File contains missing values! Decomposition not possible.')
+
+    
     #open ncdf files
     if (print.status)
         cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep=''))
@@ -200,7 +205,6 @@ DecomposeNcdf = structure(function(
     dims.cycle.name   <- dims.info[dims.cycle.id,'name']
     dim.process.id    <- match('time', dims.info$name)
     dims.cycle.n      <- length(dims.cycle.id)
-    data.all          <- var.get.nc(file.con.orig, var.decomp.name)
     dims.cycle.length <- dim(data.all)[dims.cycle.id]
     n.timesteps       <- dims.info[match('time', dims.info$name), 3]
 
