@@ -187,15 +187,10 @@ DecomposeNcdf = structure(function(
                '[timesteps]')
     att.put.nc(file.con.copy, 'borders.low', 'unit', 'NC_CHAR',
                '[timesteps]')
-
-    
-    var.def.nc(file.con.copy, var.decomp.name, 'NC_DOUBLE',
+    var.def.nc(file.con.copy, var.decomp.name, var.inq.nc(file.con.orig, var.decomp.name)$type,
                c(var.inq.nc(file.con.orig, var.decomp.name)$dimids,
                  dim.inq.nc(file.con.copy, 'spectral_bands')$id))
-   
-#    if (length(vars.copy) > 0)
-#        for (var.copy.t in vars.copy)
-#            ncdf.var.copy(file.con.orig,file.con.copy,var.copy.t)
+    ncdf.att.copy(file.con.orig, var.decomp.name, var.decomp.name, file.con.copy)
     close.nc(file.con.copy)
     dims.ids.data     <- var.inq.nc(file.con.orig, var.decomp.name)$dimids + 1   
     dims.info         <- ncdf.get.diminfo(file.con.orig)[dims.ids.data,]
