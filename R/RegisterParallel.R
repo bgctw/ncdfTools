@@ -12,14 +12,14 @@ RegisterParallel <- function(
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
-    require(pckg.parallel, character.only = TRUE)
+    require(pckg.parallel, character.only = TRUE, warn.conflicts = FALSE, quietly = TRUE) 
     if (pckg.parallel == 'doSMP') {
-        require(iterators)
-        require(codetools)
+        require(iterators, warn.conflicts = FALSE, quietly = TRUE)
+        require(codetools, warn.conflicts = FALSE, quietly = TRUE)
         w <<- startWorkers(workerCount = max.cores)
     } else if (pckg.parallel == 'doMC'){
         w <<- max.cores
-        require(multicore)
+        require(multicore, warn.conflicts = FALSE, quietly = TRUE)
     } else {
         stop(paste('Package ', pckg.parallel, ' is not supported!', sep=''))
     }

@@ -132,9 +132,6 @@ DecomposeNcdf = structure(function(
         stop(paste('File has no dimension called time (case sensitive)!'))
 
     data.all          <- var.get.nc(file.con.orig, var.decomp.name)
-#    if(sum(is.na(data.all)) > 0)
-#      stop('File contains missing values! Decomposition not possible.')
-
     
     #open ncdf files
     if (print.status)
@@ -218,11 +215,14 @@ DecomposeNcdf = structure(function(
     slices.constant             <- apply(data.all, MAR = dims.cycle.id, function(x){diff(range(x, na.rm = TRUE)) == 0})
    
     if (sum(slices.constant) > 0)
-        warning(paste(sum(slices.constant),' constant slices were found. Spectral decomp. for these is ommited!', sep=''))
+       cat(paste(Sys.time(), ' : ', sum(slices.constant),' constant slices were found. ',
+                 ' Spectral decomp. for these is ommited!', sep=''))
     if (sum(slices.zero) > 0)
-        warning(paste(sum(slices.zero),' (nearly) zero slices were found. Spectral decomp. for these is ommited!', sep=''))
+        cat(paste(Sys.time(), ' : ', sum(slices.zero),' (nearly) zero slices were found. ',
+                  'Spectral decomp. for these is ommited!', sep=''))
     if (sum(slices.gappy) > 0)
-        warning(paste(sum(slices.gappy),' series with gaps were found. Spectral decomp. for these is not possible!',sep=''))
+        cat(paste(Sys.time(), ' : ', sum(slices.gappy),' series with gaps were found. ',
+                  'Spectral decomp. for these is not possible!',sep=''))
     slices.process                  <- as.vector(slices.valid)
     slices.process[slices.constant | slices.zero] <- FALSE
     if (sum(slices.process) == 0)
@@ -256,10 +256,7 @@ DecomposeNcdf = structure(function(
     calcs.iter = function(iter.nr, file.name, n.timesteps, n.bands, dims.cycle.n,
                           iter.grid, args.call, var.decomp.name, dim.process.id, dims.cycle.id)
     {
-        require(RNetCDF)
-        #require(spectral.methods)
-        #require(ncdf.tools)
-
+         require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
         file.con.t                 <- open.nc(file.name)
         data.all.t                 <- var.get.nc(file.con.t, var.decomp.name)
         iter.ind                   <- iter.gridind[iter.nr, ]
