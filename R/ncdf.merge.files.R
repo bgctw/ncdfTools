@@ -6,6 +6,7 @@ ncdf.merge.files <- function(
       , fun.end   =  function(x){substr(x, nchar(x)-8, nchar(x)-3)}
       , time.range.out = c() 
       , format ='%Y%m'
+      , convert = function(x)chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y')
 )
 {
   ##TODO useful defaults
