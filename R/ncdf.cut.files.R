@@ -5,7 +5,7 @@ ncdf.cut.files <- function(
        , fun.start = function(x){}
        , fun.end = function(x){}
        , format = ''
-       , convert = function(x)chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y')
+       , convert = function(x)chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y'))
 {
   ##TODO implement possiibility to supply dates
   ##TODO implement possiibility to extract dates from file
