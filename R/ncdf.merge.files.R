@@ -65,4 +65,3 @@ ncdf.merge.files <- function(
       file.remove(file.t)
   invisible(list(file.out = ofile, date.range = c(date.start.out, date.end.out)))
 }
-
