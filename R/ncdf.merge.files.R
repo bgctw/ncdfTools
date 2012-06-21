@@ -41,7 +41,7 @@ ncdf.merge.files <- function(
     files.delete <- c() 
     if (date.start.in[1] < time.range.out[1]) {
       file.start.new <- ncdf.cut.files(file.names[1], time.range.out =  c(time.range.out[1], date.end.in[1]),
-          fun.start= fun.start, fun.end = fun.end, format = format )
+          fun.start= fun.start, fun.end = fun.end, format = format, convert = convert)
       file.names[1]  <- file.start.new
       files.delete   <- c(files.delete, file.start.new)
       date.start.out <- time.range.out[1]
@@ -49,7 +49,7 @@ ncdf.merge.files <- function(
     if (date.end.in[length(date.end.in)] > time.range.out[2]) {
       file.end.new <- ncdf.cut.files(file.names[length(file.names)],
           time.range.out =  c(date.start.in[length(date.start.in)], time.range.out[2]),
-          fun.start= fun.start, fun.end = fun.end, format = format )
+          fun.start= fun.start, fun.end = fun.end, format = format, convert = convert)
       file.names[length(file.names)]  <- file.end.new
       files.delete <- c(files.delete, file.end.new)
       date.end.out <- time.range.out[2]
