@@ -56,7 +56,7 @@ ncdf.merge.files <- function(
     } 
   }
   
-  system('export SKIP_SAME_TIME=1')
+  Sys.setenv(export SKIP_SAME_TIME=1)
   ofile  <- do.call(name.change, list(sub(do.call(fun.end, list(file.names[1])),
               do.call(fun.end, list(file.names[length(file.names)])),
               file.names[1])))
