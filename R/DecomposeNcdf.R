@@ -208,8 +208,14 @@ DecomposeNcdf = structure(function(
     slices.empty                <- amnt.na == 1
     slices.valid                <- amnt.na == 0
     slices.gappy                <- !slices.empty & !slices.valid
-    fun.zero <- function(x){sum(abs(x) <  tresh.const) >= (1-ratio.const)*length(x)}
-    slices.zero                 <- as.vector(apply(data.all, MAR = dims.cycle.id,fun.zero))
+    fun.zero <- function(x){
+      if (sum(is.na(x)) == length(x)) {
+        return(FALSE)
+      } else {
+        return(sum(abs(x) <  tresh.const) >= (1 - ratio.const)*length(x))
+      }
+    }
+    slices.zero                 <- as.vector(apply(data.all, MAR = dims.cycle.id, fun.zero))
     slices.zero[is.na(slices.zero) & slices.empty] <- FALSE
     fun.constant <- function(x){
       if (sum(is.na(x)) == length(x)) {
@@ -218,7 +224,10 @@ DecomposeNcdf = structure(function(
         return(diff(range(x, na.rm = TRUE)) == 0)
       }  
     }
-    slices.constant             <- apply(data.all, MAR = dims.cycle.id, fun.constant)
+    slices.constant               <- apply(data.all, MAR = dims.cycle.id, fun.constant)
+    slices.constant[slices.gappy] <- FALSE
+    slices.zero[slices.gappy]     <- FALSE
+ 
     if (sum(slices.constant) > 0)
        cat(paste(Sys.time(), ' : ', sum(slices.constant),' constant slices were found. ',
                  ' Spectral decomp. for these is ommited!', sep=''))
