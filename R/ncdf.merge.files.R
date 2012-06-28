@@ -10,7 +10,7 @@ ncdf.merge.files <- function(
 )
 {
   ##TODO useful defaults
-  
+  require(chron)
   date.start.in <- ncdf.name2date(file.names, fun.start, convert)
   date.end.in   <- ncdf.name2date(file.names, fun.end, convert)
   

@@ -367,7 +367,7 @@ DecomposeNcdf = structure(function(
 
     #add attributes with process information to ncdf files
     all.args     <- formals(FilterTSeriesSSA)
-    all.args[match(names(args.call), names(all.args))] <- args.call
+    all.args[na.omit(match(names(args.call), names(all.args)))] <- args.call[is.element(names(args.call), names(all.args))]
     red.args     <- all.args[c('borders.wl', 'M', 'n.comp', 'harmonics', 'tolerance.harmonics',
                         'var.thresh.ratio', 'grouping', 'pad.series', 'SSA.methods', 'repeat.extr')]
     string.args  <- paste(paste(names(red.args),sapply(red.args,function(x)paste(x,collapse=', '))
