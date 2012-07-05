@@ -28,6 +28,7 @@ DecomposeNcdf = structure(function(
                           ##  extensively tested with this package.!
     , max.cores = 16      ##<< integer: maximum number of cores to use.
     , check.files = TRUE
+    , debugging = FALSE
     , ...                 ##<< additional arguments transferred to FilterTSeriesSSA.
   )
   ##details<<
@@ -82,7 +83,7 @@ DecomposeNcdf = structure(function(
     ##TODO Try zero line crossings for frequency determination
     ##TODO Make method reproducible (seed etc)
     ##TODO Add way to handle non convergence
-  
+
     #load libraries
     if (print.status)
         cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
@@ -132,7 +133,7 @@ DecomposeNcdf = structure(function(
         stop(paste('File has no dimension called time (case sensitive)!'))
 
     data.all          <- var.get.nc(file.con.orig, var.decomp.name)
-    
+
     #open ncdf files
     if (print.status)
         cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep=''))
@@ -164,11 +165,13 @@ DecomposeNcdf = structure(function(
     args.call[['plot.spectra']]   <- FALSE
     args.call[['center.series']]  <- center.series
     args.call[['repeat.extr']]    <- repeat.extr
+    args.call[['debugging']]      <- debugging
     dim.values                    <- 1:n.bands
     borders.low                   <- rapply(borders.wl, function(x){x[-length(x)]})
     borders.up                    <- rapply(borders.wl, function(x){x[-1]})
     dim.name                      <- 'spectral_bands'
     
+
     #prepare results file
     ncdf.fileatts.copy(file.con.orig, file.con.copy)    
     dim.def.nc(file.con.copy, 'spectral_bands', length(dim.values) )
@@ -192,6 +195,8 @@ DecomposeNcdf = structure(function(
     dims.ids.data     <- var.inq.nc(file.con.orig, var.decomp.name)$dimids + 1   
     dims.info         <- ncdf.get.diminfo(file.con.orig)[dims.ids.data,]
 
+
+    
     #prepare parallel iteration parameters
     dims.cycle.id     <- sort(setdiff(1:length(dims.ids.data), match('time', dims.info$name) ))
     dims.cycle.name   <- dims.info[dims.cycle.id,'name']
@@ -230,13 +235,13 @@ DecomposeNcdf = structure(function(
  
     if (sum(slices.constant) > 0)
        cat(paste(Sys.time(), ' : ', sum(slices.constant),' constant slices were found. ',
-                 ' Spectral decomp. for these is ommited!', sep=''))
+                 ' Spectral decomp. for these is ommited!\n', sep=''))
     if (sum(slices.zero) > 0)
         cat(paste(Sys.time(), ' : ', sum(slices.zero),' (nearly) zero slices were found. ',
-                  'Spectral decomp. for these is ommited!', sep=''))
+                  'Spectral decomp. for these is ommited!\n', sep=''))
     if (sum(slices.gappy) > 0)
         cat(paste(Sys.time(), ' : ', sum(slices.gappy),' series with gaps were found. ',
-                  'Spectral decomp. for these is not possible!',sep=''))
+                  'Spectral decomp. for these is not possible!\n',sep=''))
     slices.process                  <- as.vector(slices.valid)
     slices.process[slices.constant | slices.zero] <- FALSE
     if (sum(slices.process) == 0)
@@ -268,7 +273,8 @@ DecomposeNcdf = structure(function(
 
     #define process during iteration
     calcs.iter = function(iter.nr, file.name, n.timesteps, n.bands, dims.cycle.n,
-                          iter.grid, args.call, var.decomp.name, dim.process.id, dims.cycle.id)
+                          iter.grid, args.call, var.decomp.name, dim.process.id,
+                          dims.cycle.id)
     {
          require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
         file.con.t                 <- open.nc(file.name)
