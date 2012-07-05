@@ -369,6 +369,9 @@ DecomposeNcdf = structure(function(
         save.image(paste('workspace_before_writing_', file.name, '.RData', sep=''))
     if (print.status)
         cat(paste(Sys.time(), ' : Writing results to file. \n', sep=''))
+    if (!is.element('missing_value', ncdf.get.attinfo(file.con.copy, var.decomp.name)[,'name']) &&
+        sum(is.na(data.results.final)) > 0)
+      att.put.nc(file.con.copy, var.decomp.name, 'missing_value', var.inq.nc(file.con.copy, var.decomp.name)$type, -9999.0)
     var.put.nc(file.con.copy, var.decomp.name, data.results.final)
 
     #add attributes with process information to ncdf files
@@ -376,18 +379,18 @@ DecomposeNcdf = structure(function(
     all.args[na.omit(match(names(args.call), names(all.args)))] <- args.call[is.element(names(args.call), names(all.args))]
     red.args     <- all.args[c('borders.wl', 'M', 'n.comp', 'harmonics', 'tolerance.harmonics',
                         'var.thresh.ratio', 'grouping', 'pad.series', 'SSA.methods', 'repeat.extr')]
-    string.args  <- paste(paste(names(red.args),sapply(red.args,function(x)paste(x,collapse=', '))
-                                   ,sep=': '), collapse='; ')
+    string.args  <- paste(paste(names(red.args), sapply(red.args, function(x)paste(x, collapse=', '))
+                                   , sep=': '), collapse='; ')
     att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposed_by', 'NC_CHAR', compile.sysinfo())
     att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposed_on', 'NC_CHAR', as.character(Sys.time()))
     att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposition_settings', 'NC_CHAR', string.args)
-    hist.string.append <- paste('Spectrally decomposed on ',as.character(Sys.time()),
-                                ' by ',Sys.info()['user'],sep='')
-    if (is.element('history',ncdf.get.attinfo(file.con.copy,'NC_GLOBAL')[,'name'])) {
-        hist.string <- paste(att.get.nc(file.con.copy,'NC_GLOBAL','history'),'; ',hist.string.append)
-        att.put.nc(file.con.copy,'NC_GLOBAL','history','NC_CHAR',hist.string)
+    hist.string.append <- paste('Spectrally decomposed on ', as.character(Sys.time()),
+                                ' by ', Sys.info()['user'], sep='')
+    if (is.element('history', ncdf.get.attinfo(file.con.copy, 'NC_GLOBAL')[, 'name'])) {
+        hist.string <- paste(att.get.nc(file.con.copy, 'NC_GLOBAL', 'history'), '; ', hist.string.append)
+        att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string)
     } else {
-        att.put.nc(file.con.copy,'NC_GLOBAL','history','NC_CHAR',hist.string.append)
+        att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string.append)
     }
     close.nc(file.con.copy)
     close.nc(file.con.orig)
