@@ -194,8 +194,6 @@ DecomposeNcdf = structure(function(
     close.nc(file.con.copy)
     dims.ids.data     <- var.inq.nc(file.con.orig, var.decomp.name)$dimids + 1   
     dims.info         <- ncdf.get.diminfo(file.con.orig)[dims.ids.data,]
-
-
     
     #prepare parallel iteration parameters
     dims.cycle.id     <- sort(setdiff(1:length(dims.ids.data), match('time', dims.info$name) ))
@@ -347,22 +345,17 @@ DecomposeNcdf = structure(function(
     if (package.parallel=='doSMP')
         stopWorkers(w)
 
-    
     #transpose results
     if (print.status)
         cat(paste(Sys.time(), ' : Transposing results. \n', sep=''))
-    data.results.all.cells                     <- array(NA, dim=c(n.timesteps, n.bands, n.slices))
+    data.results.all.cells                     <- array(NA, dim = c(n.timesteps, n.bands, n.slices))
     data.results.all.cells[, , slices.process] <- data.results.valid.cells
-    data.results.all.cells.trans               <- aperm(data.results.all.cells, perm=c(3, 1, 2))
+    data.results.all.cells.trans               <- aperm(data.results.all.cells, perm = c(3, 1, 2))
     file.con.copy                              <- open.nc(file.name.copy, write=TRUE)
     data.results.final                         <- array(as.vector(data.results.all.cells.trans),
                                                         dim = c(dims.cycle.length, n.timesteps, n.bands))
     aperm.array                                <- c(order(c(dims.cycle.id, dim.process.id)), length(c(dims.cycle.id, dim.process.id)) + 1)
     data.results.final                         <- aperm(data.results.final, aperm.array)
-    if (sum(slices.gappy) > 0) {
-        ind.gappy                              <- ind.datacube(data.all, slices.gappy, dims.cycle.id)
-        data.results.final[ind.gappy]          <- data.all[ind.gappy]
-    }
 
     #save results
     if(sum(is.infinite(data.results.final)) > 0)

@@ -17,9 +17,9 @@ ncdf.get.varname <- function(
 {  
   var.name         <- setdiff(ncdf.get.varinfo(file.con, order.var ='id')$name, ncdf.get.diminfo(file.con)$name)
   if(length(var.name) > 1) {
-    var.id.nocoord <- ncdf.get.varinfo(file.con, order.var ='id')[match(var.name,ncdf.get.varinfo(file.con, order.var ='id')$name),1] 
-    var.ind <- var.id.nocoord[which.max(ncdf.get.varinfo(file.con)[var.id.nocoord,4])] +1
-    if (length(var.id) > 1) {
+    var.id.nocoord <- ncdf.get.varinfo(file.con, order.var ='id')[match(var.name, ncdf.get.varinfo(file.con, order.var ='id')$name), 1] 
+    var.ind <- var.id.nocoord[which.max(ncdf.get.varinfo(file.con, order.var ='id')[var.id.nocoord + 1, 4])] + 1
+    if (length(var.ind) > 1) {
       stop('Not possible to detect variable name!')
     } else {
       var.name <-ncdf.get.varinfo(file.con, order.var ='id')$name[var.ind]         
