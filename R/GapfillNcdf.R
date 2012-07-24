@@ -79,7 +79,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 , package.parallel = 'doMC' ##<< character: one of 'doSMP' or 'doMC': package to use for linking foreach to
                       ##   parallel computing back end.
 , max.cores = 8       ##<< integer: maximum number of cores to use.
-, save.debug.info = FALSE
+, debugging = FALSE
 , reproducible = FALSE##<< logical: Whether a seed based on the characters of the file name should be set
                       ##            which forces all random steps, including the nutrlan SSA algorithm to be
                       ##            exactly reproducible.
@@ -332,9 +332,10 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                 n.comp = n.comp[[ind]][[l]],
                 pad.series = pad.series[[ind]][[l]],
                 amnt.iters = amnt.iters.loop,
-						    amnt.iters.start = amnt.iters.start.loop,
+                amnt.iters.start = amnt.iters.start.loop,
                 print.stat   = FALSE,
-                plot.results = FALSE)         
+                plot.results = FALSE,
+                debugging = debugging)         
             ##get first guess
             if (h > 1 && exists('file.name.guess.next')) {
               file.con.guess   <- open.nc(file.name.guess.next)
@@ -349,7 +350,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                     dims.process = dims.process, dims.cycle = dims.cycle, 
                     print.status = print.status, datapts.n = datapts.n, dims.info = dims.info,
                     calc.parallel = calc.parallel, ocean.mask = ocean.mask, 
-                    save.debug.info = save.debug.info, h = h, l = l,  MSSA = MSSA[[ind]][[l]],
+                    debugging = debugging, h = h, l = l,  MSSA = MSSA[[ind]][[l]],
                     MSSA.blocksize = MSSA.blocksize, ratio.test.t = ratio.test.t, g = g,
                     MSSA.blck.trsh = MSSA.blck.trsh, file.name = file.name), 
                 list(args.call.SSA = args.call.SSA))
@@ -531,7 +532,7 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
     print.status, first.guess, pad.series, process.cells, ocean.mask, tresh.fill,
     var.name, amnt.iters.start, amnt.iters, file.name, process.type, size.biggap, 
     amnt.artgaps, M, n.comp, dimensions, max.steps, tresh.fill.first, reproducible,
-    save.debug.info, MSSA, MSSA.blocksize, keep.steps, ratio.test.t, force.all.dims,
+    debugging, MSSA, MSSA.blocksize, keep.steps, ratio.test.t, force.all.dims,
     debug, gaps.cv,  MSSA.blck.trsh)
 {
   ##title<< helper function for GapfillNcdf
@@ -805,7 +806,7 @@ GapfillNcdfSaveResults <- function(datacube, reconstruction, args.call.global,
 ##################################   gapfill data cube #########################
 GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),  
     max.cores = 8, args.call.SSA = list(), iters.n, print.status,  datapts.n, 
-    dims.info, calc.parallel = TRUE, save.debug.info, h, l,  MSSA, MSSA.blocksize, 
+    dims.info, calc.parallel = TRUE, debugging, h, l,  MSSA, MSSA.blocksize, 
     first.guess = 'mean', dims.cycle, datacube, dims.cycle.id, dims.process.id, 
     dims.process, process.cells = c('gappy','all')[1], ratio.test.t, g, slices.process = c(),
     slices.constant = c(), values.constant = c(), slices.excluded = c(), 
@@ -873,7 +874,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
               iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
               print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
               dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)
+              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name, debugging = debugging)
     } else {
        results.parallel = foreach(i = 1:1
               , .combine =  rbindMod
@@ -882,7 +883,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
               iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
               print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
               dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)            
+              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name, debugging = debugging)            
     }
     data.results.valid.cells <- results.parallel$reconstruction
     data.variances           <- results.parallel$variances
