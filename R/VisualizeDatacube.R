@@ -67,14 +67,25 @@ VisualizeDatacube <- function(
     cube.info              <- array(cube.info, dim = c(dim(cube.info)[1:2], 1, dim(cube.info)[3]))
   dimnames(cube.info)[[4]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
   nas.series         <- apply(data.cube.sort, MAR = c(1,2,4),  function(x){sum(is.na(x)) / length(x)})
+
+  if (dim(cube.info)[3] > 1) {
+    cube.info.agg      <- data.frame(min = apply(cube.info[,,,'min'], 3, min, na.rm = TRUE),
+                                     max = apply(cube.info[,,,'max'], 3, max, na.rm = TRUE),
+                                     mean = apply(cube.info[,,,'mean'], 3, mean, na.rm = TRUE),
+                                     ratio.na = apply(cube.info[,,,'ratio na'], 3, mean, na.rm = TRUE),
+                                     series.empty = apply(nas.series, 3, function(x) sum(x == 1)) / prod(dim(data.cube.sort)[1:2]),
+                                     series.full = apply(nas.series, 3, function(x) sum(x == 0)) / prod(dim(data.cube.sort)[1:2]), 
+                                     series.gappy = apply(nas.series, 3, function(x) sum(x != 0 & x != 1)) / prod(dim(data.cube.sort)[1:2]))
+  } else {
+    cube.info.agg      <- data.frame(min = min(cube.info[,,1,'min'], na.rm = TRUE),
+                                     max = max(cube.info[,,1,'max'], na.rm = TRUE),
+                                     mean = mean(cube.info[,,1,'mean'], na.rm = TRUE),
+                                     ratio.na = mean(cube.info[,,1,'ratio na'], na.rm = TRUE),
+                                     series.empty = sum(nas.series == 1) / prod(dim(data.cube.sort)[1:2]),
+                                     series.full = sum(nas.series == 0) / prod(dim(data.cube.sort)[1:2]), 
+                                     series.gappy = sum(nas.series != 0 & nas.series != 1) / prod(dim(data.cube.sort)[1:2]))
+  }
   
-  cube.info.agg      <- data.frame(min = apply(cube.info[,,,'min'], 3, min, na.rm = TRUE),
-                                   max = apply(cube.info[,,,'max'], 3, max, na.rm = TRUE),
-                                   mean = apply(cube.info[,,,'mean'], 3, mean, na.rm = TRUE),
-                                   ratio.na = apply(cube.info[,,,'ratio na'], 3, mean, na.rm = TRUE),
-                                   series.empty = apply(nas.series, 3, function(x) sum(x == 1)) / prod(dim(data.cube.sort)[1:2]),
-                                   series.full = apply(nas.series, 3, function(x) sum(x == 0)) / prod(dim(data.cube.sort)[1:2]), 
-                                   series.gappy = apply(nas.series, 3, function(x) sum(x != 0 & x != 1)) / prod(dim(data.cube.sort)[1:2]))
   for (h in 1:length(forth.dim)) {
     forth.dim.t = forth.dim[h]
     if (forth.dim.t == 0)

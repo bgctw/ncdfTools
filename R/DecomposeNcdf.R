@@ -215,7 +215,7 @@ DecomposeNcdf = structure(function(
       if (sum(is.na(x)) == length(x)) {
         return(FALSE)
       } else {
-        return(sum(abs(x) <  tresh.const) >= (1 - ratio.const)*length(x))
+        return(sum(abs(x) <  tresh.const, na.rm = TRUE) >= (1 - ratio.const)*length(na.omit(x)))
       }
     }
     slices.zero                 <- as.vector(apply(data.all, MAR = dims.cycle.id, fun.zero))

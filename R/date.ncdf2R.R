@@ -13,8 +13,11 @@ date.ncdf2R  =  function(
     if (class(time.source) == 'NetCDF') {
         time.units      <- ncdf.get.attinfo(time.source, 'time')[, 'value'][ncdf.get.attinfo(time.source, 'time')[, 'name'] == 'units']
         origin.file     <- try({as.POSIXct(sub('^.*since ', '', time.units), tz = 'UTC')}, silent = TRUE)
-        if ((class(origin.file) == 'try-error') || !(sub(' since.*$', '', time.units) == 'days'))
-            stop('date format in ncdf file is in a non implemented format, Supply date vector by hand.')
+        if ((class(origin.file) == 'try-error') || !(sub(' since.*$', '', time.units) == 'days')) {
+          if(!interactive())
+            cat('Date format in ncdf file is in a non implemented format.\n')
+          return(var.get.nc(time.source, 'time'))
+        }    
         units          <- sub(' since.*$', '', time.units)
         date.vec.conv  <- as.numeric(var.get.nc(time.source, 'time') + julian(origin.file, as.POSIXct(origin)))
     } else {

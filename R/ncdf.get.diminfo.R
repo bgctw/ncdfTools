@@ -20,7 +20,11 @@ ncdf.get.diminfo  <- function(
         if (is.element(dim.name, ncdf.get.varinfo(file.con)$name)) {
           if (dim.name == 'time') {
             dims.vals      <- date.ncdf2R(file.con)
-            dims.info      <- c(as.integer(format(range(dims.vals), '%Y%m%d')), mean(diff(dims.vals)))
+            if (class(dims.vals)[1] == 'POSIXct') {
+              dims.info      <- c(as.integer(format(range(dims.vals), '%Y%m%d')), mean(diff(dims.vals)))
+            } else {
+              dims.info      <- c(range(dims.vals),  mean(diff(dims.vals)))              
+            }
           } else {
             dims.vals      <- var.get.nc(file.con, dim.name)
             dims.info      <- c(range(dims.vals), mean(diff(dims.vals)))

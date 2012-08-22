@@ -72,6 +72,10 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                       ##   (with identical size!) as the file to fill which contains values used as a
                       ##   first guess (for the first step of the process!). This name need to be exactly
                       ##   "<filename>_first_guess_step_1.nc".
+, tresh.const = 1e-12 ##<< numeric: value below which abs(values) are assumed to be constant and excluded
+                      ##   from the decomposition
+, ratio.const = 0.05  ##<< numeric: max ratio of the time series that is allowed to be above tresh.const for the time series
+                      ##   still to be not cosidered constant.
 , keep.steps = TRUE   ##<< logical: whether to keep the files with the results from the single steps                      
 , print.status = TRUE ##<< logical: whether to print status information during the process
 , calc.parallel = TRUE##<< logical: whether to use parallel computing. Needs packages doMC, foreach or doSMP (and
@@ -254,30 +258,31 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         ## determine different iteration control parameters
         if (process.type == 'stepwise') {
           ind                   <- h     
-          n.dims.loop <- length(dimensions[[ind]])             
+          n.dims.loop           <- length(dimensions[[ind]])
+          n.calc.repeat         <- 1 
         } else if (process.type == 'variances') {
           ind                   <- 1
           n.dims.loop           <- length(dimensions[[ind]])
           if (process == 'final') {
             if (length(processes) == 2) {
-              dims.calc           <- step.chosen['dim', h]
+              dims.calc         <- step.chosen['dim', h]
             } else if (length(processes) == 1) {
-              dims.calc           <- 1
+              dims.calc         <- 1
             }
             n.calc.repeat       <- 1
             ratio.test.t        <- 1
           } else if (process == 'cv') {
             dims.calc           <- 1:n.dims.loop
             if (force.all.dims && h == 1) {
-              ratio.test.t <- 1
+              ratio.test.t      <- 1
             } else {
-              ratio.test.t <- ratio.test 
+              ratio.test.t      <- ratio.test 
             }
           }                  
           if (ratio.test.t == 1) {
-            n.calc.repeat <- 1
+            n.calc.repeat      <- 1
           } else {
-            n.calc.repeat <- 2
+            n.calc.repeat      <- 2
           }	        
         }
         if (!exists('pred.measures')) {
@@ -353,7 +358,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                     debugging = debugging, h = h, l = l,  MSSA = MSSA[[ind]][[l]],
                     MSSA.blocksize = MSSA.blocksize, ratio.test.t = ratio.test.t, g = g,
                     MSSA.blck.trsh = MSSA.blck.trsh, file.name = file.name), 
-                list(args.call.SSA = args.call.SSA))
+                    list(args.call.SSA = args.call.SSA), ratio.const = ratio.const,
+                    tresh.const = tresh.const)
             if (g > 1)
               args.Datacube <- c(args.Datacube, list(slices.process = slices.process,
                       slices.constant = slices.constant,
@@ -533,7 +539,7 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
     var.name, amnt.iters.start, amnt.iters, file.name, process.type, size.biggap, 
     amnt.artgaps, M, n.comp, dimensions, max.steps, tresh.fill.first, reproducible,
     debugging, MSSA, MSSA.blocksize, keep.steps, ratio.test.t, force.all.dims,
-    debug, gaps.cv,  MSSA.blck.trsh)
+    debug, gaps.cv,  MSSA.blck.trsh, ratio.const, tresh.const)
 {
   ##title<< helper function for GapfillNcdf
   ##details<< helper function for GapfillNcdf that checks the consistency of the 
@@ -810,7 +816,8 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     first.guess = 'mean', dims.cycle, datacube, dims.cycle.id, dims.process.id, 
     dims.process, process.cells = c('gappy','all')[1], ratio.test.t, g, slices.process = c(),
     slices.constant = c(), values.constant = c(), slices.excluded = c(), 
-    slices.without.gaps= c(), MSSA.blck.trsh = MSSA.blck.trsh, file.name)
+    slices.without.gaps= c(), MSSA.blck.trsh = MSSA.blck.trsh, file.name,
+    ratio.const = ratio.const, tresh.const = tresh.const)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that handles the main datacube transformations. 
 ##seealso<<
@@ -832,7 +839,8 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                         ocean.mask = ocean.mask, print.status = print.status, 
 		        slices.n = slices.n, dims.process.length = dims.process.length,
                         tresh.fill.dc = tresh.fill.dc, ratio.test.t = ratio.test.t,
-                        g = g, l = l, h = h)
+                        g = g, l = l, h = h, ratio.const = ratio.const, tresh.const = tresh.const)
+ 
   if (g == 2)
     args.identify <- c(args.identify, list(slices.excluded = slices.excluded,
                                            values.constant = values.constant,
@@ -874,7 +882,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
               iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
               print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
               dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name, debugging = debugging)
+              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)
     } else {
        results.parallel = foreach(i = 1:1
               , .combine =  rbindMod
@@ -883,7 +891,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
               iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
               print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
               dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name, debugging = debugging)            
+              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)            
     }
     data.results.valid.cells <- results.parallel$reconstruction
     data.variances           <- results.parallel$variances
@@ -923,7 +931,8 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
                                      slices.process = rep(TRUE, slices.n),
                                      slices.ocean = rep(FALSE, slices.n),
                                      values.constant = integer(length = slices.n),
-                                     slices.excluded = rep(FALSE, slices.n))
+                                     slices.excluded = rep(FALSE, slices.n),
+                                     ratio.const, tresh.const )
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that identifies the grid cells to process. 
 ##seealso<<
@@ -932,14 +941,20 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
 {
   ##FIXME
   # possibility to identify gap less MSSA blocks
-
   ##ToDo: remove h and l from argument list
 
   ##ToDo
   #determine grid cells to process
-
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
+    fun.zero <- function(x){
+      if (sum(is.na(x)) == length(x)) {
+        return(FALSE)
+      } else {
+        return(sum(abs(x) <  tresh.const, na.rm = TRUE) >= (1 - ratio.const)*length(na.omit(x)))
+      }
+    }
+  
   if (!MSSA) {  
     if (g == 1) {
       amnt.na                 <- apply(datacube, MAR = dims.cycle.id + 1 ,
@@ -971,6 +986,8 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
       slices.too.gappy[slices.ocean] <- FALSE
       slices.constant            <- as.vector(apply(datacube, MAR = dims.cycle.id + 1,
                                                     function(x){length(unique(na.omit(as.vector(x)))) == 1}))
+      slices.zero                <-  as.vector(apply(datacube, MAR = dims.cycle.id + 1, fun.zero))
+      slices.constant[slices.zero] <- TRUE
       if (sum(slices.constant) > 0 && print.status)
         cat(paste(Sys.time(), ' : ', sum(slices.constant),' constant grids/slices',
                   ' were found and will be filled with constant values!\n', sep=''))
