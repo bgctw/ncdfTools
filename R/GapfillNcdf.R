@@ -968,8 +968,6 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
   ##ToDo
   #determine grid cells to process
 
-  if (interactive())
-    browser(skipCalls = 200)
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
   fun.zero <- function(x) {
