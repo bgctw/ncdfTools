@@ -259,7 +259,9 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         if (process.type == 'stepwise') {
           ind                   <- h     
           n.dims.loop           <- length(dimensions[[ind]])
-          n.calc.repeat         <- 1 
+          n.calc.repeat         <- 1
+          dims.calc             <- 1:n.dims.loop
+          ratio.test.t          <- 1
         } else if (process.type == 'variances') {
           ind                   <- 1
           n.dims.loop           <- length(dimensions[[ind]])
@@ -424,6 +426,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             gapfill.results.step <- gapfill.results
           }        
         }
+        if (interactive())
+          browser(skipCalls = 200)
        
         ##determine first guess for next step
         if (!is.null(gapfill.results.step$reconstruction)) {
@@ -484,6 +488,23 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
   max.cores        = 8
   calc.parallel    = TRUE
 
+  #example settings for traditional one dimesnional "onlytime" setting and
+  # one step
+  amnt.artgaps     <- list(list(c(0.05, 0.05)));
+  amnt.iters       <- list(list(c(3, 10)));
+  dimensions       <- list(list("time")); 
+  M                <- list(list(12)); 
+  n.comp           <- list(list(6)); 
+  size.biggap      <- list(list(5)); 
+  var.name         <- "auto"
+  process.type     <- "stepwise"
+  GapfillNcdf(file.name = file.name, dimensions = dimensions, amnt.iters = amnt.iters, 
+              amnt.iters.start = amnt.iters.start, amnt.artgaps = amnt.artgaps, 
+              size.biggap = size.biggap, n.comp = n.comp, tresh.fill = tresh.fill,
+              M = M, process.type = process.type)
+
+
+  
   #example settings for 3 steps, stepwise and mono dimensional
   dimensions       = list(list('time'), list('time'), list('time'))
   amnt.iters       = list(list(c(1,5)), list(c(2,5)), list(c(3,5)))
@@ -826,7 +847,6 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
 ##TODO
 #remove h, save.debug.info
 {
-
   slices.n            <- prod(dim(datacube)[dims.cycle.id + 1])
   dims.process.length <- dim(datacube)[dims.process.id + 1]
   dims.cycle.length   <- dim(datacube)[dims.cycle.id + 1]
@@ -942,18 +962,20 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
   ##FIXME
   # possibility to identify gap less MSSA blocks
   ##ToDo: remove h and l from argument list
-
   ##ToDo
   #determine grid cells to process
+        if (interactive())
+          browser(skipCalls = 200)
+  
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
-    fun.zero <- function(x){
-      if (sum(is.na(x)) == length(x)) {
-        return(FALSE)
-      } else {
-        return(sum(abs(x) <  tresh.const, na.rm = TRUE) >= (1 - ratio.const)*length(na.omit(x)))
-      }
+  fun.zero <- function(x) {
+    if (sum(is.na(x)) == length(x)) {
+      return(FALSE)
+    } else {
+      return(sum(abs(x) <  tresh.const, na.rm = TRUE) >= (1 - ratio.const)*length(na.omit(x)))
     }
+  }
   
   if (!MSSA) {  
     if (g == 1) {

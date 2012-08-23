@@ -45,7 +45,7 @@ VisualizeDatacube <- function(
   dims.par   <- ncdf.get.diminfo(file.con)$name[var.inq.nc(file.con, var.name)$dimids + 1]
   
   ## sort dataframe
-  aperm.data <- match(c('lat', 'lon', 'time'), dims.par)
+  aperm.data <- pmatch(c('lat', 'lon', 'time'), dims.par)
   data       <- var.get.nc(file.con,var.name)
   if (length(forth.dim) > 1 || forth.dim != 0) {
     aperm.data <- c(aperm.data, 4)
@@ -138,7 +138,7 @@ VisualizeDatacube <- function(
         }
         plot.new()
         color.legend(0, 0, 1, 1, rect.col = col.palette(20),
-            legend = pretty(cube.info[, , forth.dim.t, i])
+            legend = pretty(cube.info[, , forth.dim.t, i], digits = 5)
             , gradient = 'x', align = 'rb', cex = 0.7)
       } else {
         plot.new()
