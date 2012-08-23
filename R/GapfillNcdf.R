@@ -163,6 +163,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     ##TODO remove first guess stuff
     ##TODO incorporate non convergence information in final datacube
     ##TODO facilitate easy run of different settings (e.g. with different default settings)
+    ##TODO switch off "force.all.dims" in case of non neccessity
      
     #save argument values of call
     args.call.filecheck <- as.list(environment())
@@ -266,25 +267,29 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           ind                   <- 1
           n.dims.loop           <- length(dimensions[[ind]])
           if (process == 'final') {
-            if (length(processes) == 2) {
-              dims.calc         <- step.chosen['dim', h]
-            } else if (length(processes) == 1) {
-              dims.calc         <- 1
+            if (force.all.dims) {
+              dims.calc         <- 1:n.dims.loop
+            } else if (!force.all.dims) {  
+              if (length(processes) == 2) {
+                dims.calc       <- step.chosen['dim', h]
+              } else if (length(processes) == 1) {
+                dims.calc       <- 1
+              }
             }
             n.calc.repeat       <- 1
             ratio.test.t        <- 1
           } else if (process == 'cv') {
             dims.calc           <- 1:n.dims.loop
-            if (force.all.dims && h == 1) {
+            if (force.all.dims) {
               ratio.test.t      <- 1
             } else {
               ratio.test.t      <- ratio.test 
             }
           }                  
           if (ratio.test.t == 1) {
-            n.calc.repeat      <- 1
+            n.calc.repeat       <- 1
           } else {
-            n.calc.repeat      <- 2
+            n.calc.repeat       <- 2
           }	        
         }
         if (!exists('pred.measures')) {
@@ -426,8 +431,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             gapfill.results.step <- gapfill.results
           }        
         }
-        if (interactive())
-          browser(skipCalls = 200)
        
         ##determine first guess for next step
         if (!is.null(gapfill.results.step$reconstruction)) {
@@ -964,16 +967,16 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
   ##ToDo: remove h and l from argument list
   ##ToDo
   #determine grid cells to process
-        if (interactive())
-          browser(skipCalls = 200)
-  
+
+  if (interactive())
+    browser(skipCalls = 200)
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
   fun.zero <- function(x) {
     if (sum(is.na(x)) == length(x)) {
       return(FALSE)
     } else {
-      return(sum(abs(x) <  tresh.const, na.rm = TRUE) >= (1 - ratio.const)*length(na.omit(x)))
+      return(sum(abs(x) <  tresh.const, na.rm = TRUE) >= (1 - ratio.const)*length(x[!is.na(x)]))
     }
   }
   
@@ -982,9 +985,10 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
       amnt.na                 <- apply(datacube, MAR = dims.cycle.id + 1 ,
                                        function(x) sum(is.na(x)) / prod(dim(datacube)[dims.process.id + 1])   )
       if ((length(ocean.mask) > 0 ) & (sum(!is.na(match(c('longitude','latitude'), 
-                                                        dims.process))) == 2))
+                                                        dims.process))) == 2)) {
         amnt.na <- 1- apply(datacube, MAR = dims.cycle.id + 1 ,
                          function(x) sum(!is.na(x[as.vector(!ocean.mask)])) / sum(!ocean.mask)   )
+      }
       if (process.cells == 'gappy') {
         slices.without.gaps       <- as.vector((amnt.na == 0))
       } else {
