@@ -207,6 +207,9 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       dimnames(step.chosen) <- list(c('dim','step'), paste('step', 1:max.steps))
     } else {
       n.steps           <- length(amnt.artgaps)
+      step.chosen       <- matrix(NA, 2, n.steps)
+      step.chosen[1, ]  <- 1
+      step.chosen[2, ]  <- 1:n.steps
     }
     ##TODO put to check arguments
     if (missing(file.name) )
@@ -967,7 +970,6 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
   ##ToDo: remove h and l from argument list
   ##ToDo
   #determine grid cells to process
-
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
   fun.zero <- function(x) {
@@ -1005,7 +1007,7 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
         if ((length(ocean.mask) > 0 ) & (sum(!is.na(match(c('longitude','latitude'), dims.process))) == 2))
            amnt.na.first.guess  <- 1- apply(first.guess, MAR = dims.cycle.id + 1 ,
                                             function(x) sum(!is.na(x[as.vector(!ocean.mask)])) / sum(!ocean.mask)   )
-        slices.too.gappy[amnt.na.first.guess < 0.9] <- FALSE
+        slices.too.gappy[amnt.na.first.guess < 0.9 & amnt.na < 0.75] <- FALSE
       }
       slices.too.gappy[slices.ocean] <- FALSE
       slices.constant            <- as.vector(apply(datacube, MAR = dims.cycle.id + 1,
@@ -1046,6 +1048,9 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
     }
   }  
   iters.n <- sum(slices.process)
+  ##TODO remove
+  print(lapply(list(slices.process = slices.process, slices.constant = slices.constant, slices.ocean = slices.ocean,
+                    slices.without.gaps = slices.without.gaps, slices.too.gappy = slices.too.gappy), sum))
   return(list(iters.n = iters.n, slices.process = slices.process, 
               values.constant = values.constant, slices.constant = slices.constant, 
               slices.without.gaps = slices.without.gaps, slices.excluded = slices.excluded,

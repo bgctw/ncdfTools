@@ -20,6 +20,8 @@ image.rotated = function(
     add.args = list(...)
     if (length(col.vals) == 0) { 
       col.strings <- colnames(data)
+      if  (is.null(col.strings))
+        col.strings =  1:dim(data)[2]
       col.vals    <- 1:dim(data)[2]
     } else {
       col.strings <- col.vals
@@ -36,6 +38,8 @@ image.rotated = function(
     
     if (length(row.vals) == 0) {
       row.strings <- rev(rownames(data))
+      if  (is.null(row.strings))
+        row.strings =  1:dim(data)[1]
       row.vals    <- 1:dim(data)[1]
     } else {
       row.strings <- rev(row.vals)
