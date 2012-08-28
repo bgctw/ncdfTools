@@ -199,17 +199,16 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     library(raster)
 
     # necessary variables
+    step.chosen           <- matrix(NA, 2, max.steps)
+    dimnames(step.chosen) <- list(c('dim','step'), paste('step', 1:max.steps))
     if (process.type == 'variances') {
-      n.steps           <- max.steps
-      var.steps         <- array(NA, dim = c(max.steps, max(unlist(n.comp)), 
-                                 length(dimensions[[1]])))
-      step.chosen       <- matrix(NA, 2, max.steps)
-      dimnames(step.chosen) <- list(c('dim','step'), paste('step', 1:max.steps))
+      n.steps             <- max.steps
+      var.steps           <- array(NA, dim = c(max.steps, max(unlist(n.comp)), 
+                                   length(dimensions[[1]])))
     } else {
-      n.steps           <- length(amnt.artgaps)
-      step.chosen       <- matrix(NA, 2, n.steps)
-      step.chosen[1, ]  <- 1
-      step.chosen[2, ]  <- 1:n.steps
+      n.steps             <- length(amnt.artgaps)
+      step.chosen[1, ]    <- 1
+      step.chosen[2, ]    <- 1:n.steps
     }
     ##TODO put to check arguments
     if (missing(file.name) )
@@ -228,6 +227,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     file.name.copy<- res.open$file.name.copy
     
     # start parallel processing workers
+#    if(interactive() & exists('browsing'))
+#      browser()
     if (calc.parallel)
         RegisterParallel(package.parallel, max.cores)
     if (gaps.cv != 0) {
@@ -658,15 +659,13 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
                              (1:3)[is.element(ncdf.get.diminfo(file.con.orig)[, 'name'], 
                              c('longitude', 'latitude'))])
     if (sum(!is.na(data.t[ind.array])) > 0)
-      stop('Data contains non NA values at oceaniter.nr grid positions!')
+      stop('Data contains non NA values at ocean grid positions!')
   }
   if (length(ocean.mask) > 0 && !(dim(ocean.mask) == lengths.dim.nontime))
     stop(paste('The ocean mask has to have identical dimensions as the spatial',
                ' dimensions in the ncdf file!', sep = ''))
 
   # check consitency of inputs
-  if (max.cores == 1)
-    calc.parallel <- FALSE
   n.steps           <- length(amnt.artgaps)
   if (!is.element(process.cells,c('gappy', 'all')))
     stop('process.cells has to be one of \'all\' or \'gappy\'!')
@@ -1183,6 +1182,8 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
 ##seealso<<
 ##\code{\link{GapfillNcdf}}, \code{\link{foreach}}                                     
 {
+#  if (interactive() & exists('browsing'))
+#    browser()
   iter.ind          <- iter.gridind[iter.nr, ]
   datapts.n         <- prod(dim(datacube)[dims.process.id + 1])
   n.series.steps    <- numeric()
