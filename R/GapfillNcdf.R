@@ -17,7 +17,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                       ##   for details). Has to have the sam ind.extr e structure as dimensions.
 , MSSA.blocksize = 1  ##<< integer: size of the quadratical block used for MSSA.  
 , gaps.cv        = 0
-, MSSA.blck.trsh = 0                                  
+, MSSA.blck.trsh = tresh.fill[[1]]                                 
 , amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of numeric vectors: the relative ratio (length gaps/series length) of
                       ##  artificial gaps to include to determine the iteration with the best
@@ -227,8 +227,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     file.name.copy<- res.open$file.name.copy
     
     # start parallel processing workers
-#    if(interactive() & exists('browsing'))
-#      browser()
     if (calc.parallel)
         RegisterParallel(package.parallel, max.cores)
     if (gaps.cv != 0) {
@@ -495,7 +493,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
   max.cores        = 8
   calc.parallel    = TRUE
 
-  #example settings for traditional one dimesnional "onlytime" setting and
+  #example settings for traditional one dimensional "onlytime" setting and
   # one step
   amnt.artgaps     <- list(list(c(0.05, 0.05)));
   amnt.iters       <- list(list(c(3, 10)));
@@ -864,7 +862,8 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                         ocean.mask = ocean.mask, print.status = print.status, 
 		        slices.n = slices.n, dims.process.length = dims.process.length,
                         tresh.fill.dc = tresh.fill.dc, ratio.test.t = ratio.test.t,
-                        g = g, l = l, h = h, ratio.const = ratio.const, tresh.const = tresh.const)
+                        g = g, l = l, h = h, ratio.const = ratio.const,
+                        tresh.const = tresh.const, args.call.SSA = args.call.SSA)
  
   if (g == 2)
     args.identify <- c(args.identify, list(slices.excluded = slices.excluded,
@@ -890,7 +889,8 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                                          dims.cycle.id = dims.cycle.id, 
                                          max.cores = max.cores, MSSA = MSSA, 
                                          MSSA.blocksize = MSSA.blocksize,
-                                         MSSA.blck.trsh = MSSA.blck.trsh))
+                                         MSSA.blck.trsh = MSSA.blck.trsh,
+                                         tresh.fill.dc = tresh.fill.dc))
     AttachList(results.crtitercube)                                                           
     
     #perform (parallelized) calculation
@@ -957,7 +957,7 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
                                      slices.ocean = rep(FALSE, slices.n),
                                      values.constant = integer(length = slices.n),
                                      slices.excluded = rep(FALSE, slices.n),
-                                     ratio.const, tresh.const )
+                                     ratio.const, tresh.const , args.call.SSA)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that identifies the grid cells to process. 
 ##seealso<<
@@ -999,7 +999,20 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
       } else {
         slices.ocean           <- rep(FALSE, slices.n)
       }
-      slices.too.gappy           <- as.vector(amnt.na >= (1 - (tresh.fill.dc)))
+      if (sum(args.call.SSA$amnt.artgaps != 0) >= 0) {
+        n_biggaps   <- max(c(floor(prod(dims.process.length) * args.call.SSA$amnt.artgaps[1] /
+                                   args.call.SSA$size.biggap^(length(dims.process.length))), 1))  
+        if (args.call.SSA$amnt.artgaps[1] > 0) {
+          n_smallgaps <- n_biggaps * args.call.SSA$size.biggap^(length(dims.process.length)) * args.call.SSA$amnt.artgaps[1] / args.call.SSA$amnt.artgaps[2]
+        } else {
+          n_smallgaps <- prod(process.length)* args.call.SSA$amnt.artgaps[2]
+        }
+        treshhld.gappy         <- 1 - ((n_smallgaps + n_biggaps*args.call.SSA$size.biggap) / prod(dims.process.length) ) - tresh.fill.dc
+      } else {
+        treshhld.gappy         <- 1 - (tresh.fill.dc)
+      }
+
+      slices.too.gappy         <- as.vector(amnt.na >= treshhld.gappy)
       if ((length(first.guess) > 1) & tresh.fill.dc == 0) {
         amnt.na.first.guess    <- apply(first.guess, MAR = dims.cycle.id + 1,
                                         function(x)sum(is.na(x)) / prod(dims.process.length)   )
@@ -1061,7 +1074,7 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
 
 GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length, 
     dims.cycle.id, slices.process, max.cores, slices.n, MSSA, MSSA.blocksize,
-    MSSA.blck.trsh)
+    MSSA.blck.trsh, tresh.fill.dc)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that creates the index array used
 ##          in the foreach iterations to extract data.     
@@ -1070,13 +1083,12 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
 {
   ##TODO
   #make indices independent from dimension order
-  
   index.MSSAseries   <- integer()
   index.MSSAnr       <- array(1:prod(dims.cycle.length), dim = dims.cycle.length)
   if (MSSA) {
     slices.remove    <- array(!slices.process, dim = dims.cycle.length)
     iters.n          <- prod(ceiling(dim(datacube)[dims.cycle.id + 1] / MSSA.blocksize))
-    ind.process.cube <- array(FALSE,dim = c(iters.n, dims.cycle.length))    
+    ind.process.cube <- array(FALSE,dim = c(iters.n, dims.cycle.length))
     row.block        <- 1
     col.block        <- 1
     for (p in 1:iters.n) {      
@@ -1085,7 +1097,7 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
       mn.blck.fll    <- MSSA.blck.trsh * prod(length(ind.row), length(ind.col),
                                               dim(datacube)[-(dims.cycle.id + 1)])
       if (sum(!is.na(datacube[ind.row,ind.col,])) > mn.blck.fll) 
-          ind.process.cube[p, ind.row, ind.col] <- TRUE
+        ind.process.cube[p, ind.row, ind.col] <- TRUE
       #create vector with indices for the time series computed
       ind.add          <- index.MSSAnr[ind.process.cube[p,,]][!slices.remove[ind.process.cube[p,,]]]
       index.MSSAseries <- c(index.MSSAseries, ind.add)
@@ -1096,7 +1108,8 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
         col.block      <- col.block + MSSA.blocksize
       }         
     }
-    #remove ocean cells
+    
+    ##remove ocean cells
     if (sum(!slices.process) > 0) {
       ind.process.cube[ind.datacube(ind.process.cube, slices.remove, c(2,3))] <- FALSE
       rows.remove <- apply(ind.process.cube,1,function(x){sum(x)==0})
@@ -1104,7 +1117,8 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
         ind.process.cube <- ind.process.cube[!rows.remove,,]
         iters.n <- iters.n - sum(rows.remove)
       } 
-    }  
+    }
+        
   } else if (!MSSA) {
     args.expand.grid     <- alist()
     for (d in 1:length(dims.cycle.id))
@@ -1119,7 +1133,7 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
   if (!(iters.n %% max.cores) == 0)
     iters.per.cyc[1:((iters.n %% max.cores))] <- floor(iters.n / max.cores) + 1
   iter.gridind           <- matrix(NA, ncol = 2, nrow = max.cores)
-  colnames(iter.gridind) <- c('first.iter','last.iter')
+  colnames(iter.gridind) <- c('first.iter', 'last.iter')
   if (max.cores > 1)  {
     iter.gridind[, 1]    <- (cumsum(iters.per.cyc) + 1) - iters.per.cyc
     iter.gridind[, 2]    <- cumsum(iters.per.cyc)
@@ -1182,12 +1196,9 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
 ##seealso<<
 ##\code{\link{GapfillNcdf}}, \code{\link{foreach}}                                     
 {
-#  if (interactive() & exists('browsing'))
-#    browser()
   iter.ind          <- iter.gridind[iter.nr, ]
   datapts.n         <- prod(dim(datacube)[dims.process.id + 1])
   n.series.steps    <- numeric()
-
   if (MSSA){
     ind.t           <- rep(FALSE, times = dim(ind.process.cube)[1])
     ind.t[iter.ind[1]:iter.ind[2]]       <- TRUE
@@ -1209,7 +1220,6 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
         if (print.status)
           cat(paste(Sys.time(), ' : Finished ~',
                     round(n / (diff(iter.ind) + 1) * 100), '%. \n', sep=''))
-
       args.call.t             <- args.call.SSA
       args.call.t[['seed']]   <- iter.nr * n      
       dims.extr.data          <- dims.process.length
