@@ -15,7 +15,7 @@ date.ncdf2R  =  function(
         origin.file     <- try({as.POSIXct(sub('^.*since ', '', time.units), tz = 'UTC')}, silent = TRUE)
         if ((class(origin.file) == 'try-error') || !(sub(' since.*$', '', time.units) == 'days')) {
           if(!interactive())
-            cat('Date format in ncdf file is in a non implemented format.\n')
+            stop('Date format in ncdf file is in a non implemented format.\n')
           return(var.get.nc(time.source, 'time'))
         }    
         units          <- sub(' since.*$', '', time.units)
