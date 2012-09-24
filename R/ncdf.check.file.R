@@ -22,7 +22,7 @@ ncdf.check.file = function(
     stop(paste('Function is not designed to check dimensions ', dims[dims.nonvalid], '!', sep=''))
 
   #check dimensions
-  dims.exists <- match(dims, ncdf.get.diminfo(con.check)[, 'name'])
+  dims.exists <- match(dims, ncdf.get.diminfo(con.check, extended = FALSE)[, 'name'])
   if (sum(is.na(dims.exists))>0) {
     close.nc(con.check)
     cat(paste('Dimension ', dims[is.na(dims.exists)], ' not existent!\n', sep=''))
@@ -45,7 +45,7 @@ ncdf.check.file = function(
     }
   }
   #check attributes
-  variables <- ncdf.get.varinfo(con.check)[, 'name'][is.na(match(ncdf.get.varinfo(con.check)[, 'name'], ncdf.get.diminfo(con.check)[, 'name']))]
+  variables <- ncdf.get.varinfo(con.check)[, 'name'][is.na(match(ncdf.get.varinfo(con.check)[, 'name'], ncdf.get.diminfo(con.check, extended = FALSE)[, 'name']))]
   atts.check <- c('_FillValue', 'missing_value', 'add_offset', 'scale_factor', 'units')
   for (var.t in variables[variables != c("flag.orig")]) {
     atts.found <- match(atts.check, ncdf.get.attinfo(con.check, var.t)[, 'name'])

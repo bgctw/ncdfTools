@@ -17,7 +17,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                       ##   for details). Has to have the sam ind.extr e structure as dimensions.
 , MSSA.blocksize = 1  ##<< integer: size of the quadratical block used for MSSA.  
 , gaps.cv        = 0
-, MSSA.blck.trsh = tresh.fill[[1]]                                 
+, MSSA.blck.trsh = tresh.fill[[1]][[1]]                                 
 , amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of numeric vectors: the relative ratio (length gaps/series length) of
                       ##  artificial gaps to include to determine the iteration with the best
@@ -582,10 +582,8 @@ GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel,
   ##TODO add checks
   ## - single dimension variances and thresh.fill.first, tresh.fill
   ## - facilitate old school SSA via gaps.cv, max.steps = 1, amnt.artgaps !=0 and length(dimensions) == 1
-  ##TODO check intererelation between ratio.test and gaps.cv
+  ##TODO check intercorelation between ratio.test and gaps.cv
   
-
-
   
   if (!file.exists(file.name))
     stop('Input ncdf file not found. Check name!')
@@ -1111,14 +1109,14 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
     
     ##remove ocean cells
     if (sum(!slices.process) > 0) {
-      ind.process.cube[ind.datacube(ind.process.cube, slices.remove, c(2,3))] <- FALSE
-      rows.remove <- apply(ind.process.cube,1,function(x){sum(x)==0})
-      if (sum(rows.remove) > 0) {
-        ind.process.cube <- ind.process.cube[!rows.remove,,]
-        iters.n <- iters.n - sum(rows.remove)
-      } 
+      ind.process.cube[ind.datacube(ind.process.cube, slices.remove, c(2, 3))] <- FALSE
     }
-        
+    rows.remove <- apply(ind.process.cube, 1, function(x){sum(x) == 0})
+    if (sum(rows.remove) > 0) {
+      ind.process.cube <- ind.process.cube[!rows.remove, , ]
+      iters.n <- iters.n - sum(rows.remove)
+    } 
+            
   } else if (!MSSA) {
     args.expand.grid     <- alist()
     for (d in 1:length(dims.cycle.id))
