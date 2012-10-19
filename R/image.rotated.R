@@ -18,56 +18,55 @@ image.rotated = function(
 {
     oopts <- options(warn = -1)
     add.args = list(...)
-    if (length(col.vals) == 0) { 
-      col.strings <- colnames(data)
-      if  (is.null(col.strings))
-        col.strings =  1:dim(data)[2]
-      col.vals    <- 1:dim(data)[2]
-    } else {
-      col.strings <- col.vals
-    }  
-    
-    if(sum(is.na(as.numeric(col.strings))) == 0) {
-      col.strings.pretty   <- pretty(as.numeric(col.strings))
-      a = lm(y~x, data = data.frame(x = range(as.numeric(col.strings)),y = range(col.vals)))
-      col.vals.axis <- coefficients(a)[1] +  coefficients(a)[2]*col.strings.pretty 
-    } else {
-      col.vals.axis <- 1:length(row.strings)
-        col.strings.pretty <- col.strings
+  
+    coords=list()
+    coords$x <- c(1, dim(data)[2])
+    if (length(col.vals) == 0) {
+      col.vals <- colnames(data)
+      if  (is.null(col.vals))
+        col.vals =  1:dim(data)[2]      
+    }
+    if (class(col.vals) == 'numeric') {
+       coords$x <- range(col.vals)
     }
     
+    coords$y <- c(dim(data)[1], 1)
     if (length(row.vals) == 0) {
-      row.strings <- rev(rownames(data))
-      if  (is.null(row.strings))
-        row.strings =  1:dim(data)[1]
-      row.vals    <- 1:dim(data)[1]
-    } else {
-      row.strings <- rev(row.vals)
+      row.vals <- rownames(data)
+      if  (is.null(row.vals))
+        row.vals =  1:dim(data)[1]      
     }
-    
-    if(sum(is.na(as.numeric(row.strings)))==0) {
-      row.strings.pretty   <- pretty(as.numeric(row.strings))
-      a = lm(y~x, data=data.frame(x=range(as.numeric(row.strings)), y=range(row.vals)))
-      row.vals.axis <- coefficients(a)[1] +  coefficients(a)[2]*row.strings.pretty 
-    } else {
-      row.vals.axis <- 1:length(row.strings)
-      row.strings.pretty <- row.strings         
+    if (class(row.vals) == 'numeric') {
+      coords$y <- rev(range(row.vals))
     }
   
     options(oopts)
-    data=t(data)[,dim(data)[1]:1]
+    data.p =t(data)[,dim(data)[1]:1]
+    par(las = 1, tcl = 0.2, mgp = c(1,0,0))
     if (scale) {
       old.mar <- par()$mar
       par(mar=par()$mar + c(0,0,0,2))
     }  
     
-    image(x = sort(col.vals), y = sort(row.vals), z = data, xaxt = 'n', yaxt = 'n', col = col, zlim = zlim ,...)
     
-    if (is.null(add.args$xaxt) || add.args$xaxt != 'n')       
-       axis(side = 1,labels = col.strings.pretty, at = col.vals.axis)
-    if (is.null(add.args$yaxt) || add.args$yaxt != 'n')
-       axis(side = 2, labels = row.strings.pretty, at = row.vals.axis)    
-    
+    image(z = data.p, xaxt = 'n', yaxt = 'n', col = col, zlim = zlim ,...)
+    par(new=TRUE)
+    plot(0,0,type ='n', xlim = coords$x, ylim = coords$y, xaxt = 'n', yaxt = 'n', 
+         xlab = '', ylab = '')
+    if (is.null(add.args$xaxt) || add.args$xaxt != 'n') { 
+      if (class(col.vals) == 'numeric') {
+        axis(side = 1)
+      } else {
+        axis(side = 1, labels = col.vals, at = coords$x[1]:coords$x[2])
+      }  
+    }
+    if (is.null(add.args$yaxt) || add.args$yaxt != 'n') {
+      if (class(row.vals) == 'numeric') {
+        axis(side = 1)
+      } else {
+        axis(side = 2, labels = row.vals, at = coords$y[2]:coords$y[1])
+      }
+    }
     if (scale) {
       require(plotrix)
       width.col<- 0.05*diff(par()$usr[1:2])
