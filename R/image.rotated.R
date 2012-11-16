@@ -49,7 +49,7 @@ image.rotated = function(
     }  
     
     
-    image(z = data.p, xaxt = 'n', yaxt = 'n', col = col, zlim = zlim ,...)
+    image(z = data.p, xaxt = 'n', yaxt = 'n', col = col, zlim = zlim,...)
     par(new=TRUE)
     plot(0,0,type ='n', xlim = coords$x, ylim = coords$y, xaxt = 'n', yaxt = 'n', 
          xlab = '', ylab = '')
@@ -57,14 +57,14 @@ image.rotated = function(
       if (class(col.vals) == 'numeric') {
         axis(side = 1)
       } else {
-        axis(side = 1, labels = col.vals, at = coords$x[1]:coords$x[2])
+        axis(side = 1, labels = col.vals, at = coords$x[1]:coords$x[2], ...)
       }  
     }
     if (is.null(add.args$yaxt) || add.args$yaxt != 'n') {
       if (class(row.vals) == 'numeric') {
         axis(side = 1)
       } else {
-        axis(side = 2, labels = row.vals, at = coords$y[2]:coords$y[1])
+        axis(side = 2, labels = row.vals, at = coords$y[2]:coords$y[1], ...)
       }
     }
     if (scale) {
