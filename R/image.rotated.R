@@ -51,8 +51,10 @@ image.rotated = function(
     
     image(z = data.p, xaxt = 'n', yaxt = 'n', col = col, zlim = zlim,...)
     par(new=TRUE)
-    plot(0,0,type ='n', xlim = coords$x, ylim = coords$y, xaxt = 'n', yaxt = 'n', 
-         xlab = '', ylab = '')
+    limits <- list(x = coords$x + c(-1,1)*diff(coords$x)/(2*(length(col.vals)-1)),
+                   y = coords$y + c(-1,1)*diff(coords$y)/(2*(length(row.vals)-1)))
+    plot(0,0,type ='n', xlim = limits$x, ylim = limits$y, xaxt = 'n', yaxt = 'n', 
+         xlab = '', ylab = '', xaxs = 'i', yaxs = 'i')
     if (is.null(add.args$xaxt) || add.args$xaxt != 'n') { 
       if (class(col.vals) == 'numeric') {
         axis(side = 1)
