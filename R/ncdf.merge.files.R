@@ -10,6 +10,7 @@ ncdf.merge.files <- function(
 )
 {
   ##TODO useful defaults
+  ##TODO detect overlapping time spans
   require(chron)
   date.start.in <- ncdf.name2date(file.names, fun.start, convert)
   date.end.in   <- ncdf.name2date(file.names, fun.end, convert)
@@ -61,7 +62,7 @@ ncdf.merge.files <- function(
               do.call(fun.end, list(file.names[length(file.names)])),
               file.names[1])))
   system(paste('cdo -O mergetime ', paste(file.names, collapse =' '), ' ', ofile, sep ='') )   
-  if (length(files.delete) > 0 )
+  if (exists('files.delete') && length(files.delete) > 0 )
     for (file.t in files.delete)
       file.remove(file.t)
   invisible(list(file.out = ofile, date.range = c(date.start.out, date.end.out)))
