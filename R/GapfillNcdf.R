@@ -738,9 +738,7 @@ GapfillNcdfOpenFiles <- function(file.name, var.name, n.steps, print.status)
     con.tmp            <- open.nc(file.name.guess.t, write = TRUE)
     data.tmp           <- var.get.nc(con.tmp, var.name)
     data.tmp[]         <- NA
-    var.rename.nc(con.tmp, sub('[.]nc$', '', file.name), sub('[.]nc$', '', 
-                                                             file.name.guess.t))
-    var.put.nc(con.tmp, sub('[.]nc$', '', file.name.guess.t), data.tmp)
+    var.put.nc(con.tmp, sub('[.].*$', '', file.name.guess.t), data.tmp)
     close.nc(con.tmp)
     Sys.chmod(file.name.guess.t, mode = "0777")
   }

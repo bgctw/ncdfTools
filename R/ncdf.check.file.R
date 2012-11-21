@@ -33,17 +33,26 @@ ncdf.check.file = function(
     dims.exists <- match(dims, ncdf.get.varinfo(con.check)[, 'name'])
     if (sum(is.na(dims.exists)) > 0)  {
       close.nc(con.check)
-      cat(paste('Coordinate variable for dim ', dims[is.na(dims.exists)], ' not existent!\n', sep=''))
+      cat(paste('Coordinate variable for dim ', dims[is.na(dims.exists)], ' not existent!\n', sep = ''))
       return(invisible(FALSE))
     }
     for (dim.t in dims) {
       if (!(sum(!is.na(var.get.nc(con.check, dim.t))) == dim.inq.nc(con.check, dim.t)$length)) {
         close.nc(con.check)
-        cat(paste('Coordinate variable for dim ', dim.t, ' has missing values!\n', sep=''))
+        cat(paste('Coordinate variable for dim ', dim.t, ' has missing values!\n', sep = ''))
         return(invisible(FALSE))
       }
     }
   }
+
+  #check file name
+  if (type == 'strict') {
+    var.name <- sub('[.].*', '', file.name)
+    if (!is.element(var.name, ncdf.get.varinfo(con.check)[,'name']))
+      stop(paste('File does not have the main variable which has to be named ', var.name,
+                 '(according to the file name targetvar.NumberLatitudes.NumberLongitudes.Year.nc )', sep = ''))    
+  }
+  
   #check attributes
   variables <- ncdf.get.varinfo(con.check)[, 'name'][is.na(match(ncdf.get.varinfo(con.check)[, 'name'], ncdf.get.diminfo(con.check, extended = FALSE)[, 'name']))]
   atts.check <- c('_FillValue', 'missing_value', 'add_offset', 'scale_factor', 'units')
