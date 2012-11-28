@@ -3,9 +3,9 @@ create.std.nc = function
     ##description<< This function writes an empty ncdf file with variable names, dimensions and
     ##              attributes formated in a standardized way.
        (
-    var.name                 ##<< character string: name of the target variable in the file
+    var.name                ##<< character string: name of the target variable in the file
     , file.name = c()    
-    , units = '[]'       ##<< character string: units of variable (should be compatible with udunits)
+    , units = '[]'          ##<< character string: units of variable (should be compatible with udunits)
     , lat.values = c()
     , long.values = c()
     , time.values = c()                     ##<< POSIXct vector: time values for the time dimension
@@ -13,10 +13,10 @@ create.std.nc = function
     , long.length = length(long.values)     ##<< integer: length of the longitude dimension
     , time.length = length(time.values)     ##<< integer: length of the time dimension
     , year.start.end = c()
-    , scale_factor = 1       ##<< numeric: scale factor
-    , add_offset = 0         ##<< numeric: offset
-    , type.var = 'NC_DOUBLE' ##<< character string: type of the data
-    , missing_value = -9999  ##<< numeric: missing data value
+    , scale_factor = 1      ##<< numeric: scale factor
+    , add_offset = 0        ##<< numeric: offset
+    , type.var = 'NC_DOUBLE'##<< character string: type of the data
+    , missing_value = -9999 ##<< numeric: missing data value
     , con.atts = c())    
 {
   require(RNetCDF)
@@ -58,7 +58,7 @@ create.std.nc = function
     ncdf.def.all.atts(file.con,'latitude',atts = list(long_name = "latitude",units = "degrees_north" ,
             standard_name = "latitude"))       
     if (length(lat.values) > 0)
-      var.put.nc(file.con, 'latitude', lat.values)  
+      var.put.nc(file.con, 'latitude', lat.values[order(lat.values, decreasing = TRUE)])  
   }   
   if (0 != long.length) {    
     dim.def.nc(file.con, 'longitude', dimlength = long.length)
@@ -66,12 +66,12 @@ create.std.nc = function
     ncdf.def.all.atts(file.con,'longitude',atts = list(long_name = "longitude",units = "degrees_east" ,
             standard_name = "longitude"))
     if (length(long.values) > 0)
-      var.put.nc(file.con, 'longitude', long.values)  
+      var.put.nc(file.con, 'longitude', long.values[order(long.values)])  
   }   
   if (0 != time.length) { 
     dim.def.nc(file.con, 'time', dimlength = time.length)
     var.def.nc(file.con, 'time','NC_DOUBLE', 'time')
-    ncdf.def.all.atts(file.con,'time',atts = list(long_name = "time",units = "days since 1584-10-14 00:00" ,
+    ncdf.def.all.atts(file.con,'time',atts = list(long_name = "time",units = "days since 1582-10-14 00:00" ,
             calendar = "gregorian"))     
     if (length(time.values) > 0) {
       time.ncdf <- as.numeric(julian(time.values, origin = as.POSIXct("1582-10-14", tz="UTC")))
