@@ -16,6 +16,8 @@ ncdf.get.varname <- function(
   ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {  
   var.name         <- setdiff(ncdf.get.varinfo(file.con, order.var ='id')$name, ncdf.get.diminfo(file.con, extended = FALSE)$name)
+  names.excluded   <- c('time_bnds')
+  var.name         <- setdiff(var.name, names.excluded)
   if(length(var.name) > 1) {
     var.id.nocoord <- ncdf.get.varinfo(file.con, order.var ='id')[match(var.name, ncdf.get.varinfo(file.con, order.var ='id')$name), 1] 
     var.ind <- var.id.nocoord[which.max(ncdf.get.varinfo(file.con, order.var ='id')[var.id.nocoord + 1, 4])] + 1

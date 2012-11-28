@@ -108,24 +108,13 @@ DecomposeNcdf = structure(function(
         stop('Wrong class for borders.wl! Needs to be a list!')
     file.con.orig <- open.nc(file.name)
     if (var.name == 'auto') {
-        var.decomp.name <- setdiff(ncdf.get.varinfo(file.con.orig)$name,
-                c(ncdf.get.diminfo(file.con.orig)$name,'doy','year','flag.orig'))
-        vars.copy <- c()
-        if (length(var.decomp.name)) {
-          var.decomp.lengths <- ncdf.get.varinfo(file.con.orig)[match(var.decomp.name, ncdf.get.varinfo(file.con.orig)$name), 'n.dims']
-          var.decomp.longest <- which(var.decomp.lengths == max(var.decomp.lengths))
-          if (length( var.decomp.longest) == 1) {
-              var.decomp.name <- var.decomp.name[var.decomp.longest]
-          } else {
-            stop('More than one non-dimensional/coordinate variable available in file!') 
-          }          
-        }  
-      } else {
-        var.decomp.name <- var.name
-        if (!is.element(var.name,ncdf.get.varinfo(file.con.orig)$name))
-            stop('Specified variable name does not exist in ncdf file!')
-        vars.noncopy <- c(var.decomp.name,ncdf.get.diminfo(file.con.orig)$name)
-        vars.copy    <- setdiff(ncdf.get.varinfo(file.con.orig)$name,vars.noncopy)
+      var.decomp.name <- ncdf.get.varname(file.con.orig)  
+    } else {
+      var.decomp.name <- var.name
+      if (!is.element(var.name,ncdf.get.varinfo(file.con.orig)$name))
+        stop('Specified variable name does not exist in ncdf file!')
+      vars.noncopy <- c(var.decomp.name,ncdf.get.diminfo(file.con.orig)$name)
+      vars.copy    <- setdiff(ncdf.get.varinfo(file.con.orig)$name,vars.noncopy)
     }
 #    if(package.parallel=='doSMP')
 #        stop('Please use doMC for parallel computing as doSMP is not yet functional/tested.')
@@ -207,7 +196,7 @@ DecomposeNcdf = structure(function(
     if (print.status)
         cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
     fun.na <- function(x){sum(is.na(x)) / n.timesteps}
-    amnt.na                     <- apply(data.all, MAR = dims.cycle.id,fun.na)
+    amnt.na                     <- apply(data.all, MAR = dims.cycle.id, fun.na)
     slices.empty                <- amnt.na == 1
     slices.valid                <- amnt.na == 0
     slices.gappy                <- !slices.empty & !slices.valid
@@ -253,6 +242,7 @@ DecomposeNcdf = structure(function(
     iter.grid.all          <- as.matrix(do.call("expand.grid", args.expand.grid))
     n.slices               <- dim(iter.grid.all)[1]
     n.iters                <- sum(slices.process)
+    max.cores              <- min(c(max.cores, n.iters))
     iter.grid              <- matrix(1, nrow = n.iters, ncol = length(dims.cycle.id) + 1)
     colnames(iter.grid)    <- c('iter.nr', dims.cycle.name)
     iter.grid[,'iter.nr']  <- 1:n.iters

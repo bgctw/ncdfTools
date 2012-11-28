@@ -752,7 +752,7 @@ GapfillNcdfOpenFiles <- function(file.name, var.name, n.steps, print.status)
   datacube                    <- var.get.nc(file.con.copy, var.name)
   if(sum(is.na(datacube))==0)
     stop('Data does not contain any gaps. Gap filling not possible.')
-  data.flag                   <- array(NA, dim=dim(datacube))
+  data.flag                   <- array(NA, dim = dim(datacube))
   data.flag[is.na(datacube)]  <- 0
   data.flag[!is.na(datacube)] <- 1
   var.put.nc(file.con.copy, 'flag.orig', data.flag)

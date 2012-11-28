@@ -7,6 +7,7 @@ ncdf.merge.files <- function(
       , time.range.out = c() 
       , format ='%Y%m'
       , convert = function(x)chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y')
+      , path.target = getwd()
 )
 {
   ##TODO useful defaults
@@ -58,9 +59,8 @@ ncdf.merge.files <- function(
   }
   
   Sys.setenv(SKIP_SAME_TIME=1)
-  ofile  <- do.call(name.change, list(sub(do.call(fun.end, list(file.names[1])),
-              do.call(fun.end, list(file.names[length(file.names)])),
-              file.names[1])))
+  ofile  <- file.path(path.target, do.call(name.change, list(sub(do.call(fun.end, list(file.names[1])),
+        do.call(fun.end, list(file.names[length(file.names)])), file.names[1]))))
   system(paste('cdo -O mergetime ', paste(file.names, collapse =' '), ' ', ofile, sep ='') )   
   if (exists('files.delete') && length(files.delete) > 0 )
     for (file.t in files.delete)
