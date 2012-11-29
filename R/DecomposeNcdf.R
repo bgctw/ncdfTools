@@ -109,6 +109,7 @@ DecomposeNcdf = structure(function(
     res.check     <- do.call(NcdfCheckInputSSA,
                              c(SSAprocess = 'Decompose', args.call.filecheck))
     var.name      <- res.check[[1]]
+    file.con.orig <- res.check[[2]]
 
     ##load data
     data.all          <- var.get.nc(file.con.orig, var.name)
