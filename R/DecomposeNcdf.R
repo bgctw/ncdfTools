@@ -93,7 +93,10 @@ DecomposeNcdf = structure(function(
     require(ncdf.tools, warn.conflicts = FALSE, quietly = TRUE)
     require(Rssa, warn.conflicts = FALSE, quietly = TRUE)
     require(abind, warn.conflicts = FALSE, quietly = TRUE)
-
+    if (calc.parallel) {
+      require(multicore, warn.conflicts = FALSE, quietly = TRUE)
+    }
+    
     #check input
     if (missing(file.name) | missing(borders.wl))
         stop('file.name and borders.wl need to be supplied!')

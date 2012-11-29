@@ -13,11 +13,11 @@ create.std.nc = function
     , long.length = length(long.values)     ##<< integer: length of the longitude dimension
     , time.length = length(time.values)     ##<< integer: length of the time dimension
     , year.start.end = c()
-    , scale_factor = 1      ##<< numeric: scale factor
-    , add_offset = 0        ##<< numeric: offset
-    , type.var = 'NC_DOUBLE'##<< character string: type of the data
-    , missing_value = -9999 ##<< numeric: missing data value
-    , con.atts = c())    
+    , scale_factor = 1       ##<< numeric: scale factor
+    , add_offset = 0         ##<< numeric: offset
+    , type.var = 'NC_DOUBLE' ##<< character string: type of the data
+    , missing_value = -9999  ##<< numeric: missing data value
+    , con.atts = c())
 {
   require(RNetCDF)
   #copy attributes etc from other ncdf file (if chosen)

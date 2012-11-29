@@ -194,6 +194,10 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     require(abind, warn.conflicts = FALSE, quietly = TRUE)
     require(raster, warn.conflicts = FALSE, quietly = TRUE)
     require(plyr, warn.conflicts = FALSE, quietly = TRUE)
+    if (calc.parallel) {
+      require(multicore, warn.conflicts = FALSE, quietly = TRUE)
+    }
+      
     if (sum(!is.na(match(c('latitude', 'longitude', 'lat', 'long'), 
                          unlist(dimensions)))) > 0)
     library(raster)
