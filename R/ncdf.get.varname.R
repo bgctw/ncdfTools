@@ -1,5 +1,5 @@
 ncdf.get.varname <- function(
-  file.con ##<< connection to the ncdf file.
+  file ##<< connection to the ncdf file.
 )
 ##title<<
 ## get name of variable in ncdf file
@@ -14,19 +14,32 @@ ncdf.get.varname <- function(
 
   ##author<<
   ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
-{  
+{
+  if (class(file) == 'character') {
+    file.con <- open.nc(file)
+  } else {
+    file.con <- file
+  }  
   var.name         <- setdiff(ncdf.get.varinfo(file.con, order.var ='id')$name, ncdf.get.diminfo(file.con, extended = FALSE)$name)
   names.excluded   <- c('time_bnds')
   var.name         <- setdiff(var.name, names.excluded)
   if(length(var.name) > 1) {
-    var.id.nocoord <- ncdf.get.varinfo(file.con, order.var ='id')[match(var.name, ncdf.get.varinfo(file.con, order.var ='id')$name), 1] 
-    var.ind <- var.id.nocoord[which.max(ncdf.get.varinfo(file.con, order.var ='id')[var.id.nocoord + 1, 4])] + 1
-    if (length(var.ind) > 1) {
+    var.id.nocoord <- ncdf.get.varinfo(file.con, order.var ='id')[match(var.name, ncdf.get.varinfo(file.con, order.var ='id')$name), 1]
+    var.nocoord.ndims <- ncdf.get.varinfo(file.con, order.var ='id')[var.id.nocoord + 1, 4]
+    var.id <- var.id.nocoord[var.nocoord.ndims == max(var.nocoord.ndims)]    
+    if (length(var.id) > 1 && class(file) == 'character') {
+      names.nocoord <- ncdf.get.varinfo(file.con, order.var = 'id')[var.id + 1,'name']
+      var.id        <- var.id[which(!is.na(pmatch(names.nocoord, file)))]
+    }
+    if ((length(var.id) > 1) ) {
       stop('Not possible to detect variable name!')
     } else {
-      var.name <-ncdf.get.varinfo(file.con, order.var ='id')$name[var.ind]         
+      var.name <-ncdf.get.varinfo(file.con, order.var ='id')$name[var.id + 1]         
     }
   }
+  if (class(file) == 'character') {
+    close.nc(file.con)
+  } 
   ##value<< character string: name of the variable.   
   return(var.name)
 }  

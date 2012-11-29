@@ -10,6 +10,7 @@ ncdf.check.file = function(
                 ##<< character string: if 'strict', then all aspects are checked. If this
                 ##   is any other value, only aspects relevant for the processing of
                 ##   decomp.ncdf are checked.
+  , var.check ='single'
 )
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
@@ -43,7 +44,7 @@ ncdf.check.file = function(
         return(invisible(FALSE))
       }
     }
-  }
+  } 
 
   #check file name
   if (type == 'strict') {
@@ -55,15 +56,22 @@ ncdf.check.file = function(
   
   #check attributes
   variables <- ncdf.get.varinfo(con.check)[, 'name'][is.na(match(ncdf.get.varinfo(con.check)[, 'name'], ncdf.get.diminfo(con.check, extended = FALSE)[, 'name']))]
-  atts.check <- c('_FillValue', 'missing_value', 'add_offset', 'scale_factor', 'units')
-  for (var.t in variables[variables != c("flag.orig")]) {
-    atts.found <- match(atts.check, ncdf.get.attinfo(con.check, var.t)[, 'name'])
-    if (sum(is.na(atts.found)) > 0) {
-      close.nc(con.check)
-      cat(paste('Variable ', var.t, ' does not have attributes ', paste(atts.check[is.na(atts.found)], collapse=',  '), '\n', sep=''))
-      return(invisible(FALSE))
+  variables <- variables[!is.element(variables, c("flag.orig", 'borders.low', 'borders.up'))]
+  if (length(variables) > 1 && var.check == 'single')
+    variables  <- ncdf.get.varname(file.name)
+  
+  if (type == 'strict') {       
+    atts.check <- c('_FillValue', 'missing_value', 'add_offset', 'scale_factor', 'units')
+    for (var.t in variables) {
+      atts.found <- match(atts.check, ncdf.get.attinfo(con.check, var.t)[, 'name'])
+      if (sum(is.na(atts.found)) > 0) {
+        close.nc(con.check)
+        cat(paste('Variable ', var.t, ' does not have attributes ', paste(atts.check[is.na(atts.found)], collapse=',  '), '\n', sep=''))
+        return(invisible(FALSE))
+      }
     }
   }
+  
   #check time vector
   if (type == 'strict') {
     if (is.element('time', dims)) {
@@ -82,7 +90,7 @@ ncdf.check.file = function(
   }
   #check missing_values attribute
   atts.check <- c('_FillValue', 'missing_value')
-  for (var.t in variables[variables != c("flag.orig")]) {
+  for (var.t in variables) {
     for (att.t in atts.check) {
       if (!(att.inq.nc(con.check, var.t, att.t)$type == var.inq.nc(con.check, var.t)$type)) {
         close.nc(con.check)

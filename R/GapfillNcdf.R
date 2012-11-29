@@ -196,11 +196,10 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     require(plyr, warn.conflicts = FALSE, quietly = TRUE)
     if (calc.parallel) {
       require(multicore, warn.conflicts = FALSE, quietly = TRUE)
-    }
-      
+    }     
     if (sum(!is.na(match(c('latitude', 'longitude', 'lat', 'long'), 
                          unlist(dimensions)))) > 0)
-    library(raster)
+      library(raster, warn.conflicts = FALSE, quietly = TRUE)
 
     # necessary variables
     step.chosen           <- matrix(NA, 2, max.steps)
@@ -214,12 +213,11 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       step.chosen[1, ]    <- 1
       step.chosen[2, ]    <- 1:n.steps
     }
-    ##TODO put to check arguments
-    if (missing(file.name) )
-        stop('file.name needs to be supplied!')
+
     
     #check input, check first guess, transfer and check ocean mask
-    res.check     <- do.call(GapfillNcdfCheckInput, args.call.filecheck)
+    res.check     <- do.call(NcdfCheckInputSSA,
+                             c(SSAprocess = 'Gapfill', args.call.filecheck))
     var.name      <- res.check[[1]]
     ocean.mask    <- res.check[[2]]
 
@@ -558,161 +556,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               process.type = process.type, amnt.artgaps = amnt.artgaps, 
               size.biggap = size.biggap, max.cores = max.cores)
 })
-
-
-
-
-
-##################################  check input ################################
-GapfillNcdfCheckInput <- function(max.cores, package.parallel, calc.parallel, 
-    print.status, first.guess, pad.series, process.cells, ocean.mask, tresh.fill,
-    var.name, amnt.iters.start, amnt.iters, file.name, process.type, size.biggap, 
-    amnt.artgaps, M, n.comp, dimensions, max.steps, tresh.fill.first, reproducible,
-    debugging, MSSA, MSSA.blocksize, keep.steps, ratio.test.t, force.all.dims,
-    debug, gaps.cv,  MSSA.blck.trsh, ratio.const, tresh.const)
-{
-  ##title<< helper function for GapfillNcdf
-  ##details<< helper function for GapfillNcdf that checks the consistency of the 
-  ##          input paramters.
-  ##seealso<<
-  ##\code{\link{GapfillNcdf}}
-  
-  ##TODO
-  # include test for MSSA and windowlength=1
-  
-  ##TODO
-  #check for tresh.fill.first
-  #check input file
-  ##TODO add checks
-  ## - single dimension variances and thresh.fill.first, tresh.fill
-  ## - facilitate old school SSA via gaps.cv, max.steps = 1, amnt.artgaps !=0 and length(dimensions) == 1
-  ##TODO check intercorelation between ratio.test and gaps.cv
-  
-  
-  if (!file.exists(file.name))
-    stop('Input ncdf file not found. Check name!')
-  check.passed = ncdf.check.file(file.name = file.name, 
-                                 dims = unique(unlist(dimensions)), 
-                                 type = 'relaxed')
-  if (!check.passed)
-    stop('NCDF file not consistent with CF ncdf conventions!')
-  file.con.orig <- open.nc(file.name)
-  if (var.name=='auto') {
-    var.name <- setdiff(ncdf.get.varinfo(file.con.orig)$name,
-        c(ncdf.get.diminfo(file.con.orig)$name,'doy', 'year', 'flag.orig'))
-    if (length(var.name) > 1)
-      stop('More than one non-dimensional/coordinate variable available in file!')
-  } else {
-    var.name=var.name
-    if (!is.element(var.name, ncdf.get.varinfo(file.con.orig)$name))
-      stop('Specified variable name does not exist in ncdf file!')
-  }
-  if(sum(is.na(match(unique(unlist(dimensions)), c('longitude', 'latitude', 'time')))) > 0)
-    stop('Every dimensions value has to be one of time, longitude, latitude!')
-  dims.not.exist <- is.na(match(unlist(dimensions), ncdf.get.diminfo(file.con.orig)[, 'name']))
-  if(sum(dims.not.exist)>0)
-    stop(paste('Dimension(s) ', paste(unlist(dimensions)[dims.not.exist], collapse=', '),
-            'not existent in ncdf file!', sep=''))
-
-  # check first guess file
-  name.first.guess.std <- paste(sub('.nc', '', file.name),'_first_guess_step_1.nc', sep = '')
-  if (!(first.guess == 'mean')) {
-    if (!(file.exists(first.guess))) {
-      stop('Specified first.guess file not existent!')
-    } else if (!(first.guess == name.first.guess.std)) {
-      stop('Name for supplied first guess file does not fit the standardized scheme!')
-    }
-    check.passed = ncdf.check.file(file.name = first.guess, 
-                                   dims = ncdf.get.diminof(file.con.orig)[, 'name'], 
-                                   type = "relaxed")
-    if (!check.passed)
-      stop('First guess NCDF file not consistent with CF ncdf conventions!')
-  }
-
-  #transfer and check ocean mask
-  lengths.dim.nontime <- ncdf.get.diminfo(file.con.orig)['length'][!(ncdf.get.diminfo(file.con.orig)['name'] == 'time')]
-
-  data.t                    <- var.get.nc(file.con.orig, var.name)
-  if (!is.null(ocean.mask) && class(ocean.mask)=='character') {
-    if (!(file.exists(ocean.mask)))
-      stop('File for ocean mask not existent!')
-    check.passed <- ncdf.check.file(file.name = ocean.mask, 
-                                    dims=c('longitude','latitude'), type = 'relaxed')
-    if (!check.passed)
-      stop('ocean mask NCDF file not consistent with CF ncdf conventions!')
-    con.ocean   <- open.nc(ocean.mask)
-    var.names.t <- ncdf.get.varinfo(con.ocean)[,'name']
-    var.name.om <- var.names.t[is.na(match(var.names.t, c('time', 'longitude', 'latitude')))]
-    if (length(var.name.om) > 1)
-      stop('More then one variable existent in ocean mask!')
-    for (par.check in c('longitude', 'latitude')) {
-      if(!identical(var.get.nc(file.con.orig,par.check), 
-                    var.get.nc(con.ocean, par.check)))
-        stop(paste(par.check,' values need to be identical in ocean.mask and',
-                   ' input ncdf file!'))
-    }
-    ocean.cells <- var.get.nc(con.ocean, var.name.om)
-    ocean.mask  <- array(FALSE, dim = dim(ocean.cells))
-    ocean.mask[ocean.cells == 1 ] <- TRUE
-    close.nc(con.ocean)
-    ind.array <- ind.datacube(data.t, ocean.mask,
-                             (1:3)[is.element(ncdf.get.diminfo(file.con.orig)[, 'name'], 
-                             c('longitude', 'latitude'))])
-    if (sum(!is.na(data.t[ind.array])) > 0)
-      stop('Data contains non NA values at ocean grid positions!')
-  }
-  if (length(ocean.mask) > 0 && !(dim(ocean.mask) == lengths.dim.nontime))
-    stop(paste('The ocean mask has to have identical dimensions as the spatial',
-               ' dimensions in the ncdf file!', sep = ''))
-
-  # check consitency of inputs
-  n.steps           <- length(amnt.artgaps)
-  if (!is.element(process.cells,c('gappy', 'all')))
-    stop('process.cells has to be one of \'all\' or \'gappy\'!')
-  if (!is.element(process.type,c('stepwise', 'variances')))
-    stop('process.type has to be one of \'stepwise\' or \'variances\'!')
-  if (max.cores > 1 & !calc.parallel)
-    stop('More than one core can only be used if calc.parallel==TRUE!')
-  if(all(unlist(c(tresh.fill, tresh.fill.first)) < 0 | unlist(c(tresh.fill, tresh.fill.first)) > 1))
-    stop('All values in tresh.fill (and tresh.fill.first) need to be between 0 and 1!')
-  if (process.type == 'variances') {
-    args.check <- c('dimensions', 'n.comp', 'M', 'amnt.artgaps', 'size.biggap', 'tresh.fill')
-    n.dims     <- length(dimensions[[1]])
-    for (m in 1:length(args.check)) {
-      if (length(get(args.check[m])[[1]]) != n.dims)
-        stop(paste(args.check[m],' needs to be of the same length as dimensions',
-                   '[[1]] for process.type == \'variances\'!', sep = ''))
-      if(!(class(get(args.check[m]))) == 'list')
-        stop(paste('Argument ',args.check[m], ' is not a list!'))
-      if (length(get(args.check[m])) != 1)
-        stop(paste(args.check[m],' needs to be of length 1 for process.type ==',
-                   ' \'variances\' !', sep = ''))
-    }
-  }
-  if (process.type == 'stepwise') {
-    args.list = c('amnt.artgaps', 'size.biggap', 'n.comp', 'M', 'pad.series', 
-                 'tresh.fill', 'amnt.iters', 'amnt.iters.start')
-    for (n in 1:length(args.list)) {
-      if((class(get(args.list[n]))) != 'list')
-        stop(paste('Argument ', args.list[n], ' is not a list!'))
-      if (length(get(args.list[n])[[1]]) != length(dimensions[[1]]))
-        stop(paste('Argument ', args.list[n], ' has to be a list of the same ',
-                   'length as dimensions for process.type == \'stepwise\'!'))
-#      if (! all(sapply(get(args.list[n]), length) == 1 ))
-#        stop(paste('Argument ', args.list[n], '[[1..n]] can only be a list of ',
-#                   'length one for process.type == \'stepwise\'!', sep = ''))
-    }
-    for (o in 1:length(dimensions))
-      if (sapply(dimensions[o] , function(x) length(x)) > 2)
-        stop('Settings imply SSA with more than two dimensions which is not implemented.')
-    step.wrong <- (unlist(tresh.fill) == 0 & (!(unlist(size.biggap) == 0) | 
-            !(all(unlist(amnt.artgaps) == 0))))
-  }
-  close.nc(file.con.orig)
-  return(invisible(list(var.name = var.name, ocean.mask = ocean.mask, calc.parallel = calc.parallel)))
-
-}
-
 
 
 ##################################      create files    ########################

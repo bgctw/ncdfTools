@@ -83,10 +83,18 @@ DecomposeNcdf = structure(function(
     ##TODO Try zero line crossings for frequency determination
     ##TODO Make method reproducible (seed etc)
     ##TODO Add way to handle non convergence
-
-    #load libraries
+  
+    ##save argument values of call
+    args.call.filecheck <- as.list(environment())
+    args.call.global    <- call.args2string()
+    if (print.status & !interactive()) {
+      print('Arguments supplied to function call:')
+      print(args.call.filecheck)
+    }
+      
+    ##load libraries
     if (print.status)
-        cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
+      cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
     require(foreach, warn.conflicts = FALSE, quietly = TRUE)
     require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
     require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
@@ -97,34 +105,13 @@ DecomposeNcdf = structure(function(
       require(multicore, warn.conflicts = FALSE, quietly = TRUE)
     }
     
-    #check input
-    if (missing(file.name) | missing(borders.wl))
-        stop('file.name and borders.wl need to be supplied!')
-    if (!file.exists(file.name))
-        stop('Input ncdf file not found. Check name')
-    if (check.files) {  
-       check.passed = ncdf.check.file(file.name = file.name, dims = 'time', type = 'relaxed')
-       if (!check.passed)
-          stop('NCDF file not consistent with CF ncdf conventions!')
-    }    
-    if (!class(borders.wl) == 'list')
-        stop('Wrong class for borders.wl! Needs to be a list!')
-    file.con.orig <- open.nc(file.name)
-    if (var.name == 'auto') {
-      var.decomp.name <- ncdf.get.varname(file.con.orig)  
-    } else {
-      var.decomp.name <- var.name
-      if (!is.element(var.name,ncdf.get.varinfo(file.con.orig)$name))
-        stop('Specified variable name does not exist in ncdf file!')
-      vars.noncopy <- c(var.decomp.name,ncdf.get.diminfo(file.con.orig)$name)
-      vars.copy    <- setdiff(ncdf.get.varinfo(file.con.orig)$name,vars.noncopy)
-    }
-#    if(package.parallel=='doSMP')
-#        stop('Please use doMC for parallel computing as doSMP is not yet functional/tested.')
-    if (!(is.element('time', ncdf.get.diminfo(file.con.orig)$name)))
-        stop(paste('File has no dimension called time (case sensitive)!'))
+    ##check input
+    res.check     <- do.call(NcdfCheckInputSSA,
+                             c(SSAprocess = 'Decompose', args.call.filecheck))
+    var.name      <- res.check[[1]]
 
-    data.all          <- var.get.nc(file.con.orig, var.decomp.name)
+    ##load data
+    data.all          <- var.get.nc(file.con.orig, var.name)
 
     #open ncdf files
     if (print.status)
@@ -179,12 +166,12 @@ DecomposeNcdf = structure(function(
                '[timesteps]')
     att.put.nc(file.con.copy, 'borders.low', 'unit', 'NC_CHAR',
                '[timesteps]')
-    var.def.nc(file.con.copy, var.decomp.name, var.inq.nc(file.con.orig, var.decomp.name)$type,
-               c(var.inq.nc(file.con.orig, var.decomp.name)$dimids,
+    var.def.nc(file.con.copy, var.name, var.inq.nc(file.con.orig, var.name)$type,
+               c(var.inq.nc(file.con.orig, var.name)$dimids,
                  dim.inq.nc(file.con.copy, 'spectral_bands')$id))
-    ncdf.att.copy(file.con.orig, var.decomp.name, var.decomp.name, file.con.copy)
+    ncdf.att.copy(file.con.orig, var.name, var.name, file.con.copy)
     close.nc(file.con.copy)
-    dims.ids.data     <- var.inq.nc(file.con.orig, var.decomp.name)$dimids + 1   
+    dims.ids.data     <- var.inq.nc(file.con.orig, var.name)$dimids + 1   
     dims.info         <- ncdf.get.diminfo(file.con.orig)[dims.ids.data,]
     
     #prepare parallel iteration parameters
@@ -264,12 +251,12 @@ DecomposeNcdf = structure(function(
 
     #define process during iteration
     calcs.iter = function(iter.nr, file.name, n.timesteps, n.bands, dims.cycle.n,
-                          iter.grid, args.call, var.decomp.name, dim.process.id,
+                          iter.grid, args.call, var.name, dim.process.id,
                           dims.cycle.id)
     {
          require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
         file.con.t                 <- open.nc(file.name)
-        data.all.t                 <- var.get.nc(file.con.t, var.decomp.name)
+        data.all.t                 <- var.get.nc(file.con.t, var.name)
         iter.ind                   <- iter.gridind[iter.nr, ]
         data.results.iter          <- array(NA,dim=c(n.timesteps, n.bands, diff(iter.ind) + 1))
         for (j in 1:(diff(iter.ind) + 1))
@@ -324,7 +311,7 @@ DecomposeNcdf = structure(function(
                                                        file.name = file.name , n.timesteps = n.timesteps,
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
-                                                       var.decomp.name = var.decomp.name,
+                                                       var.name = var.name,
                                                        dim.process.id = dim.process.id, dims.cycle.id = dims.cycle.id)
     } else {
         data.results.valid.cells <- foreach(i = 1:max.cores
@@ -332,7 +319,7 @@ DecomposeNcdf = structure(function(
                                                        file.name = file.name , n.timesteps = n.timesteps,
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
-                                                       var.decomp.name = var.decomp.name, dim.process.id = dim.process.id,
+                                                       var.name = var.name, dim.process.id = dim.process.id,
                                                         dims.cycle.id = dims.cycle.id)
     }
     if (package.parallel=='doSMP')
@@ -355,10 +342,10 @@ DecomposeNcdf = structure(function(
         save.image(paste('workspace_before_writing_', file.name, '.RData', sep=''))
     if (print.status)
         cat(paste(Sys.time(), ' : Writing results to file. \n', sep=''))
-    if (!is.element('missing_value', ncdf.get.attinfo(file.con.copy, var.decomp.name)[,'name']) &&
+    if (!is.element('missing_value', ncdf.get.attinfo(file.con.copy, var.name)[,'name']) &&
         sum(is.na(data.results.final)) > 0)
-      att.put.nc(file.con.copy, var.decomp.name, 'missing_value', var.inq.nc(file.con.copy, var.decomp.name)$type, -9999.0)
-    var.put.nc(file.con.copy, var.decomp.name, data.results.final)
+      att.put.nc(file.con.copy, var.name, 'missing_value', var.inq.nc(file.con.copy, var.name)$type, -9999.0)
+    var.put.nc(file.con.copy, var.name, data.results.final)
 
     #add attributes with process information to ncdf files
     all.args     <- formals(FilterTSeriesSSA)
