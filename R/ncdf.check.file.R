@@ -91,11 +91,17 @@ ncdf.check.file = function(
   #check missing_values attribute
   atts.check <- c('_FillValue', 'missing_value')
   for (var.t in variables) {
+    if (sum(is.na(match(atts.check, ncdf.get.attinfo(con.check, var.t)[, 'name']))) == 2) {
+      cat(paste('One of the attributes _FillValue or missing_value has to be available for variable ', var.t, '!.\n', sep=''))
+      return(invisible(FALSE))
+    }
     for (att.t in atts.check) {
-      if (!(att.inq.nc(con.check, var.t, att.t)$type == var.inq.nc(con.check, var.t)$type)) {
-        close.nc(con.check)
-        cat(paste('Attribute ', att.t, ' of variable ', var.t, ' needs to be of the same class as ', var.t, '.\n', sep=''))
-        return(invisible(FALSE))
+      if (!is.na(match(att.t, ncdf.get.attinfo(con.check, var.t)[, 'name']))) {
+        if (!(att.inq.nc(con.check, var.t, att.t)$type == var.inq.nc(con.check, var.t)$type)) {
+          close.nc(con.check)
+          cat(paste('Attribute ', att.t, ' of variable ', var.t, ' needs to be of the same class as ', var.t, '.\n', sep=''))
+          return(invisible(FALSE))
+        }
       }
     }
   }
