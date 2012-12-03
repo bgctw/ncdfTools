@@ -176,11 +176,20 @@ DecomposeNcdf = structure(function(
     dims.info         <- ncdf.get.diminfo(file.con.orig)[dims.ids.data,]
     
     #prepare parallel iteration parameters
-    dims.cycle.id     <- sort(setdiff(1:length(dims.ids.data), match('time', dims.info$name) ))
-    dims.cycle.name   <- dims.info[dims.cycle.id,'name']
-    dim.process.id    <- match('time', dims.info$name)
+    drop.dim = FALSE
+    if (length(dim(data.all)) >1 ) {
+      dims.cycle.id     <- sort(setdiff(1:length(dims.ids.data), match('time', dims.info$name) ))
+      dims.cycle.name   <- dims.info[dims.cycle.id,'name']
+      dim.process.id    <- match('time', dims.info$name)
+    } else {
+      dims.cycle.id     <- 1
+      dim.process.id    <- 2
+      dims.cycle.name   <- 'series'
+      data.all          <- array(data.all, dim = c(1, length(data.all)))
+      drop.dim          <- TRUE
+    }
+    dims.cycle.length <- dim(data.all)[dims.cycle.id] 
     dims.cycle.n      <- length(dims.cycle.id)
-    dims.cycle.length <- dim(data.all)[dims.cycle.id]
     n.timesteps       <- dims.info[match('time', dims.info$name), 3]
 
     #determine slices to process
@@ -209,8 +218,7 @@ DecomposeNcdf = structure(function(
     }
     slices.constant               <- apply(data.all, MAR = dims.cycle.id, fun.constant)
     slices.constant[slices.gappy] <- FALSE
-    slices.zero[slices.gappy]     <- FALSE
- 
+    slices.zero[slices.gappy]     <- FALSE 
     if (sum(slices.constant) > 0)
        cat(paste(Sys.time(), ' : ', sum(slices.constant),' constant slices were found. ',
                  ' Spectral decomp. for these is ommited!\n', sep=''))
@@ -253,11 +261,13 @@ DecomposeNcdf = structure(function(
     #define process during iteration
     calcs.iter = function(iter.nr, file.name, n.timesteps, n.bands, dims.cycle.n,
                           iter.grid, args.call, var.name, dim.process.id,
-                          dims.cycle.id)
+                          dims.cycle.id, iter.gridind)
     {
-         require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
+        require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
         file.con.t                 <- open.nc(file.name)
         data.all.t                 <- var.get.nc(file.con.t, var.name)
+        if (length(dim(data.all.t))  < 2)
+          data.all.t               <- array(data.all.t, c(1, length(data.all.t)))
         iter.ind                   <- iter.gridind[iter.nr, ]
         data.results.iter          <- array(NA,dim=c(n.timesteps, n.bands, diff(iter.ind) + 1))
         for (j in 1:(diff(iter.ind) + 1))
@@ -273,7 +283,7 @@ DecomposeNcdf = structure(function(
                            ind.extract[[dims.cycle.id[i] + 1]] <- iter.grid[ind.total, i + 1]
                         ind.extract[[dim.process.id + 1]] <- TRUE
                         args.call.t             <- args.call
-                        args.call.t[['series']] <- do.call('[', ind.extract)
+                        args.call.t[['series']] <- as.numeric(do.call('[', ind.extract))
                         series.decomp           <- do.call(FilterTSeriesSSA, args.call.t)
                         t(series.decomp$dec.series)
                     })
@@ -312,7 +322,7 @@ DecomposeNcdf = structure(function(
                                                        file.name = file.name , n.timesteps = n.timesteps,
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
-                                                       var.name = var.name,
+                                                       var.name = var.name, iter.gridind = iter.gridind, 
                                                        dim.process.id = dim.process.id, dims.cycle.id = dims.cycle.id)
     } else {
         data.results.valid.cells <- foreach(i = 1:max.cores
@@ -321,7 +331,7 @@ DecomposeNcdf = structure(function(
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
                                                        var.name = var.name, dim.process.id = dim.process.id,
-                                                        dims.cycle.id = dims.cycle.id)
+                                                       dims.cycle.id = dims.cycle.id, iter.gridind = iter.gridind)
     }
     if (package.parallel=='doSMP')
         stopWorkers(w)
@@ -346,6 +356,8 @@ DecomposeNcdf = structure(function(
     if (!is.element('missing_value', ncdf.get.attinfo(file.con.copy, var.name)[,'name']) &&
         sum(is.na(data.results.final)) > 0)
       att.put.nc(file.con.copy, var.name, 'missing_value', var.inq.nc(file.con.copy, var.name)$type, -9999.0)
+    if (drop.dim)
+      data.results.final <- drop(data.results.final)
     var.put.nc(file.con.copy, var.name, data.results.final)
 
     #add attributes with process information to ncdf files
