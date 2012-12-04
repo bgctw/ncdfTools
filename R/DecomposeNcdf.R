@@ -23,8 +23,8 @@ DecomposeNcdf = structure(function(
                           ##   from the decomposition
     , ratio.const = 0.05  ##<< numeric: max ratio of the time series that is allowed to be above tresh.const for the time series
                           ##   still to be not cosidered constant.
-    , package.parallel = 'doMC' ##<< character: one of 'doSMP' or 'doMC': package to use for linking foreach to
-                          ##       the parallel computing backend. Preferably use doMC as the algorithm has been
+    , package.parallel = 'doMC' ##<< character: package to use for linking foreach to
+                          ##       the parallel computing backend. Only doMC as the algorithm has been
                           ##  extensively tested with this package.!
     , max.cores = 16      ##<< integer: maximum number of cores to use.
     , check.files = TRUE
@@ -259,15 +259,11 @@ DecomposeNcdf = structure(function(
     }
 
     #define process during iteration
-    calcs.iter = function(iter.nr, file.name, n.timesteps, n.bands, dims.cycle.n,
+    calcs.iter = function(iter.nr, n.timesteps, n.bands, dims.cycle.n,
                           iter.grid, args.call, var.name, dim.process.id,
                           dims.cycle.id, iter.gridind)
     {
         require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
-        file.con.t                 <- open.nc(file.name)
-        data.all.t                 <- var.get.nc(file.con.t, var.name)
-        if (length(dim(data.all.t))  < 2)
-          data.all.t               <- array(data.all.t, c(1, length(data.all.t)))
         iter.ind                   <- iter.gridind[iter.nr, ]
         data.results.iter          <- array(NA,dim=c(n.timesteps, n.bands, diff(iter.ind) + 1))
         for (j in 1:(diff(iter.ind) + 1))
@@ -278,7 +274,7 @@ DecomposeNcdf = structure(function(
                         if (iter.nr == 1 &&( diff(iter.ind) < 20  || (j%%(ceiling((diff(iter.ind)) / 20)) == 0)))
                             if (print.status)
                                 cat(paste(Sys.time(), ' : Finished ~', round(j / (diff(iter.ind) + 1) * 100), '%. \n', sep=''))
-                        ind.extract <- list(data.all.t)
+                        ind.extract <- list(data.all)
                         for (i in 1:length(dims.cycle.id))
                            ind.extract[[dims.cycle.id[i] + 1]] <- iter.grid[ind.total, i + 1]
                         ind.extract[[dim.process.id + 1]] <- TRUE
@@ -293,7 +289,7 @@ DecomposeNcdf = structure(function(
                 error.from.calc                 <- data.results.iter.t
                 trace.save                      <- traceback()
                 error.from.calc                 <- data.results.iter.t
-
+                print(data.results.iter.t[1])
                 data.results.iter.t             <- matrix(Inf, ncol=n.bands, nrow=n.timesteps)
                 system.info=sessionInfo()
                 file.name.t                      <- paste('workspace_error_', file.name, '_',iter.nr, '_', j, sep = '')
@@ -319,7 +315,7 @@ DecomposeNcdf = structure(function(
     if (calc.parallel) {
         data.results.valid.cells <- foreach(i = 1:max.cores
                                 ,  .combine = abind.mod, .multicombine = TRUE) %dopar% calcs.iter(iter.nr = i,
-                                                       file.name = file.name , n.timesteps = n.timesteps,
+                                                       n.timesteps = n.timesteps,
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
                                                        var.name = var.name, iter.gridind = iter.gridind, 
@@ -327,7 +323,7 @@ DecomposeNcdf = structure(function(
     } else {
         data.results.valid.cells <- foreach(i = 1:max.cores
                                 ,  .combine = abind.mod,  .multicombine = TRUE) %do% calcs.iter(iter.nr = i,
-                                                       file.name = file.name , n.timesteps = n.timesteps,
+                                                       n.timesteps = n.timesteps,
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
                                                        var.name = var.name, dim.process.id = dim.process.id,
