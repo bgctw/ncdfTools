@@ -171,7 +171,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     args.call.global    <- call.args2string()
     if (print.status & !interactive()) {
       print('Arguments supplied to function call:')
-      cat(paste(paste(names(args.call.filecheck), args.call.filecheck, sep=':'), collapse = '; '))
+      cat(paste(paste(names(args.call.filecheck), args.call.filecheck, sep=':'), '\n\n', collapse = '; '))
     }
     
     #set seed based on file name
@@ -644,7 +644,7 @@ GapfillNcdfSaveResults <- function(datacube, reconstruction, args.call.global,
   if (print.status)
     cat(paste(Sys.time(), ' : Writing results to file. \n', sep = ''))
   file.con.copy                   <- open.nc(file.name.copy, write = TRUE)
-  var.put.nc(file.con.copy, paste(var.name, '_gapfill', sep=''), data.results.final)
+  var.put.nc(file.con.copy, var.name, data.results.final)
   sync.nc(file.con.copy)
 
   #add attributes with process information to ncdf files
