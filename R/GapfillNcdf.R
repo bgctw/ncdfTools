@@ -80,8 +80,9 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 , print.status = TRUE ##<< logical: whether to print status information during the process
 , calc.parallel = TRUE##<< logical: whether to use parallel computing. Needs packages doMC, foreach or doSMP (and
                       ##   their dependencies) to be installed.
-, package.parallel = 'doMC' ##<< character: one of 'doSMP' or 'doMC': package to use for linking foreach to
-                      ##   parallel computing back end.
+, package.parallel = 'doMC' ## character: package to use for linking foreach to
+                      ##       the parallel computing backend. Only doMC as the algorithm has been
+                      ##  extensively tested with this package.!
 , max.cores = 8       ##<< integer: maximum number of cores to use.
 , debugging = FALSE
 , reproducible = FALSE##<< logical: Whether a seed based on the characters of the file name should be set
@@ -170,7 +171,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     args.call.global    <- call.args2string()
     if (print.status & !interactive()) {
       print('Arguments supplied to function call:')
-      print(args.call.filecheck)
+      cat(paste(paste(names(args.call.filecheck), args.call.filecheck, sep=':'), collapse = '; '))
     }
     
     #set seed based on file name
@@ -603,7 +604,6 @@ GapfillNcdfOpenFiles <- function(file.name, var.name, n.steps, print.status)
   data.flag[is.na(datacube)]  <- 0
   data.flag[!is.na(datacube)] <- 1
   var.put.nc(file.con.copy, 'flag.orig', data.flag)
-  var.rename.nc(file.con.copy, var.name, sub('[.]nc$', '', file.name.copy))
   dims.info                  <- ncdf.get.diminfo(file.con.copy)
   close.nc(file.con.copy)
   return(list(dims.info = dims.info, datacube = datacube, 
@@ -863,8 +863,11 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
            amnt.na.first.guess  <- 1- apply(first.guess, MAR = dims.cycle.id + 1 ,
                                             function(x) sum(!is.na(x[as.vector(!ocean.mask)])) / sum(!ocean.mask)   )
         slices.too.gappy[amnt.na.first.guess < 0.9 & amnt.na < 0.75] <- FALSE
-      }
+      }      
       slices.too.gappy[slices.ocean] <- FALSE
+
+ 
+      
       slices.constant            <- as.vector(apply(datacube, MAR = dims.cycle.id + 1,
                                                     function(x){length(unique(na.omit(as.vector(x)))) == 1}))
       slices.zero                <-  as.vector(apply(datacube, MAR = dims.cycle.id + 1, fun.zero))
@@ -876,7 +879,7 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
                                                      mean, na.rm = TRUE))
       slices.constant[slices.without.gaps & slices.ocean & slices.too.gappy] <- FALSE
       slices.process             <- !slices.constant & !slices.ocean & 
-                                    !slices.too.gappy & !slices.without.gaps
+                                    !slices.too.gappy & !slices.without.gaps  
       slices.excluded            <- logical(slices.n)
 
       ##extract only a ratio of the slices to calculate for variance testing
@@ -894,7 +897,7 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
         slices.without.gaps[ind.added] <- FALSE
       }
     } else {
-      slices.process <- slices.excluded0
+      slices.process <- slices.excluded
     }
   } else if (MSSA) {
     if (length(ocean.mask) > 0) {

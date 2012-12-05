@@ -89,7 +89,7 @@ DecomposeNcdf = structure(function(
     args.call.global    <- call.args2string()
     if (print.status & !interactive()) {
       print('Arguments supplied to function call:')
-      print(args.call.filecheck)
+      print(paste(paste(names(args.call.filecheck), args.call.filecheck, sep=':'), collapse = '; '))
     }
       
     ##load libraries
@@ -298,7 +298,6 @@ DecomposeNcdf = structure(function(
             }
             data.results.iter[,,j]  <- data.results.iter.t
         }
-        close.nc(file.con.t)
         data.results.iter
     }
 
