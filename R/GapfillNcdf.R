@@ -356,7 +356,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             ##get first guess
             if (h > 1 && exists('file.name.guess.next')) {
               file.con.guess   <- open.nc(file.name.guess.next)
-              first.guess      <- var.get.nc(file.con.guess, sub('[.]nc', '', file.name.guess.next))
+              first.guess      <- var.get.nc(file.con.guess, var.name)
               close.nc(file.con.guess)
             }
             ##run calculation
@@ -460,8 +460,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             }
           }
           #save first guess data
-          var.put.nc(file.con.guess.next, sub('[.]nc$', '', file.name.guess.curr), 
-              data.first.guess)
+          var.put.nc(file.con.guess.next, var.name, data.first.guess)
           close.nc(file.con.guess.next)
           step.use.frst.guess  <- step.chosen['step', max(which(!is.na(step.chosen['step',])))]
           file.name.guess.next <- paste(sub('.nc$', '', file.name), '_first_guess_step_',
@@ -586,7 +585,7 @@ GapfillNcdfOpenFiles <- function(file.name, var.name, n.steps, print.status)
     con.tmp            <- open.nc(file.name.guess.t, write = TRUE)
     data.tmp           <- var.get.nc(con.tmp, var.name)
     data.tmp[]         <- NA
-    var.put.nc(con.tmp, sub('[.].*$', '', file.name.guess.t), data.tmp)
+    var.put.nc(con.tmp, var.name, data.tmp)
     close.nc(con.tmp)
     Sys.chmod(file.name.guess.t, mode = "0777")
   }
@@ -864,10 +863,7 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
                                             function(x) sum(!is.na(x[as.vector(!ocean.mask)])) / sum(!ocean.mask)   )
         slices.too.gappy[amnt.na.first.guess < 0.9 & amnt.na < 0.75] <- FALSE
       }      
-      slices.too.gappy[slices.ocean] <- FALSE
-
- 
-      
+      slices.too.gappy[slices.ocean] <- FALSE      
       slices.constant            <- as.vector(apply(datacube, MAR = dims.cycle.id + 1,
                                                     function(x){length(unique(na.omit(as.vector(x)))) == 1}))
       slices.zero                <-  as.vector(apply(datacube, MAR = dims.cycle.id + 1, fun.zero))
@@ -879,7 +875,8 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
                                                      mean, na.rm = TRUE))
       slices.constant[slices.without.gaps & slices.ocean & slices.too.gappy] <- FALSE
       slices.process             <- !slices.constant & !slices.ocean & 
-                                    !slices.too.gappy & !slices.without.gaps  
+                                    !slices.too.gappy & !slices.without.gaps
+      browser(skipCalls=1000)
       slices.excluded            <- logical(slices.n)
 
       ##extract only a ratio of the slices to calculate for variance testing

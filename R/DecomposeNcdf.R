@@ -345,7 +345,7 @@ DecomposeNcdf = structure(function(
 
     #save results
     if(sum(is.infinite(data.results.final)) > 0)
-        save.image(paste('workspace_before_writing_', file.name, '.RData', sep=''))
+        save.image(paste('workspace_before_writing_', file.name, '.RData', sep = ''))
     if (print.status)
         cat(paste(Sys.time(), ' : Writing results to file. \n', sep=''))
     if (!is.element('missing_value', ncdf.get.attinfo(file.con.copy, var.name)[,'name']) &&
