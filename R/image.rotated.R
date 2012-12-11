@@ -26,8 +26,8 @@ image.rotated = function(
       if  (is.null(col.vals))
         col.vals =  1:dim(data)[2]      
     }
-    if (class(col.vals) == 'numeric') {
-       coords$x <- range(col.vals)
+    if (is.numeric(col.vals)) {
+       coords$x <- c(col.vals[1], col.vals[length(col.vals)])
     }
     
     coords$y <- c(dim(data)[1], 1)
@@ -36,8 +36,8 @@ image.rotated = function(
       if  (is.null(row.vals))
         row.vals =  1:dim(data)[1]      
     }
-    if (class(row.vals) == 'numeric') {
-      coords$y <- rev(range(row.vals))
+    if (is.numeric(row.vals)) {
+      coords$y <- rev(c(row.vals[1], row.vals[length(row.vals)]))
     }
   
     options(oopts)
@@ -56,15 +56,15 @@ image.rotated = function(
     plot(0,0,type ='n', xlim = limits$x, ylim = limits$y, xaxt = 'n', yaxt = 'n', 
          xlab = '', ylab = '', xaxs = 'i', yaxs = 'i')
     if (is.null(add.args$xaxt) || add.args$xaxt != 'n') { 
-      if (class(col.vals) == 'numeric') {
+      if (is.numeric(col.vals)) {
         axis(side = 1)
       } else {
         axis(side = 1, labels = col.vals, at = coords$x[1]:coords$x[2], ...)
       }  
     }
     if (is.null(add.args$yaxt) || add.args$yaxt != 'n') {
-      if (class(row.vals) == 'numeric') {
-        axis(side = 1)
+      if (is.numeric(row.vals)) {
+        axis(side = 2)
       } else {
         axis(side = 2, labels = row.vals, at = coords$y[2]:coords$y[1], ...)
       }

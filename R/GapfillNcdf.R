@@ -171,7 +171,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     args.call.global    <- call.args2string()
     if (print.status & !interactive()) {
       print('Arguments supplied to function call:')
-      cat(paste(paste(names(args.call.filecheck), args.call.filecheck, sep=':'), '\n\n', collapse = '; '))
+      cat(paste(paste(paste(names(args.call.filecheck), args.call.filecheck, sep=':'), collapse = '; '), '\n\n'))
     }
     
     #set seed based on file name
@@ -876,7 +876,6 @@ GapfillNcdfIdentifyCells <- function(dims.cycle, dims.cycle.id, dims.process.id,
       slices.constant[slices.without.gaps & slices.ocean & slices.too.gappy] <- FALSE
       slices.process             <- !slices.constant & !slices.ocean & 
                                     !slices.too.gappy & !slices.without.gaps
-      browser(skipCalls=1000)
       slices.excluded            <- logical(slices.n)
 
       ##extract only a ratio of the slices to calculate for variance testing
@@ -1109,8 +1108,10 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       error.from.calc                 <- data.results.iter.t
       data.results.iter.t             <- matrix(Inf, ncol = datapts.n, nrow = 1)
       system.info                     <- sessionInfo()
-      file.name.t                     <- paste('workspace_error_', file.name, '_',
-                                               iter.nr, '_', n, sep = '')
+      file.name.t                     <- file.path('/', 'Net', 'Groups', 'C-Side', 'MDI', 'tmp', 
+                                                   'jbuttlar', 'Cluster_jobs_debugging', sub('/Net/Groups/C-Side/MDI/', '', getwd()),
+                                                   paste('workspace_error_', file.name, '_',
+                                                         iter.nr, '_', n, sep = ''))
       print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
       dump.frames(to.file = TRUE, dumpto = file.name.t)
       stop()

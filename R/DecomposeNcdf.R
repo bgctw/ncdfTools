@@ -83,7 +83,6 @@ DecomposeNcdf = structure(function(
     ##TODO Try zero line crossings for frequency determination
     ##TODO Make method reproducible (seed etc)
     ##TODO Add way to handle non convergence
-  
     ##save argument values of call
     args.call.filecheck <- as.list(environment())
     args.call.global    <- call.args2string()
@@ -292,7 +291,10 @@ DecomposeNcdf = structure(function(
                 print(data.results.iter.t[1])
                 data.results.iter.t             <- matrix(Inf, ncol=n.bands, nrow=n.timesteps)
                 system.info=sessionInfo()
-                file.name.t                      <- paste('workspace_error_', file.name, '_',iter.nr, '_', j, sep = '')
+                file.name.t                     <- file.path('/', 'Net', 'Groups', 'C-Side', 'MDI', 'tmp', 
+                                                             'jbuttlar', 'Cluster_jobs_debugging', sub('/Net/Groups/C-Side/MDI/', '', getwd()),
+                                                             paste('workspace_error_', file.name, '_',
+                                                                   iter.nr, '_', j, sep = ''))
                 print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
                 dump.frames(to.file = TRUE, dumpto = file.name.t)
             }

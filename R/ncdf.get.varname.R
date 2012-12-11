@@ -21,7 +21,7 @@ ncdf.get.varname <- function(
     file.con <- file
   }  
   var.name         <- setdiff(ncdf.get.varinfo(file.con, order.var ='id')$name, ncdf.get.diminfo(file.con, extended = FALSE)$name)
-  names.excluded   <- c('time_bnds')
+  names.excluded   <- c('time_bnds', 'flag.orig')
   var.name         <- setdiff(var.name, names.excluded)
   if(length(var.name) > 1) {
     var.id.nocoord <- ncdf.get.varinfo(file.con, order.var ='id')[match(var.name, ncdf.get.varinfo(file.con, order.var ='id')$name), 1]
