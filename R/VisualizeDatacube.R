@@ -24,7 +24,7 @@ VisualizeDatacube <- function(
   cat('\nPreparing stuff ...')
   if (parallel) {
     require(foreach)
-    if (getDoParWorkers() < 2) {
+    if (!exists('cl') || !inherits(cl, 'cluster')) {
       cl <- RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))
     }
   }  
@@ -81,13 +81,13 @@ VisualizeDatacube <- function(
   dimnames(cube.info)[[1]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
 
   if (dim(cube.info)[4] > 1) {
-    cube.info.agg      <- data.frame(min = apply(cube.info['min',,,], 4, min, na.rm = TRUE),
-                                     max = apply(cube.info['max',,,], 4, max, na.rm = TRUE),
-                                     mean = apply(cube.info['mean',,,], 4, mean, na.rm = TRUE),
-                                     ratio.na = apply(cube.info['ratio na',,,], 4, mean, na.rm = TRUE),
-                                     series.empty = apply(cube.info['ratio na',,,], 4, function(x) sum(x == 1)) / prod(dim(data.cube.sort)[2:3]),
-                                     series.full = apply(cube.info['ratio na',,,], 4, function(x) sum(x == 0)) / prod(dim(data.cube.sort)[2:3]), 
-                                     series.gappy = apply(cube.info['ratio na',,,], 4, function(x) sum(x != 0 & x != 1)) / prod(dim(data.cube.sort)[2:3]))
+    cube.info.agg      <- data.frame(min = apply(cube.info['min',,,], 3, min, na.rm = TRUE),
+                                     max = apply(cube.info['max',,,], 3, max, na.rm = TRUE),
+                                     mean = apply(cube.info['mean',,,], 3, mean, na.rm = TRUE),
+                                     ratio.na = apply(cube.info['ratio na',,,], 3, mean, na.rm = TRUE),
+                                     series.empty = apply(cube.info['ratio na',,,], 3, function(x) sum(x == 1)) / prod(dim(data.cube.sort)[2:3]),
+                                     series.full = apply(cube.info['ratio na',,,], 3, function(x) sum(x == 0)) / prod(dim(data.cube.sort)[2:3]), 
+                                     series.gappy = apply(cube.info['ratio na',,,], 3, function(x) sum(x != 0 & x != 1)) / prod(dim(data.cube.sort)[2:3]))
   } else {
     cube.info.agg      <- data.frame(min = min(cube.info['min',,,1], na.rm = TRUE),
                                      max = max(cube.info['max',,,1], na.rm = TRUE),
@@ -100,15 +100,15 @@ VisualizeDatacube <- function(
   cat('Doing plots ...')
   for (h in 1:length(forth.dim)) {
     forth.dim.t = forth.dim[h]
-    if (forth.dim == 0)
+    if (length(forth.dim) == 1 && forth.dim == 0)
       forth.dim.t <- 1
     
     grids.valid <- which(cube.info['ratio na', , ,forth.dim.t] < 1, arr.ind = TRUE)
     ind.rand      <- round(runif(16, 1, dim(grids.valid)[1]), digits = 0)
     ind.lat.orig  <- (1:length(latitudes))[order(latitudes, decreasing = TRUE)][grids.valid[ind.rand, 1]]
     ind.long.orig <- (1:length(longitudes))[order(longitudes)][grids.valid[ind.rand, 2]]
-    ind.orig      <- matrix(NA, ncol = {if(forth.dim == 0){3} else {4}}, nrow = length(ind.rand))
-    if (forth.dim == 0) {
+    ind.orig      <- matrix(NA, ncol = {if(length(forth.dim) == 1){3} else {4}}, nrow = length(ind.rand))
+    if  (length(forth.dim) == 1 && forth.dim == 0) {
       colnames(ind.orig) <- c('lat', 'long', 'time')
     } else {
       colnames(ind.orig) <- c('lat', 'long', 'time', 'forth.dim')
@@ -117,7 +117,7 @@ VisualizeDatacube <- function(
     ind.orig[,'lat']  <- ind.lat.orig
     ind.orig[,'long'] <- ind.long.orig
     ind.orig[,'time']      <- '..'
-    if (forth.dim != 0)
+    if (length(forth.dim) > 1 || forth.dim != 0)
       ind.orig[,4]           <- forth.dim.t
     
     ## define color specs
@@ -149,7 +149,7 @@ VisualizeDatacube <- function(
         }
         plot.new()
         color.legend(0, 0, 1, 1, rect.col = col.palette(20),
-            legend = format(pretty(cube.info[, , forth.dim.t, i], digits = 5), scientific = -1)
+            legend = format(pretty(cube.info[i, , , forth.dim.t], digits = 5), scientific = -1)
             , gradient = 'x', align = 'rb', cex = 0.7)
       } else {
         plot.new()

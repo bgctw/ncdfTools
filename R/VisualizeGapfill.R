@@ -6,7 +6,7 @@ VisualizeGapfill <- function(
   , data.filled =c()                          
   , n.series = 16
   , lwd = 2
-  , max.cores = 16                            
+  , max.cores = 36                           
   , ...
 )
 ##details<<
@@ -19,25 +19,26 @@ VisualizeGapfill <- function(
   require(plotrix)
   require(jannis.misc)
   library(RColorBrewer)
-
+  require(DistributionUtils)
+  
   cat('\nPreparing stuff ...')
-  if (parallel) {
-    require(foreach)
-    if (getDoParWorkers() < 2) {
-      cl <- RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))
-    }
-  }
+
+  require(foreach)
+  if (getDoParWorkers() < 2) 
+    cl <- RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))
+
+    
   con.orig <- open.nc(file.orig)
   con.filled <- open.nc(file.filled)
   var.filled <- ncdf.get.varname(file.filled)
   var.orig   <- ncdf.get.varname(file.orig)
-
+  
   if (length(data.orig) == 0)
     data.orig <- var.get.nc(con.orig, var.orig)
-
+  
   if (length(data.filled) == 0)
     data.filled <- var.get.nc(con.filled, var.filled)  
-
+  
   dim.lat <- pmatch('lat', ncdf.get.diminfo(con.orig)[var.inq.nc(con.orig, var.orig)$dimids + 1, 'name'])
   dim.long <- pmatch('lon', ncdf.get.diminfo(con.orig)[var.inq.nc(con.orig, var.orig)$dimids + 1, 'name'])
   
@@ -49,84 +50,123 @@ VisualizeGapfill <- function(
   
   dimnames(cube.info.orig)[[1]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
   dimnames(cube.info.filled)[[1]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
-
+  
   cat('Doing plots ...')
-
-    
-    grids.valid <- which(cube.info.orig['ratio na', , ] < 1, arr.ind = TRUE)
-    ind.rand      <- round(runif(16, 1, dim(grids.valid)[1]), digits = 0)
-    ind.lat.orig  <- grids.valid[ind.rand, 1]
-    ind.long.orig <- grids.valid[ind.rand, 2]
-    ind.orig      <- matrix(NA, ncol = 3, nrow = length(ind.rand))
-      colnames(ind.orig) <- c('lat', 'long', 'time')
   
-    ind.orig[,'lat']  <- ind.lat.orig
-    ind.orig[,'long'] <- ind.long.orig
-    ind.orig[,'time']      <- '..'
   
-    
-    ## define color specs
-    col.palette <- colorRampPalette(c('blue', 'yellow', 'red'))
-    cols  <- rep(brewer.pal(ceiling(n.series/2), 'Set1'), times = 2)
-    lty  <- rep(c(1), each = ceiling(n.series/2)*2)
-    if (n.series > 8) {
-      cols <- rep(cols, each = 2)
-      lty  <- rep(c(1, 2), each = ceiling(n.series/2))
-    }
-    
-    ## plot maps
-pdf(file.diagnostics, width = 12, height= 16)
-    layout(matrix(c(1:9, rep(10,3)),byrow=TRUE,ncol=3),
-        height=c(1,1,1,1))
-    par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(2, 0, 0, 1), oma = c(0, 2, 4, 0))
-    pars.plot =  c('ratio na', 'min', 'max')
-    for (i in 1:length(pars.plot)) {
-      par.t = pars.plot[i]
-      for (j in 1:3){
-        if (j == 1) {
-          data.t = cube.info.orig[par.t, , ]
-        } else if (j == 2) {
-          data.t = cube.info.filled[par.t, , ]
-        } else if (j == 3) {
-          data.t = cube.info.orig[par.t, , ] - cube.info.filled[par.t, , ]
-        }
-        if (sum(!is.na(data.t)) > 0 ) {
-          image.rotated(data.t,  xlab = '', col = col.palette(60),
-                        zlim = range(pretty(data.t), scale = FALSE))
-        #  if (i == 1) {
-        #    y <-  latitudes[order(latitudes, decreasing=TRUE)][grids.valid[ind.rand[1:n.series], 1]]
-        #    x <-  longitudes[grids.valid[ind.rand[1:n.series], 2]]
-        #    points(x, y, cex = 4, pch = 17, col = cols[1:n.series])
-        #    text(x, y, 1:n.series, pos = 3)
-        #  }
-      #    plot.new()
-      #    color.legend(0, 0, 1, 1, rect.col = col.palette(20),
-       #                legend = format(pretty(data.t, digits = 5), scientific = -1)
-        #               , gradient = 'x', align = 'rb', cex = 0.7)
-        } else {
-         # plot.new()
-          plot.new()
-        }   
-      } 
-      mtext(outer = TRUE, line = 0, side = 3, text = sub('.data', '', pars.plot)
-            , at = 1 / length(pars.plot) * (0:(length(pars.plot) - 1)) + 1 / (2 * length(pars.plot)))
-    }
-  dev.off()
-    ## plot example series
-    ind.series <-  array(FALSE, dim = dim(data.cube.sort)[1:2])
-    ind.series[as.matrix(data.frame(a = grids.valid[ind.rand[1:n.series],1], b = grids.valid[ind.rand[1:n.series],2]))]=TRUE
-    plot.bg(rgb(0.9,0.9,0.9))
-    data.cube.t <- data.cube.sort[,,,forth.dim.t]
-    if (cube.info.agg[forth.dim.t, 'series.empty'] != 1) {
-      ydata = t(array(data.cube.t[ind.datacube(data.cube.t, ind.series, c(1,2))], dim = c(length(time), n.series)))
-      plot.nlines(x.data = 1:length(time), y.data = ydata, option = 'stacked', col = cols[1:n.series], scale = 0.35, ...)
-      legend('topright', legend = paste(1:n.series, apply(ind.orig[1:n.series, ], MAR = 1, paste, collapse = ','), sep = ': '),
-          col = cols[1:n.series], lty = lty[1:n.series], lwd = 2, bg = 'white', cex = par()$cex*2, ...)
+  grids.valid <- which(cube.info.orig['ratio na', , ] < 1, arr.ind = TRUE)
+  ind.rand      <- round(runif(16, 1, dim(grids.valid)[1]), digits = 0)
+  ind.lat.orig  <- grids.valid[ind.rand, 1]
+  ind.long.orig <- grids.valid[ind.rand, 2]
+  ind.orig      <- matrix(NA, ncol = 3, nrow = length(ind.rand))
+  colnames(ind.orig) <- c('lat', 'long', 'time')
+  
+  ind.orig[,'lat']  <- ind.lat.orig
+  ind.orig[,'long'] <- ind.long.orig
+  ind.orig[,'time']      <- '..'
+  
+  
+  ## define color specs
+  col.palette <- colorRampPalette(c('blue', 'yellow', 'red'))
+  cols  <- rep(brewer.pal(ceiling(n.series/2), 'Set1'), times = 2)
+  lty  <- rep(c(1), each = ceiling(n.series/2)*2)
+  if (n.series > 8) {
+    cols <- rep(cols, each = 2)
+    lty  <- rep(c(1, 2), each = ceiling(n.series/2))
+  }
+  
+  ## plot maps
+  layout(matrix(c(1:9),byrow=TRUE,ncol=3),
+         height=c(1,1,1,1))
+  par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(2, 0, 0, 2), oma = c(0, 2, 4, 0))
+  pars.plot =  c('ratio na', 'min', 'max')
+  for (i in 1:length(pars.plot)) {
+    par.t = pars.plot[i]
+    for (j in 1:3){
+      if (j == 1) {
+        data.t = cube.info.orig[par.t, , ]
+      } else if (j == 2) {
+        data.t = cube.info.filled[par.t, , ]
+      } else if (j == 3) {
+        data.t = cube.info.orig[par.t, , ] - cube.info.filled[par.t, , ]
+      }
+      if (j == 1)
+        zlim <- range(c(cube.info.orig[par.t, , ], cube.info.filled[par.t, , ]), na.rm = TRUE)
+      if (j == 3)
+        zlim <- RangeZeroEqui(range(data.t, na.rm = TRUE))
+      if (sum(!is.na(data.t)) > 0 ) {
+        image.rotated(data.t,  xlab = '', xaxt = 'n', yaxt = 'n', col = col.palette(60),
+                      zlim = range(pretty(zlim), scale = FALSE), useRaster = TRUE)
+      } else {
+        plot.new()
+      }   
     }
   }
-  if (!(class(data.object)=='NetCDF'))
-    close.nc(file.con)
-  cat('Finished!\n')
-  invisible(cube.info.agg)
+  LabelMargins(c('', rev(pars.plot)), las = 3, side = 2, outer = TRUE, cex= 2, line = .2)
+  LabelMargins(c('orig', 'filled', 'orig - filled'), side = 3, outer = TRUE, cex = 2, line =0.5)
+
+  layout(matrix(c(1:2),byrow=TRUE,ncol=1),
+         height=c(1,1))
+  par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(2, 0, 0, 2), oma = c(0, 2, 4, 0))
+  breaks = seq(min(cube.info.filled['min', , ], na.rm = TRUE),
+    max(cube.info.filled['max', , ], na.rm = TRUE), length.out = 500)
+  hst.orig    <- hist(data.orig, breaks = breaks, plot = FALSE)
+  hst.filled  <- hist(data.filled, breaks = breaks, plot = FALSE)
+  plot.bg(rgb(.5,.5,.5))
+  plot(hst.filled, xlim = range(c(hst.orig$mids, hst.filled$mids)),
+       ylim = c(0, max( range(c(hst.orig$counts, hst.filled$counts)))),
+       col = 'red', xlab = '', main = 'data')
+  par(new=TRUE)  
+  plot(hst.orig, xlim = range(c(hst.orig$mids, hst.filled$mids)),
+       ylim = c(0, max( range(c(hst.orig$counts, hst.filled$counts)))), xlab = '',
+       main = '', col = 'black')
+  box()
+  text(trnsf.coords(c(0.8,0.9),c(0.9, 0.9)), labels =  c('filled', 'orig'),
+       col = c('red', 'black'), cex = 2)
+
+
+  hst.filled  <- logHist(cube.info.filled['ratio na',,], breaks =100, col = 'red',
+                         pch = 16, xlab = '', main = '')
+  par(new = TRUE)
+  logHist(cube.info.orig['ratio na',,], breaks =100, ylim = hst.filled$ylim,
+          cex = 1.1, xlab = 'ratio of missing values per grid point', main = '')
+  text(trnsf.coords(c(0.7,0.9),c(0.9, 0.9)), labels =  c('filled', 'orig'),
+       col = c('red', 'black'), cex = 2)
+
+
+
+  ratios.take <- seq(0, min(cube.info.filled['ratio na', , ][cube.info.filled['ratio na', , ] != 0], na.rm = TRUE), length.out = n.series)
+  ind.closest <- which.closest(ratios.take, cube.info.orig['ratio na', , ], arr.ind = TRUE)
+  
+  
+  ## plot example series
+ 
+  layout(matrix(1:n.series, n.series, 1))
+  par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(0, 0, 0, 0), oma = c(2, 2, 2, 2))
+
+  args.extract =  c(list(data.filled), list(TRUE, TRUE, TRUE))
+  args.orig    =  c(list(data.orig), list(TRUE, TRUE, TRUE))
+
+  for (i in 1:n.series) {
+    plot.bg(rgb(0.9,0.9,0.9))
+    args.extract[[dim.lat + 1]] <- ind.closest[i,1]
+    args.extract[[dim.long + 1]] <- ind.closest[i,2]
+    args.orig[[dim.lat + 1]] <- ind.closest[i,1]
+    args.orig[[dim.long + 1]] <- ind.closest[i,2]
+    
+    y.data       <- do.call('[',args.extract)
+    y.data.orig  <- do.call('[',args.orig)
+    if (sum(!is.na(y.data)) > 0 ) {
+      plot(y.data, type = 'l', col = 'red', lwd = 2)
+      points(y.data.orig, type = 'l', col = 'black', lwd = 2)
+
+    } else {
+      plot.new()      
+    }
+  }
+  
+  text(trnsf.coords(c(0.8,0.9),c(0.4, 0.4)), labels =  c('filled', 'orig'),
+       col = c('red', 'black'), cex = 2)
+
 }
 ##\code{\figure(visualize_ncdf_demo.png)}
