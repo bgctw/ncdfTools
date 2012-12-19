@@ -15,6 +15,7 @@ ncdf.get.varname <- function(
   ##author<<
   ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
+  require(RNetCDF)
   if (class(file) == 'character') {
     file.con <- open.nc(file)
   } else {

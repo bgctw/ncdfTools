@@ -130,6 +130,7 @@ VisualizeDatacube <- function(
     }
     
     ## plot maps
+    z.range     <- range(cube.info[, , , forth.dim.t],na.rm = TRUE, finite = TRUE)
     if (length(forth.dim) > 1 & names(dev.cur()) == 'null device' )
       x11()        
     layout(matrix(c(2,4,6,8,10,12,1,3,5,7,9,11,13,13,13,13,13,13),byrow=TRUE,ncol=6),
