@@ -5,6 +5,7 @@ image.rotated = function(
         ,scale = TRUE
         ,col = heat.colors(20)
         ,zlim = range(data, na.rm=TRUE)
+        ,title = ''
         ,...          ##<< further arguments passed to image
 )
 ##title<< plot rotated image plot
@@ -48,8 +49,25 @@ image.rotated = function(
       par(mar=par()$mar + c(0,0,0,2))
     }  
     
-    
-    image(z = data.p, xaxt = 'n', yaxt = 'n', col = col, zlim = zlim,...)
+    ## do plot
+    image(z = data.p, xaxt = 'n', yaxt = 'n', col = col, zlim = zlim, useRaster = TRUE, ...)
+
+    # add zrange outliers 
+    outer.range <- c(0, 0)
+    if (sum(data.p > max(zlim), na.rm = TRUE) > 0) {
+      require(jannis.misc)
+      col.drk = ColorChangeDarkness(col[length(col)], 0.5)
+      par(new = TRUE)
+      image(z = data.p, col = col.drk, zlim = c(max(zlim), max(data.p, na.rm = TRUE)), xaxt = 'n', yaxt = 'n', useRaster = TRUE)
+      outer.range[2] <- 1
+    }  
+    if (sum((data.p < min(zlim)), na.rm = TRUE) > 0 ) {
+      require(jannis.misc)
+      col.drk = ColorChangeDarkness(col[1], 0.5)
+      par(new = TRUE)
+      image(z = data.p, col = col.drk, zlim = c(min(data.p, na.rm = TRUE), min(zlim)), xaxt = 'n', yaxt = 'n', useRaster = TRUE)
+      outer.range[1] <- 1
+    }      
     par(new=TRUE)
     limits <- list(x = coords$x + c(-1,1)*diff(coords$x)/(2*(length(col.vals)-1)),
                    y = coords$y + c(-1,1)*diff(coords$y)/(2*(length(row.vals)-1)))
@@ -70,16 +88,7 @@ image.rotated = function(
       }
     }
     if (scale) {
-      require(plotrix)
-      width.col<- 0.05*diff(par()$usr[1:2])
-      x.coords <- par()$usr[2]+ c(0.5,1.5)*width.col
-      y.coords <- par()$usr[3:4]
-      color.legend(x.coords[1],y.coords[1],x.coords[2],y.coords[2],
-                   rect.col= col,
-                   legend=pretty(seq(zlim[1],zlim[2],
-                     length.out = length(col)))
-                   ,gradient='y',align='rb',cex=1.2)
-    } 
-    if (scale)  
+      PlotColorScale(col = col, pos = 'right', zlim = zlim, outer.range = outer.range, title = title)
       par(mar = old.mar)
+    }
 }    
