@@ -144,7 +144,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 ## calculated sequential without these dependencies. The package foreach is needed in all cases.
 
 ##seealso<<
-##\code{\link{new.SSA}}, \code{\link{GapfillSSA}}, \code{\link{decompose.ncdf}}
+##\code{\link{ssa}}, \code{\link{GapfillSSA}}, \code{\link{decompose.ncdf}}
 ##value<<
 ##Nothing is returned but a ncdf file with the results is written.
 {
