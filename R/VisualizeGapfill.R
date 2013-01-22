@@ -14,21 +14,18 @@ VisualizeGapfill <- function(
 {
   ##TODO facilitade datacube input
   ##TODO include plot.nlines capabilites
-  require(ncdf.tools)
-  require(RNetCDF)
-  require(plotrix)
-  require(jannis.misc)
-  library(RColorBrewer)
-  require(DistributionUtils)
-  
-  cat('\nPreparing stuff ...')
+  require(ncdf.tools, warn.conflicts = FALSE, quietly = TRUE)
+  require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
+  require(plotrix, warn.conflicts = FALSE, quietly = TRUE)
+  require(jannis.misc, warn.conflicts = FALSE, quietly = TRUE)
+  library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
+  require(DistributionUtils, warn.conflicts = FALSE, quietly = TRUE)
+  require(snow, warn.conflicts = FALSE, quietly = TRUE)
 
-  require(foreach)
-  if (getDoParWorkers() < 2) 
-    cl <- RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))
-
-    
-  con.orig <- open.nc(file.orig)
+  if (interactive())
+    cat('\nPreparing stuff ...')
+  cl <- RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))    
+  con.orig   <- open.nc(file.orig)
   con.filled <- open.nc(file.filled)
   var.filled <- ncdf.get.varname(file.filled)
   var.orig   <- ncdf.get.varname(file.orig)
@@ -43,15 +40,29 @@ VisualizeGapfill <- function(
   dim.long <- pmatch('lon', ncdf.get.diminfo(con.orig)[var.inq.nc(con.orig, var.orig)$dimids + 1, 'name'])
   
   ## calculate datacube info
-  cat('Doing calculations ...')
+  if (interactive())
+    cat('Doing calculations ...')
   
   cube.info.orig     <- parApply(cl, data.orig, c(dim.lat, dim.long), GetVecInfo)       
-  cube.info.filled   <- parApply(cl, data.filled, c(dim.lat, dim.long), GetVecInfo)       
+  cube.info.filled   <- parApply(cl, data.filled, c(dim.lat, dim.long), GetVecInfo)
+  stopCluster(cl)
   
   dimnames(cube.info.orig)[[1]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
   dimnames(cube.info.filled)[[1]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
-  
-  cat('Doing plots ...')
+
+  cube.info.agg       <- array(NA, dim=c(2, 7))
+  dimnames(cube.info.agg) <- list(c('orig', 'filled'), c('min', 'max', 'mean', 'sd', 'ratio_full', 'ratio_empty', 'ratio_partial'))
+  for (dataset in c('orig', 'filled')) {
+    for (measure in c('min', 'max')) 
+      cube.info.agg[dataset, measure] <- do.call(measure, list(get(paste('cube.info.', dataset, sep = ''))[measure, ,], na.rm = TRUE))
+    for (measure in c('mean', 'sd')) 
+      cube.info.agg[dataset, measure] <- do.call(measure, list(get(paste('data.', dataset, sep = '')), na.rm = TRUE))
+    cube.info.agg[dataset, 'ratio_empty'] <- sum(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]==1) / prod(dim(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]))
+    cube.info.agg[dataset, 'ratio_full']  <- sum(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]==0) / prod(dim(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]))
+    cube.info.agg[dataset, 'ratio_partial']  <- sum(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]>0 & get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]<1)/prod(dim(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]))    
+  }
+  if (interactive())
+    cat('Doing plots ...')
   
   
   grids.valid <- which(cube.info.orig['ratio na', , ] < 1, arr.ind = TRUE)
@@ -102,7 +113,7 @@ VisualizeGapfill <- function(
       }   
     }
   }
-  LabelMargins(c('', rev(pars.plot)), las = 3, side = 2, outer = TRUE, cex= 2, line = .2)
+  LabelMargins(c(rev(pars.plot)), las = 3, side = 2, outer = TRUE, cex= 2, line = .2)
   LabelMargins(c('orig', 'filled', 'orig - filled'), side = 3, outer = TRUE, cex = 2, line =0.5)
 
   layout(matrix(c(1:2),byrow=TRUE,ncol=1),
@@ -167,6 +178,6 @@ VisualizeGapfill <- function(
   
   text(trnsf.coords(c(0.8,0.9),c(0.4, 0.4)), labels =  c('filled', 'orig'),
        col = c('red', 'black'), cex = 2)
-
+  invisible(cube.info.agg)
 }
 ##\code{\figure(visualize_ncdf_demo.png)}

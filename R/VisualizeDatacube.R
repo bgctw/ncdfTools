@@ -21,7 +21,8 @@ VisualizeDatacube <- function(
   require(jannis.misc)
   library(RColorBrewer)
 
-  cat('\nPreparing stuff ...')
+  if (interactive())
+    cat('\nPreparing stuff ...')
   if (parallel) {
     require(foreach)
     if (!exists('cl') || !inherits(cl, 'cluster')) {
@@ -51,10 +52,12 @@ VisualizeDatacube <- function(
   ## sort dataframe
   aperm.data <- pmatch(c('lat', 'lon', 'time'), dims.par)
   if (length(data) == 0) {
-    cat('Loading data ...')
+    if (interactive())
+      cat('Loading data ...')
     data       <- var.get.nc(file.con, var.name)
   }
-  cat('Transposing datacube ...')
+  if (interactive())
+    cat('Transposing datacube ...')
   if (length(forth.dim) > 1 || forth.dim != 0) {
     aperm.data <- c(aperm.data, 4)
     length.forth.dim <- dim(data)[4]
@@ -70,7 +73,8 @@ VisualizeDatacube <- function(
   data.cube.sort     <- array(data.cube.sort, dim = c(dim(data.cube.sort)[1:3], length.forth.dim) ) 
   
   ## calculate datacube info
-  cat('Doing calculations ...')
+  if (interactive())
+    cat('Doing calculations ...')
   if (parallel) {
     cube.info          <- parApply(cl, data.cube.sort, c(1,2,4), GetVecInfo)       
   } else {
@@ -97,7 +101,8 @@ VisualizeDatacube <- function(
                                      series.full = sum(cube.info['ratio na',,,] == 0) / prod(dim(data.cube.sort)[2:3]), 
                                      series.gappy = sum(cube.info['ratio na',,,] != 0 & cube.info['ratio na',,,] != 1) / prod(dim(data.cube.sort)[2:3]))
   }
-  cat('Doing plots ...')
+  if (interactive())
+    cat('Doing plots ...')
   for (h in 1:length(forth.dim)) {
     forth.dim.t = forth.dim[h]
     if (length(forth.dim) == 1 && forth.dim == 0)
@@ -175,7 +180,8 @@ VisualizeDatacube <- function(
   }
   if (!(class(data.object)=='NetCDF'))
     close.nc(file.con)
-  cat('Finished!\n')
+  if (interactive())
+    cat('Finished!\n')
   invisible(cube.info.agg)
 }
 ##\code{\figure(visualize_ncdf_demo.png)}

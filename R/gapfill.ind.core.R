@@ -1,6 +1,6 @@
 gapfill.ind.core = function(iter.nr) {
   library('jannis.misc')
-  load.functions.package('ncdf.tools', path = '/Net/Groups/C-Side/MDI/jbuttlar/Software/Own_packages')
+  load.functions.package('ncdf.tools', path = '/Net/Groups/BGI/people/jbuttlar/Software/Own_packages')
   iter.ind                               <- iter.gridind[iter.nr, ]
   datapts.n                              <- prod(dim(data)[dims.process.id + 1])
   data.results.iter                      <- array(NA, dim = c(diff(iter.ind) + 1, datapts.n))

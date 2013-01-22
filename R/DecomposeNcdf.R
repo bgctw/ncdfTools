@@ -71,7 +71,7 @@ DecomposeNcdf = structure(function(
   ## calculated sequential without these dependencies. The package foreach is needed in all cases.
 
   ##seealso<<
-  ##\code{\link{ssa}}, \code{\link{FilterTSeriesSSA}}, \code{\link{gapfill.ncdf}}
+  ##\code{\link{new.SSA}}, \code{\link{FilterTSeriesSSA}}, \code{\link{gapfill.ncdf}}
 
   ##value<<
   ##Nothing is returned but a ncdf file with the results is written in the working directory.
@@ -291,8 +291,8 @@ DecomposeNcdf = structure(function(
                 print(data.results.iter.t[1])
                 data.results.iter.t             <- matrix(Inf, ncol=n.bands, nrow=n.timesteps)
                 system.info=sessionInfo()
-                file.name.t                     <- file.path('/', 'Net', 'Groups', 'C-Side', 'MDI', 'tmp', 
-                                                             'jbuttlar', 'Cluster_jobs_debugging', sub('/Net/Groups/C-Side/MDI/', '', getwd()),
+                file.name.t                     <- file.path('/', 'Net', 'Groups', 'BGI', 'tmp', 
+                                                             'jbuttlar', 'Cluster_jobs_debugging', sub('/Net/Groups/BGI/people/', '', getwd()),
                                                              paste('workspace_error_', file.name, '_',
                                                                    iter.nr, '_', j, sep = ''))
                 print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))

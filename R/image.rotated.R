@@ -6,6 +6,7 @@ image.rotated = function(
         ,col = heat.colors(20)
         ,zlim = range(data, na.rm=TRUE)
         ,title = ''
+        , useRaster=TRUE
         ,...          ##<< further arguments passed to image
 )
 ##title<< plot rotated image plot
@@ -50,7 +51,7 @@ image.rotated = function(
     }  
     
     ## do plot
-    image(z = data.p, xaxt = 'n', yaxt = 'n', col = col, zlim = zlim, useRaster = TRUE, ...)
+    image(z = data.p, xaxt = 'n', yaxt = 'n', col = col, zlim = zlim, useRaster = useRaster, ...)
 
     # add zrange outliers 
     outer.range <- c(0, 0)
@@ -58,14 +59,14 @@ image.rotated = function(
       require(jannis.misc)
       col.drk = ColorChangeDarkness(col[length(col)], 0.5)
       par(new = TRUE)
-      image(z = data.p, col = col.drk, zlim = c(max(zlim), max(data.p, na.rm = TRUE)), xaxt = 'n', yaxt = 'n', useRaster = TRUE)
+      image(z = data.p, col = col.drk, zlim = c(max(zlim), max(data.p, na.rm = TRUE)), xaxt = 'n', yaxt = 'n', useRaster = useRaster)
       outer.range[2] <- 1
     }  
     if (sum((data.p < min(zlim)), na.rm = TRUE) > 0 ) {
       require(jannis.misc)
       col.drk = ColorChangeDarkness(col[1], 0.5)
       par(new = TRUE)
-      image(z = data.p, col = col.drk, zlim = c(min(data.p, na.rm = TRUE), min(zlim)), xaxt = 'n', yaxt = 'n', useRaster = TRUE)
+      image(z = data.p, col = col.drk, zlim = c(min(data.p, na.rm = TRUE), min(zlim)), xaxt = 'n', yaxt = 'n', useRaster = useRaster)
       outer.range[1] <- 1
     }      
     par(new=TRUE)
