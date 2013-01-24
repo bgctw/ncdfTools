@@ -71,7 +71,7 @@ DecomposeNcdf = structure(function(
   ## calculated sequential without these dependencies. The package foreach is needed in all cases.
 
   ##seealso<<
-  ##\code{\link{new.SSA}}, \code{\link{FilterTSeriesSSA}}, \code{\link{gapfill.ncdf}}
+  ##\code{\link{ssa}}, \code{\link{FilterTSeriesSSA}}, \code{\link{GapfillNcdf}}
 
   ##value<<
   ##Nothing is returned but a ncdf file with the results is written in the working directory.

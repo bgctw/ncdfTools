@@ -2,13 +2,13 @@ ncdf.cut.files <- function(
        file.names
        , time.range.out = c()
        , time.range.file =  c()
-       , fun.start = function(x){}
-       , fun.end = function(x){}
+       , fun.start = function(x) NULL
+       , fun.end = function(x) NULL
        , format = ''
-       , convert = function(x)chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y'))
+       , convert = function(x) chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y'))
 {
-  ##TODO implement possiibility to supply dates
-  ##TODO implement possiibility to extract dates from file
+  ##TODO implement possibility to supply dates
+  ##TODO implement possibility to extract dates from file
   ##TODO useful defaults
   file.names.out <- c()
   require(chron)

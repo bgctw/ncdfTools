@@ -1,12 +1,12 @@
 ncdf.merge.files <- function(
       file.names
-      , name.change = function(x){x}
+      , name.change = function(x) return(x)
       , time.diff = NULL
-      , fun.start =  function(x){substr(x, nchar(x)-15, nchar(x)-10)}
-      , fun.end   =  function(x){substr(x, nchar(x)-8, nchar(x)-3)}
+      , fun.start =  function(x) substr(x, nchar(x)-15, nchar(x)-10)
+      , fun.end   =  function(x) substr(x, nchar(x)-8, nchar(x)-3)
       , time.range.out = c() 
       , format ='%Y%m'
-      , convert = function(x)chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y')
+      , convert = function(x) chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y')
       , path.target = getwd()
 )
 {

@@ -37,8 +37,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 , pad.series = rep(list(   rep(list(c(0, 0)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of integer vectors (of size 2): length of the extracts from series to use for
                       ##   padding. Only possible in the one dimensional case. See the documentation of GapfillSSA for details!
-, tresh.fill = {tresh.fill <- rep(list(rep(list(0), times = length(dimensions[[1]]))) , times = length(dimensions));
-                tresh.fill[[1]][[1]] <- 0.1; tresh.fill}
+, tresh.fill = c(list(list(0.1)), rep(list(list(0,0)), length(dimensions) - 1))
                       ##<< list of numeric fractions (0-1): This value determines the fraction of valid values below which
                       ##   series/grids will not be filled in this step and are filled with the first guess from the
                       ##   previous step (if any). For filling global maps while using a ocean.mask you need
@@ -144,7 +143,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 ## calculated sequential without these dependencies. The package foreach is needed in all cases.
 
 ##seealso<<
-##\code{\link{new.SSA}}, \code{\link{GapfillSSA}}, \code{\link{decompose.ncdf}}
+##\code{\link{ssa}}, \code{\link{GapfillSSA}}, \code{\link{DecomposeNcdf}}
 ##value<<
 ##Nothing is returned but a ncdf file with the results is written.
 {
