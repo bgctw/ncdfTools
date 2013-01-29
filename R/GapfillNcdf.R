@@ -1104,7 +1104,6 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
     })  
     if (class(data.results.iter.t) == 'try-error') {
       print(paste('Error occoured at iteration ', iter.nr, ' and loop ', n, '!', sep = ''))
-      print(data.results.iter.t)
       error.from.calc                 <- data.results.iter.t
       data.results.iter.t             <- matrix(Inf, ncol = datapts.n, nrow = 1)
       system.info                     <- sessionInfo()    

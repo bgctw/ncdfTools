@@ -22,34 +22,32 @@ VisualizeGapfill <- function(
   require(DistributionUtils, warn.conflicts = FALSE, quietly = TRUE)
   require(snow, warn.conflicts = FALSE, quietly = TRUE)
 
-  if (interactive())
-    cat('\nPreparing stuff ...')
+  ## preparation
   cl <- RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))    
   con.orig   <- open.nc(file.orig)
   con.filled <- open.nc(file.filled)
   var.filled <- ncdf.get.varname(file.filled)
   var.orig   <- ncdf.get.varname(file.orig)
-  
-  if (length(data.orig) == 0)
+
+  ## load data
+  if (length(data.orig) == 0) {
+    status.report('Loading original data ...')
     data.orig <- var.get.nc(con.orig, var.orig)
-  
-  if (length(data.filled) == 0)
+  }
+  if (length(data.filled) == 0) {
+    status.report('Loading gapfilled data ...')    
     data.filled <- var.get.nc(con.filled, var.filled)  
-  
+  }
   dim.lat <- pmatch('lat', ncdf.get.diminfo(con.orig)[var.inq.nc(con.orig, var.orig)$dimids + 1, 'name'])
   dim.long <- pmatch('lon', ncdf.get.diminfo(con.orig)[var.inq.nc(con.orig, var.orig)$dimids + 1, 'name'])
   
   ## calculate datacube info
-  if (interactive())
-    cat('Doing calculations ...')
-  
+  status.report('Doing calculations ...')
   cube.info.orig     <- parApply(cl, data.orig, c(dim.lat, dim.long), GetVecInfo)       
   cube.info.filled   <- parApply(cl, data.filled, c(dim.lat, dim.long), GetVecInfo)
   stopCluster(cl)
-  
   dimnames(cube.info.orig)[[1]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
   dimnames(cube.info.filled)[[1]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
-
   cube.info.agg       <- array(NA, dim=c(2, 7))
   dimnames(cube.info.agg) <- list(c('orig', 'filled'), c('min', 'max', 'mean', 'sd', 'ratio_full', 'ratio_empty', 'ratio_partial'))
   for (dataset in c('orig', 'filled')) {
@@ -61,10 +59,9 @@ VisualizeGapfill <- function(
     cube.info.agg[dataset, 'ratio_full']  <- sum(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]==0) / prod(dim(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]))
     cube.info.agg[dataset, 'ratio_partial']  <- sum(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]>0 & get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]<1)/prod(dim(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]))    
   }
-  if (interactive())
-    cat('Doing plots ...')
-  
-  
+
+  ## do plots
+  status.report('Doing plots ...')
   grids.valid <- which(cube.info.orig['ratio na', , ] < 1, arr.ind = TRUE)
   ind.rand      <- round(runif(16, 1, dim(grids.valid)[1]), digits = 0)
   ind.lat.orig  <- grids.valid[ind.rand, 1]

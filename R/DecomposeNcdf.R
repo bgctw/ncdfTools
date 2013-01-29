@@ -288,7 +288,6 @@ DecomposeNcdf = structure(function(
                 error.from.calc                 <- data.results.iter.t
                 trace.save                      <- traceback()
                 error.from.calc                 <- data.results.iter.t
-                print(data.results.iter.t[1])
                 data.results.iter.t             <- matrix(Inf, ncol=n.bands, nrow=n.timesteps)
                 system.info                     <- sessionInfo()
                 path.file                       <- file.path('/', 'Net', 'Groups', 'BGI', 'tmp', 
