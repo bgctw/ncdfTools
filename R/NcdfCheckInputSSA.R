@@ -104,7 +104,7 @@ NcdfCheckInputSSA <- function(SSAprocess, ...)
       if (sum(!is.na(data.t[ind.array])) > 0)
         stop('Data contains non NA values at ocean grid positions!')
     }
-    if (length(args$ocean.mask) > 0 && !(dim(args&ocean.mask) == lengths.dim.nontime))
+    if (length(args$ocean.mask) > 0 && !(dim(args$ocean.mask) == lengths.dim.nontime))
     stop(paste('The ocean mask has to have identical dimensions as the spatial',
                ' dimensions in the ncdf file!', sep = ''))
     
