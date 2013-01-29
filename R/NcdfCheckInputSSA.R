@@ -52,7 +52,7 @@ NcdfCheckInputSSA <- function(SSAprocess, ...)
 
   if (SSAprocess == 'Decompose' ) {
     if (is.null(args$borders.wl))
-      stop('Argumnet borders.wl need to be supplied!')
+      stop('Argumnet borders.wl needs to be supplied!')
     if (!class(args$borders.wl) == 'list')
       stop('Wrong class for borders.wl! Needs to be a list!')
     args.return    <- list(file.con.orig = file.con.orig)    
@@ -84,17 +84,17 @@ NcdfCheckInputSSA <- function(SSAprocess, ...)
       if (!check.passed)
         stop('ocean mask NCDF file not consistent with CF ncdf conventions!')
       con.ocean   <- open.nc(args$ocean.mask)
-      var.names.t <- ncdf.get.varinfo(args$con.ocean)[, 'name']
+      var.names.t <- ncdf.get.varinfo(con.ocean)[, 'name']
       var.name.om <- var.names.t[is.na(match(var.names.t, c('time', 'longitude', 'latitude')))]
       if (length(var.name.om) > 1)
         stop('More then one variable existent in ocean mask!')
       for (par.check in c('longitude', 'latitude')) {
         if(!identical(var.get.nc(file.con.orig, par.check), 
-                      var.get.nc(args$con.ocean, par.check)))
+                      var.get.nc(con.ocean, par.check)))
           stop(paste(par.check,' values need to be identical in ocean.mask and',
                      ' input ncdf file!'))
       }
-      ocean.cells <- var.get.nc(args$con.ocean, var.name.om)
+      ocean.cells <- var.get.nc(con.ocean, var.name.om)
       args$ocean.mask  <- array(FALSE, dim = dim(ocean.cells))
       args$ocean.mask[ocean.cells == 1 ] <- TRUE
       close.nc(con.ocean)
@@ -108,7 +108,7 @@ NcdfCheckInputSSA <- function(SSAprocess, ...)
     stop(paste('The ocean mask has to have identical dimensions as the spatial',
                ' dimensions in the ncdf file!', sep = ''))
     
-    ## check consitency of inputs
+    ## check consitency of input   
     n.steps           <- length(args$amnt.artgaps)
     if (!is.element(args$process.cells, c('gappy', 'all')))
       stop('process.cells has to be one of \'all\' or \'gappy\'!')
@@ -134,7 +134,7 @@ NcdfCheckInputSSA <- function(SSAprocess, ...)
     }
     if (args$process.type == 'stepwise') {
       args.list = c('amnt.artgaps', 'size.biggap', 'n.comp', 'M', 'pad.series', 
-        'tresh.fill', 'amnt.iters', 'amnt.iters.start')
+        'tresh.fill', 'amnt.iters', 'amnt.iters.start', 'MSSA')
       for (n in 1:length(args.list)) {
         if(class(args[args.list[n]]) != 'list')
           stop(paste('Argument ', args.list[n], ' is not a list!'))
@@ -145,6 +145,11 @@ NcdfCheckInputSSA <- function(SSAprocess, ...)
         ##        stop(paste('Argument ', args.list[n], '[[1..n]] can only be a list of ',
         ##                   'length one for process.type == \'stepwise\'!', sep = ''))
       }
+      for (i in 1:length(MSSA)) {
+        for (j in 1:length(MSSA[i]))
+          if (MSSA[[i]][[j]] & length(M[[i]][[j]]) != 2)
+            stop('If MSSA ought to be computed, all corresponding Ms need to be of length 2.')
+      } 
       for (o in 1:length(args$dimensions))
         if (sapply(args$dimensions[o] , function(x) length(x)) > 2)
           stop('Settings imply SSA with more than two dimensions which is not implemented.')
