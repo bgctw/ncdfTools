@@ -230,7 +230,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     
     # start parallel processing workers
     if (calc.parallel)
-        RegisterParallel(package.parallel, max.cores)
+        cl <- RegisterParallel(package.parallel, max.cores)
     if (gaps.cv != 0) {
       processes <- c('cv', 'final')
     } else if (gaps.cv == 0) {
@@ -379,6 +379,12 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                       slices.without.gaps = slices.without.gaps))
             gapfill.results   <- do.call(GapfillNcdfDatacube, args.Datacube)
             gapfill.results   <- c(gapfill.results, diminfo.step)
+            if (is.null(gapfill.results$reconstruction) && is.null(gapfill.results$data.variances) &&
+                n.steps ==1) {
+              print('No series available for filling and only one step process chosen. Stopping gapfilling.')
+              file.remove(file.copy)
+              return()
+            }  
             if (process.type == 'variances')
               assign(paste('gapfill.results.dim', l, sep=''), gapfill.results)
           }
