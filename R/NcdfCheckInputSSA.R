@@ -145,9 +145,9 @@ NcdfCheckInputSSA <- function(SSAprocess, ...)
         ##        stop(paste('Argument ', args.list[n], '[[1..n]] can only be a list of ',
         ##                   'length one for process.type == \'stepwise\'!', sep = ''))
       }
-      for (i in 1:length(MSSA)) {
-        for (j in 1:length(MSSA[i]))
-          if (MSSA[[i]][[j]] & length(M[[i]][[j]]) != 2)
+      for (i in 1:length(args$MSSA)) {
+        for (j in 1:length(args$MSSA[i]))
+          if (args$MSSA[[i]][[j]] & length(args$M[[i]][[j]]) != 2)
             stop('If MSSA ought to be computed, all corresponding Ms need to be of length 2.')
       } 
       for (o in 1:length(args$dimensions))
