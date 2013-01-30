@@ -73,7 +73,7 @@ VisualizeDatacube <- function(
   if (interactive())
     cat('Doing calculations ...')
   if (parallel) {
-    cube.info          <- parApply(cl, data.cube.sort, c(1,2,4), GetVecInfo)       
+    cube.info          <- parApply(get('cl', envir = globalenv()), data.cube.sort, c(1,2,4), GetVecInfo)       
   } else {
     cube.info          <- apply(data.cube.sort, c(1,2,4), GetVecInfo)
   } 
