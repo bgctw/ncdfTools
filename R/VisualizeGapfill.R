@@ -21,9 +21,11 @@ VisualizeGapfill <- function(
   library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
   require(DistributionUtils, warn.conflicts = FALSE, quietly = TRUE)
   require(snow, warn.conflicts = FALSE, quietly = TRUE)
+  require(snowfall, warn.conflicts = FALSE, quietly = TRUE)
+  
 
   ## preparation
-  RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))    
+  sfInit(cpus = min(c(GetCoreLimit(), max.cores)), type = 'SOCK', parallel = TRUE)    
   con.orig   <- open.nc(file.orig)
   con.filled <- open.nc(file.filled)
   var.filled <- ncdf.get.varname(file.filled)
@@ -43,9 +45,11 @@ VisualizeGapfill <- function(
   
   ## calculate datacube info
   status.report('Doing calculations ...')
-  cube.info.orig     <- parApply(cl, data.orig, c(dim.lat, dim.long), GetVecInfo)       
-  cube.info.filled   <- parApply(cl, data.filled, c(dim.lat, dim.long), GetVecInfo)
-  stopCluster(cl)
+  cube.info.orig     <- parApply(cl = sfGetCluster(), data.orig, c(dim.lat, dim.long), 
+                                 GetVecInfo)       
+  cube.info.filled   <- parApply(cl = sfGetCluster(), data.filled, c(dim.lat, dim.long), 
+                                 GetVecInfo)
+  sfStop()
   dimnames(cube.info.orig)[[1]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
   dimnames(cube.info.filled)[[1]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
   cube.info.agg       <- array(NA, dim=c(2, 7))

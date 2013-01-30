@@ -23,9 +23,11 @@ VisualizeDatacube <- function(
 
   if (interactive())
     cat('\nPreparing stuff ...')
-  if (parallel) 
-    RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))
-  
+  if (parallel) {
+    require(snow)
+    require(snowfall)
+    sfInit(cpus = min(c(GetCoreLimit(), max.cores)), type = 'SOCK', parallel = TRUE)
+  }
   if (class(data.object) == 'NetCDF') {
     file.con   = data.object
   } else {
@@ -73,7 +75,7 @@ VisualizeDatacube <- function(
   if (interactive())
     cat('Doing calculations ...')
   if (parallel) {
-    cube.info          <- parApply(get('cl', envir = globalenv()), data.cube.sort, c(1,2,4), GetVecInfo)       
+    cube.info          <- parApply(sfGetCluster(), data.cube.sort, c(1,2,4), GetVecInfo)       
   } else {
     cube.info          <- apply(data.cube.sort, c(1,2,4), GetVecInfo)
   } 
