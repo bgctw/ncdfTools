@@ -230,7 +230,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     
     # start parallel processing workers
     if (calc.parallel)
-        cl <- RegisterParallel(package.parallel, max.cores)
+        RegisterParallel(package.parallel, max.cores)
     if (gaps.cv != 0) {
       processes <- c('cv', 'final')
     } else if (gaps.cv == 0) {

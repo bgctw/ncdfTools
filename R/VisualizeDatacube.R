@@ -23,12 +23,9 @@ VisualizeDatacube <- function(
 
   if (interactive())
     cat('\nPreparing stuff ...')
-  if (parallel) {
-    require(foreach)
-    if (!exists('cl') || !inherits(cl, 'cluster')) {
-      cl <- RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))
-    }
-  }  
+  if (parallel) 
+    RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))
+  
   if (class(data.object) == 'NetCDF') {
     file.con   = data.object
   } else {

@@ -23,7 +23,7 @@ VisualizeGapfill <- function(
   require(snow, warn.conflicts = FALSE, quietly = TRUE)
 
   ## preparation
-  cl <- RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))    
+  RegisterParallel('snow', min(c(GetCoreLimit(), max.cores)))    
   con.orig   <- open.nc(file.orig)
   con.filled <- open.nc(file.filled)
   var.filled <- ncdf.get.varname(file.filled)
@@ -148,31 +148,25 @@ VisualizeGapfill <- function(
   
   
   ## plot example series
- 
   layout(matrix(1:n.series, n.series, 1))
   par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(0, 0, 0, 0), oma = c(2, 2, 2, 2))
-
   args.extract =  c(list(data.filled), list(TRUE, TRUE, TRUE))
   args.orig    =  c(list(data.orig), list(TRUE, TRUE, TRUE))
-
   for (i in 1:n.series) {
     plot.bg(rgb(0.9,0.9,0.9))
     args.extract[[dim.lat + 1]] <- ind.closest[i,1]
     args.extract[[dim.long + 1]] <- ind.closest[i,2]
     args.orig[[dim.lat + 1]] <- ind.closest[i,1]
     args.orig[[dim.long + 1]] <- ind.closest[i,2]
-    
     y.data       <- do.call('[',args.extract)
     y.data.orig  <- do.call('[',args.orig)
     if (sum(!is.na(y.data)) > 0 ) {
       plot(y.data, type = 'l', col = 'red', lwd = 2)
       points(y.data.orig, type = 'l', col = 'black', lwd = 2)
-
     } else {
       plot.new()      
     }
   }
-  
   text(trnsf.coords(c(0.8,0.9),c(0.4, 0.4)), labels =  c('filled', 'orig'),
        col = c('red', 'black'), cex = 2)
   invisible(cube.info.agg)
