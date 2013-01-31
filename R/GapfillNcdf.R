@@ -213,6 +213,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       step.chosen[1, ]    <- 1
       step.chosen[2, ]    <- 1:n.steps
     }
+    finished <- FALSE
 
     
     #check input, check first guess, transfer and check ocean mask
@@ -382,8 +383,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             if (is.null(gapfill.results$reconstruction) && is.null(gapfill.results$data.variances) &&
                 n.steps ==1) {
               print('No series available for filling and only one step process chosen. Stopping gapfilling.')
-              file.remove(file.copy)
-              return()
+              file.remove(file.name.copy)
+              return(list(finished = FALSE))
             }  
             if (process.type == 'variances')
               assign(paste('gapfill.results.dim', l, sep=''), gapfill.results)
@@ -491,8 +492,12 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         slices.process = gapfill.results.step$slices.process,
         file.name.copy = file.name.copy, keep.steps = keep.steps, 
         print.status = print.status, n.steps = n.steps)
-    if (process.type == 'variances')
-      return(list(pred.measures = pred.measures, step.chosen = step.chosen))
+    finished <- TRUE
+    if (process.type == 'variances') {
+      out  <-list(pred.measures = pred.measures, step.chosen = step.chosen, finished = finished)
+    } else {
+      out  <- list(finsished = finished)
+    }
 }, ex = function(){
   #prerequesites: go to dir with ncdf file and specify file.name
   setwd('')
@@ -1106,7 +1111,9 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       data.results.iter[ind.results, ]  <- array(reconstruction, dim = c(n.series.steps[n], datapts.n))
       variances[n, ]                    <- as.vector(series.filled$variances)
       iloops.converged[n]               <- sum(!(series.filled$iloop_converged))     
-      'completed'
+      if (interactive() && iter.nr == 1 && n == 1)
+        plot(kacke)
+      'completed'      
     })  
     if (class(data.results.iter.t) == 'try-error') {
       print(paste('Error occoured at iteration ', iter.nr, ' and loop ', n, '!', sep = ''))
