@@ -715,15 +715,13 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
 		                    slices.n = slices.n, dims.process.length = dims.process.length,
                         tresh.fill.dc = tresh.fill.dc, ratio.test.t = ratio.test.t,
                         g = g, ratio.const = ratio.const, algorithm = 'Gapfill', 
-                        tresh.const = tresh.const, args.call.SSA = args.call.SSA,
-                        algorithm = 'Gapfill')
- 
+                        tresh.const = tresh.const, args.call.SSA = args.call.SSA)
   if (g == 2)
     args.identify <- c(args.identify, list(slices.excluded = slices.excluded,
                                            values.constant = values.constant,
                                            slices.constant = slices.constant,
                                            slices.process = slices.process))
-  results.identify      <- do.call(IdentifyCellsNcdfSSA, args.identify)
+  results.identify      <- do.call('IdentifyCellsNcdfSSA', args.identify)
   AttachList(results.identify)
   
   #create iterator

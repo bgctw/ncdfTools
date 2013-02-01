@@ -84,6 +84,9 @@ DecomposeNcdf = structure(function(
     ##TODO Make method reproducible (seed etc)
     ##TODO Add way to handle non convergence
     ##save argument values of call
+
+    stop('Check cell identifcation mechanism for bugs before using this algorithm!')
+  
     args.call.filecheck <- as.list(environment())
     args.call.global    <- call.args2string()
     if (print.status & !interactive()) {
@@ -179,10 +182,10 @@ DecomposeNcdf = structure(function(
     if (length(dim(data.all)) >1 ) {
       dims.cycle.id     <- sort(setdiff(1:length(dims.ids.data), match('time', dims.info$name) ))
       dims.cycle.name   <- dims.info[dims.cycle.id,'name']
-      dim.process.id    <- match('time', dims.info$name)
+      dims.process.id    <- match('time', dims.info$name)
     } else {
       dims.cycle.id     <- 1
-      dim.process.id    <- 2
+      dims.process.id   <- 2
       dims.cycle.name   <- 'series'
       data.all          <- array(data.all, dim = c(1, length(data.all)))
       drop.dim          <- TRUE
@@ -194,9 +197,9 @@ DecomposeNcdf = structure(function(
 
     #determine slices to process
     args.identify <- list(dims.cycle.id = dims.cycle.id, dims.process.id = dims.process.id,
-                          datacube  , ratio.const = ratio.const, tresh.const = tresh.const , 
-                          print.status = print.status, slices.n = slices.const, 
-                          algorithm = 'Gapfill')
+                          datacube = datacube.all  , ratio.const = ratio.const, 
+                          tresh.const = tresh.const , print.status = print.status, 
+                          slices.n = slices.const, algorithm = 'Gapfill')
     results.identify  <- do.call(IdentifyCellsNcdfSSA, args.identify)
     AttachList(results.identify)
 
@@ -226,7 +229,7 @@ DecomposeNcdf = structure(function(
 
     #define process during iteration
     calcs.iter = function(iter.nr, n.timesteps, n.bands, dims.cycle.n,
-                          iter.grid, args.call, var.name, dim.process.id,
+                          iter.grid, args.call, var.name, dims.process.id,
                           dims.cycle.id, iter.gridind)
     {
         require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
@@ -243,7 +246,7 @@ DecomposeNcdf = structure(function(
                         ind.extract <- list(data.all)
                         for (i in 1:length(dims.cycle.id))
                            ind.extract[[dims.cycle.id[i] + 1]] <- iter.grid[ind.total, i + 1]
-                        ind.extract[[dim.process.id + 1]] <- TRUE
+                        ind.extract[[dims.process.id + 1]] <- TRUE
                         args.call.t             <- args.call
                         args.call.t[['series']] <- as.numeric(do.call('[', ind.extract))
                         series.decomp           <- do.call(FilterTSeriesSSA, args.call.t)
@@ -268,7 +271,6 @@ DecomposeNcdf = structure(function(
         }
         data.results.iter
     }
-
     abind.mod=function(...)abind(..., along=3)
 
     #prepare parallel backend
@@ -286,14 +288,14 @@ DecomposeNcdf = structure(function(
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
                                                        var.name = var.name, iter.gridind = iter.gridind, 
-                                                       dim.process.id = dim.process.id, dims.cycle.id = dims.cycle.id)
+                                                       dims.process.id = dims.process.id, dims.cycle.id = dims.cycle.id)
     } else {
         data.results.valid.cells <- foreach(i = 1:max.cores
                                 ,  .combine = abind.mod,  .multicombine = TRUE) %do% calcs.iter(iter.nr = i,
                                                        n.timesteps = n.timesteps,
                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n,
                                                        iter.grid = iter.grid, args.call = args.call,
-                                                       var.name = var.name, dim.process.id = dim.process.id,
+                                                       var.name = var.name, dims.process.id = dims.process.id,
                                                        dims.cycle.id = dims.cycle.id, iter.gridind = iter.gridind)
     }
     if (package.parallel=='doSMP')
@@ -308,7 +310,7 @@ DecomposeNcdf = structure(function(
     file.con.copy                              <- open.nc(file.name.copy, write=TRUE)
     data.results.final                         <- array(as.vector(data.results.all.cells.trans),
                                                         dim = c(dims.cycle.length, n.timesteps, n.bands))
-    aperm.array                                <- c(order(c(dims.cycle.id, dim.process.id)), length(c(dims.cycle.id, dim.process.id)) + 1)
+    aperm.array                                <- c(order(c(dims.cycle.id, dims.process.id)), length(c(dims.cycle.id, dims.process.id)) + 1)
     data.results.final                         <- aperm(data.results.final, aperm.array)
 
     #save results

@@ -19,7 +19,7 @@ IdentifyCellsNcdfSSA = function(
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
   
   ## get amount of missing values
-  if (algorithm == 'Decompose') {
+  if (algorithm == 'Gapfill') {
     add.id = 1  
   } else {
     add.id = 0
@@ -27,16 +27,15 @@ IdentifyCellsNcdfSSA = function(
   getMissingRatio = function(x) {
     sum(is.na(x)) / prod(dim(datacube)[dims.process.id + add.id])
   } 
-  amnt.na  <- apply(datacube, MAR = dims.cycle.id + add.id , getMissingRatio)
-  
+  amnt.na      <- apply(datacube, MAR = dims.cycle.id + add.id , getMissingRatio)
+  slices.empty <- as.vector(amnt.na == 1)
 
   ## slices checks specific to decomposition
   if (algorithm == 'Decompose') {
-    slices.empty                <- as.vector(amnt.na == 1)
     slices.process              <- as.vector(amnt.na == 0)
-    slices.gappy                <- !slices.empty & !process
-    if (sum(slices.gappy) > 0)
-      cat(paste(Sys.time(), ' : ', sum(slices.gappy),' series with gaps were found. ',
+    slices.too.gappy            <- !slices.empty & !process
+    if (sum(slices.too.gappy) > 0)
+      cat(paste(Sys.time(), ' : ', sum(slices.too.gappy),' series with gaps were found. ',
                             'Spectral decomp. for these is not possible!\n',sep=''))
  
     ## slices checks specific to gap filling 
@@ -115,13 +114,12 @@ IdentifyCellsNcdfSSA = function(
       return(FALSE)
     } else {
       min.amount <-  (1 - ratio.const)*length(x[!is.na(x)])
-      tresh.max  <-  abs(median(x, na.rm = TRUE)) + tresh.const
-      return(sum(abs(x) <  tresh.max, na.rm = TRUE) >= min.amount)
+      return(sum(abs(x - median(x, na.rm = TRUE)) <  tresh.const, na.rm = TRUE) >= min.amount)
     }
   }
-  slices.constant    <- apply(data.all, MAR = dims.cycle.id, isSeriesConstant)
-  slices.constant[slices.gappy | slices.empty] <- FALSE
-  values.constant    <-  as.vector(apply(datacube, MAR = dims.cycle.id + 1,
+  slices.constant    <- as.vector(apply(datacube, MAR = dims.cycle.id + add.id, isSeriesConstant))
+  slices.constant[slices.too.gappy | slices.empty] <- FALSE
+  values.constant    <-  as.vector(apply(datacube, MAR = dims.cycle.id + add.id,
                                          median, na.rm = TRUE))
   slices.constant[slices.without.gaps & slices.ocean & slices.too.gappy] <- FALSE      
   if (sum(slices.constant) > 0)
