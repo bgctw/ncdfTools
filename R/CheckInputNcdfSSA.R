@@ -1,4 +1,4 @@
-NcdfCheckInputSSA <- function(SSAprocess, ...)
+CheckInputNcdfSSA <- function(SSAprocess, ...)
 {
   ##title<< helper function for Ncdf SSA routines
   ##details<< helper function for Ncdf SSA routines that checks the consistency of the 
@@ -28,7 +28,7 @@ NcdfCheckInputSSA <- function(SSAprocess, ...)
   } else {
      dims.check <- unique(unlist(args$dimensions))
   }  
-  check.passed <- ncdf.check.file(file.name = args$file.name, 
+  check.passed <- CheckNcdfFile(file.name = args$file.name, 
                                  dims = dims.check, 
                                  type = 'relaxed') 
   if (!check.passed)
@@ -65,7 +65,7 @@ NcdfCheckInputSSA <- function(SSAprocess, ...)
       } else if (!(args$first.guess == name.first.guess.std)) {
         stop('Name for supplied first guess file does not fit the standardized scheme!')
       }
-      check.passed = ncdf.check.file(file.name = args$first.guess, 
+      check.passed = CheckNcdfFile(file.name = args$first.guess, 
         dims = ncdf.get.diminfo(file.con.orig)[, 'name'], 
         type = "relaxed")
       if (!check.passed)
@@ -79,7 +79,7 @@ NcdfCheckInputSSA <- function(SSAprocess, ...)
     if (!is.null(args$ocean.mask) && class(args$ocean.mask)=='character') {
       if (!(file.exists(args$ocean.mask)))
         stop('File for ocean mask not existent!')
-      check.passed <- ncdf.check.file(file.name = args$ocean.mask, 
+      check.passed <- CheckNcdfFile(file.name = args$ocean.mask, 
                                       dims=c('longitude', 'latitude'), type = 'relaxed')
       if (!check.passed)
         stop('ocean mask NCDF file not consistent with CF ncdf conventions!')
