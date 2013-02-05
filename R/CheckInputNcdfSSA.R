@@ -16,6 +16,7 @@ CheckInputNcdfSSA <- function(SSAprocess, ...)
   ## - single dimension variances and thresh.fill.first, tresh.fill
   ## - facilitate old school SSA via gaps.cv, max.steps = 1, amnt.artgaps !=0 and length(dimensions) == 1
   ##TODO check intercorelation between ratio.test and gaps.cv
+  require(BGIFileChecks, warn.conflicts = FALSE, quietly = TRUE)
   args <- list(...)
       
   if (is.null(args$file.name) )

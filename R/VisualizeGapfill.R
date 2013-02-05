@@ -50,8 +50,8 @@ VisualizeGapfill <- function(
   cube.info.filled   <- parApply(cl = sfGetCluster(), data.filled, c(dim.lat, dim.long), 
                                  GetVecInfo)
   sfStop()
-  dimnames(cube.info.orig)[[1]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
-  dimnames(cube.info.filled)[[1]] <- c('min', 'max', 'mean', 'sdev', 'ratio na', 'ratio inf')
+  dimnames(cube.info.orig)[[1]] <- c('min', 'max', 'mean', 'sdev', 'range', 'ratio na', 'ratio inf')
+  dimnames(cube.info.filled)[[1]] <- c('min', 'max', 'mean', 'sdev', 'range', 'ratio na', 'ratio inf')
   cube.info.agg       <- array(NA, dim=c(2, 7))
   dimnames(cube.info.agg) <- list(c('orig', 'filled'), c('min', 'max', 'mean', 'sd', 'ratio_full', 'ratio_empty', 'ratio_partial'))
   for (dataset in c('orig', 'filled')) {
@@ -147,32 +147,41 @@ VisualizeGapfill <- function(
 
 
 
-  ratios.take <- seq(0, min(cube.info.filled['ratio na', , ][cube.info.filled['ratio na', , ] != 0], na.rm = TRUE), length.out = n.series)
-  ind.closest <- which.closest(ratios.take, cube.info.orig['ratio na', , ], arr.ind = TRUE)
-  
-  
+   
   ## plot example series
-  layout(matrix(1:n.series, n.series, 1))
-  par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(0, 0, 0, 0), oma = c(2, 2, 2, 2))
-  args.extract =  c(list(data.filled), list(TRUE, TRUE, TRUE))
-  args.orig    =  c(list(data.orig), list(TRUE, TRUE, TRUE))
-  for (i in 1:n.series) {
-    plot.bg(rgb(0.9,0.9,0.9))
-    args.extract[[dim.lat + 1]] <- ind.closest[i,1]
-    args.extract[[dim.long + 1]] <- ind.closest[i,2]
-    args.orig[[dim.lat + 1]] <- ind.closest[i,1]
-    args.orig[[dim.long + 1]] <- ind.closest[i,2]
-    y.data       <- do.call('[',args.extract)
-    y.data.orig  <- do.call('[',args.orig)
-    if (sum(!is.na(y.data)) > 0 ) {
-      plot(y.data, type = 'l', col = 'red', lwd = 2)
-      points(y.data.orig, type = 'l', col = 'black', lwd = 2)
-    } else {
-      plot.new()      
+  for (characteristic in c('ratio na', 'range', 'sdev', 'mean')) {
+    if (characteristic == 'ratio na') {
+      ratios.take <- seq(0, max(cube.info.orig['ratio na', , ][cube.info.filled['ratio na', , ] == min(cube.info.filled['ratio na', , ], na.rm = TRUE)], na.rm = TRUE), length.out = n.series)
+      ind.plot <- which.closest(ratios.take, cube.info.orig[characteristic, , ], arr.ind = TRUE)       
+    } else {     
+      ind.plot <- VecInd2ArrInd(c(order(cube.info.filled[characteristic, , ], decreasing = TRUE)[1:floor(n.series/2)], 
+          order(cube.info.filled[characteristic, , ])[1:floor(n.series/2)]), dim(cube.info.filled)[-1])
     }
+    
+    layout(matrix(1:n.series, n.series, 1))
+    par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(0, 0, 0, 0), oma = c(2, 2, 2, 2))
+    args.extract =  c(list(data.filled), list(TRUE, TRUE, TRUE))
+    args.orig    =  c(list(data.orig), list(TRUE, TRUE, TRUE))
+    for (i in 1:n.series) {
+      plot.bg(rgb(0.9,0.9,0.9))
+      args.extract[[dim.lat + 1]] <- ind.plot[i,1]
+      args.extract[[dim.long + 1]] <- ind.plot[i,2]
+      args.orig[[dim.lat + 1]] <- ind.plot[i,1]
+      args.orig[[dim.long + 1]] <- ind.plot[i,2]
+      y.data       <- do.call('[',args.extract)
+      y.data.orig  <- do.call('[',args.orig)
+      if (sum(!is.na(y.data)) > 0 ) {
+        plot(y.data, type = 'l', col = 'red', lwd = 2)
+        points(y.data.orig, type = 'l', col = 'black', lwd = 2)
+      } else {
+        plot.new()      
+      }
+    }
+    text(trnsf.coords(c(0.8,0.9),c(0.4, 0.4)), labels =  c('filled', 'orig'),
+        col = c('red', 'black'), cex = 2)
+    mtext(characteristic, outer = TRUE, side = 3, cex = 2)
   }
-  text(trnsf.coords(c(0.8,0.9),c(0.4, 0.4)), labels =  c('filled', 'orig'),
-       col = c('red', 'black'), cex = 2)
+ ## return stuff
   invisible(cube.info.agg)
 }
 ##\code{\figure(visualize_ncdf_demo.png)}

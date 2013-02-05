@@ -217,7 +217,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 
     
     #check input, check first guess, transfer and check ocean mask
-    res.check     <- do.call(NcdfCheckInputSSA,
+    res.check     <- do.call(CheckInputNcdfSSA,
                              c(SSAprocess = 'Gapfill', args.call.filecheck))
     var.name      <- res.check[[1]]
     ocean.mask    <- res.check[[2]]
@@ -496,7 +496,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     if (process.type == 'variances') {
       out  <-list(pred.measures = pred.measures, step.chosen = step.chosen, finished = finished)
     } else {
-      out  <- list(finsished = finished)
+      out  <- list(finished = finished)
     }
 }, ex = function(){
   #prerequesites: go to dir with ncdf file and specify file.name
@@ -726,9 +726,6 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
   
   #create iterator
   if (sum(slices.process) == 0) {
-    if (print.status)
-      cat(paste(Sys.time(), ' : No series/grids available for filling. Most probably only',
-              ' totally gappy and totally gap-free grids/series exist.\n', sep=''))
     data.results.step <- NULL
     data.variances    <- NULL
   } else {
@@ -986,8 +983,6 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       data.results.iter[ind.results, ]  <- array(reconstruction, dim = c(n.series.steps[n], datapts.n))
       variances[n, ]                    <- as.vector(series.filled$variances)
       iloops.converged[n]               <- sum(!(series.filled$iloop_converged))     
-      if (interactive() && iter.nr == 1 && n == 1)
-        plot(kacke)
       'completed'      
     })  
     if (class(data.results.iter.t) == 'try-error') {
