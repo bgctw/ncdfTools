@@ -381,7 +381,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             gapfill.results   <- do.call(GapfillNcdfDatacube, args.Datacube)
             gapfill.results   <- c(gapfill.results, diminfo.step)
             if (is.null(gapfill.results$reconstruction) && is.null(gapfill.results$data.variances) &&
-                n.steps ==1) {
+                n.steps == 1) {
               print('No series available for filling and only one step process chosen. Stopping gapfilling.')
               file.remove(file.name.copy)
               return(list(finished = FALSE))
@@ -439,7 +439,11 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                                                               recstr.test[!is.na(recstr.test)] 
             }
           } else {
-            gapfill.results.step <- gapfill.results
+            if (process.type == 'variances') {
+              gapfill.results.step <- get(paste('gapfill.results.dim', step.chosen['dim', h], sep = ''))
+            } else {
+              gapfill.results.step <- gapfill.results
+            }
           }        
         }
        
@@ -726,8 +730,8 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
   
   #create iterator
   if (sum(slices.process) == 0) {
-    data.results.step <- NULL
-    data.variances    <- NULL
+    data.results.finished <- array(NA, dim(datacube))
+    data.variances        <- NULL
   } else {
     results.crtitercube  <- do.call(GapfillNcdfCreateItercube, 
                                     list(datacube = datacube, 
@@ -781,10 +785,10 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     data.results.rshp          <- array(data.results.all.cells, dim = c(dims.cycle.length, dims.process.length))
     dims.order.results         <- c(dims.cycle, dims.process)
     perm.array                 <- match(dims.info[, 'name'], dims.order.results)
-    data.results.step          <- aperm(data.results.rshp, perm.array)
+    data.results.finished          <- aperm(data.results.rshp, perm.array)
   }
 
-  return(list(reconstruction = data.results.step, data.variances = data.variances,
+  return(list(reconstruction = data.results.finished, data.variances = data.variances,
               slices.without.gaps = slices.without.gaps, slices.process = slices.process, 
               max.cores = max.cores, slices.process = slices.process, slices.too.gappy = slices.too.gappy,
               slices.constant = slices.constant, values.constant = values.constant, 
