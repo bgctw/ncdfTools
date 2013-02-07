@@ -305,6 +305,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         }
         
         for (g in 1:n.calc.repeat) {
+          if (interactive() && process == 'final')
+            browser()
           for (l in dims.calc) {
             if (g == 2 && step.chosen['dim', h] != l)
               next
@@ -453,7 +455,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
               '_first_guess_step_',formatC(h + 1, 2, flag = '0'),
               '.nc', sep = '')
           file.con.guess.next               <- open.nc(file.name.guess.curr, write = TRUE)
-          data.first.guess                  <- gapfill.results.step$reconstruction
+          results.reconstruction            <- gapfill.results.step$reconstruction
           #use first guess from other dimensions in case of too gappy series
           if (force.all.dims) {
             dim.other          <- setdiff(1:n.dims.loop, step.chosen['dim', h])
@@ -465,12 +467,12 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                 ind.datacube  <- ind.datacube(datacube, ind.array,
                                               dims = results.dim.other$dims.process.id + 1)
                 if (!is.null(results.dim.other$reconstruction))
-                  data.first.guess[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
+                  results.reconstruction[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
               }
             }
           }
           #save first guess data
-          var.put.nc(file.con.guess.next, var.name, data.first.guess)
+          var.put.nc(file.con.guess.next, var.name, results.reconstruction)
           close.nc(file.con.guess.next)
           step.use.frst.guess  <- step.chosen['step', max(which(!is.na(step.chosen['step',])))]
           file.name.guess.next <- paste(sub('.nc$', '', file.name), '_first_guess_step_',
@@ -486,7 +488,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
  
     #save results 
     GapfillNcdfSaveResults(datacube = datacube,
-        reconstruction = gapfill.results.step$reconstruction,
+        reconstruction = results.reconstruction,
         args.call.global = args.call.global,
         slices.without.gaps = gapfill.results.step$slices.without.gaps,
         dims.cycle.id = gapfill.results.step$dims.cycle.id,
@@ -745,7 +747,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                                          tresh.fill.dc = tresh.fill.dc))
     AttachList(results.crtitercube)                                                           
     
-    #perform (parallelized) calculation
+    #perform (parallelized) calculation 
     if (print.status)
       cat(paste(Sys.time(), ' : Starting calculation: Filling ', sum(slices.process),
               ' time series/grids of size ', datapts.n, '. \n', sep = ''))
