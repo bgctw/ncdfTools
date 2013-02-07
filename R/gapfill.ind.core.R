@@ -30,8 +30,10 @@ gapfill.ind.core = function(iter.nr) {
       error.from.calc                 <- data.results.iter.t
       data.results.iter.t             <- matrix(Inf, ncol = datapts.n, nrow = 1)
       system.info                     <- sessionInfo()
-
-      file.name.t                     <- paste('workspace_error_', file.name, '_',iter.nr, '_', j, sep = '')
+      path.debug                      <- file.path('/Net', 'Groups', 'BGI', 'tmp', 
+                                                   'jbuttlar', 'Cluster_jobs_debugging',
+                                                   sub('/Net/Groups/BGI/', '', getwd()))
+      file.name.t                     <- paste(path.debug, '/workspace_error_', file.name, '_',iter.nr, '_', j, sep = '')
       print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
       dump.frames(to.file = TRUE, dumpto = file.name.t)
     }
