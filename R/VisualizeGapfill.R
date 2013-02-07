@@ -25,6 +25,7 @@ VisualizeGapfill <- function(
   
 
   ## preparation
+  setDefaultClusterOptions(port = sample(49152:65535, 1))
   sfInit(cpus = min(c(GetCoreLimit(), max.cores)), type = 'SOCK', parallel = TRUE)    
   con.orig   <- open.nc(file.orig)
   con.filled <- open.nc(file.filled)
