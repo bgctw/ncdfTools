@@ -15,10 +15,13 @@ TransposeNcdfCube  = function(data.object, file.con = c(),
   }
   dims.file      <- ncdf.get.diminfo(file.con)[,'name'][var.inq.nc(file.con, var.name)$dimids + 1]
   new.dimorder   <- pmatch(c('lat', 'lon', 'time'), dims.file)
-  datacube.aperm <- aperm(datacube, new.dimorder)
-  lat.values     <- var.get.nc(file.con, new.dimorder[1] - 1) 
-  lon.values     <- var.get.nc(file.con, new.dimorder[2] - 1)
-  datacube.out   <- datacube.aperm[order(lat.values, decreasing = TRUE), , ]
-  datacube.out   <- datacube.aperm[, order(lon.values), ]
-  return(datacube = datacube.out)
+  if (sum(unique(diff(new.dimorder)) != 1) > 0)
+    datacube   <- aperm(datacube, new.dimorder)
+  lat.values     <- var.get.nc(file.con, pmatch('lat', ncdf.get.varinfo(file.con, order.var = 'id')$name) - 1) 
+  lon.values     <- var.get.nc(file.con, pmatch('lon', ncdf.get.varinfo(file.con, order.var = 'id')$name) - 1)
+  if (sum(unique(diff(order(lat.values, decreasing = TRUE))) != 1) > 0)
+    datacube   <- datacube[order(lat.values, decreasing = TRUE), , ]
+  if (sum(unique(diff(order(lon.values))) != 1) > 0)
+    datacube   <- datacube[, order(lon.values), ]
+  return(datacube = datacube)
 }
