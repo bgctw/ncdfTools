@@ -305,8 +305,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         }
         
         for (g in 1:n.calc.repeat) {
-          if (interactive() && process == 'final')
-            browser()
           for (l in dims.calc) {
             if (g == 2 && step.chosen['dim', h] != l)
               next
@@ -636,6 +634,11 @@ GapfillNcdfSaveResults <- function(datacube, reconstruction, args.call.global,
 ##seealso<<
 ##\code{\link{GapfillNcdf}}  
 {
+  ##TODO remove
+  if (interactive())
+    save(list = ls(), file='/Net/Groups/BGI/people/jbuttlar/Scratch/GC_SSA_debug_1.RData')
+  
+
   dims.cycle.length   <- dim(datacube)[dims.cycle.id + 1]
 
   #prepare results
@@ -721,7 +724,8 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
 		                    slices.n = slices.n, dims.process.length = dims.process.length,
                         tresh.fill.dc = tresh.fill.dc, ratio.test.t = ratio.test.t,
                         g = g, ratio.const = ratio.const, algorithm = 'Gapfill', 
-                        tresh.const = tresh.const, args.call.SSA = args.call.SSA)
+                        tresh.const = tresh.const, args.call.SSA = args.call.SSA,
+                        file.name = file.name)
   if (g == 2)
     args.identify <- c(args.identify, list(slices.excluded = slices.excluded,
                                            values.constant = values.constant,
@@ -776,6 +780,10 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     data.variances           <- results.parallel$variances
 
     #fill all values to results array
+    ##TODO remove
+    if (interactive())
+          save(list = ls(), file='/Net/Groups/BGI/people/jbuttlar/Scratch/GC_SSA_debug_2.RData')
+  
     if (print.status)
       cat(paste(Sys.time(), ' : Transposing results. \n', sep = ''))
     data.results.all.cells                    <- array(NA, dim = c(slices.n, datapts.n))

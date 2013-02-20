@@ -1,6 +1,7 @@
 IdentifyCellsNcdfSSA = function(
 ##title<< helper function for Ncdf SSA algorithms 
-    dims.cycle.id, dims.process.id, datacube, ratio.const, tresh.const , print.status, slices.n, algorithm, 
+    dims.cycle.id, dims.process.id, datacube, ratio.const, tresh.const , print.status,
+    slices.n, algorithm, file.name, 
     g = c() ,process.cells = c('gappy','all')[1], dims.cycle = c(), 
     args.call.SSA = list(), tresh.fill.dc = 0, ratio.test.t =1, first.guess = 'mean', 
     ocean.mask = c(), dims.process = c(), dims.process.length = 0, 
@@ -11,9 +12,13 @@ IdentifyCellsNcdfSSA = function(
 ##details<< helper function for GapfillNcdf and DecomposeNcdf that identifies the grid cells to process. 
 ##seealso<<
 ##\code{\link{GapfillNcdf}}, \code{\link{GapfillNcdf}}    
-{
-  ##FIXME
+{  ##FIXME
   # possibility to identify gap less MSSA blocks
+
+
+  ##TODO remove
+  if (interactive())
+    save(list = ls(), file='/Net/Groups/BGI/people/jbuttlar/Scratch/GC_SSA_debug_3.RData')
   
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
@@ -109,19 +114,13 @@ IdentifyCellsNcdfSSA = function(
   }
   
   # identify constant slices
-  isSeriesConstant <- function(x) {
-    if (sum(is.na(x)) == length(x)) {
-      return(FALSE)
-    } else {
-      min.amount <-  (1 - ratio.const)*length(x[!is.na(x)])
-      return(sum(abs(x - median(x, na.rm = TRUE)) <  tresh.const, na.rm = TRUE) >= min.amount)
-    }
-  }
-  slices.constant    <- as.vector(apply(datacube, MAR = dims.cycle.id + add.id, isSeriesConstant))
-  slices.constant[slices.too.gappy | slices.empty] <- FALSE
+  slices.constant    <- as.vector(apply(datacube, MAR = dims.cycle.id + add.id,
+                                        IsSeriesConstant, ratio.const = ratio.const,
+                                        tresh.const = tresh.const))
+  
+  slices.constant[slices.too.gappy | slices.empty | slices.ocean | slices.without.gaps] <- FALSE
   values.constant    <-  as.vector(apply(datacube, MAR = dims.cycle.id + add.id,
                                          median, na.rm = TRUE))
-  slices.constant[slices.without.gaps & slices.ocean & slices.too.gappy] <- FALSE      
   if (sum(slices.constant) > 0)
     cat(paste(Sys.time(), ' : ', sum(slices.constant),' constant slices were found.',
             ' SSA on these for these is ommited!\n', sep=''))

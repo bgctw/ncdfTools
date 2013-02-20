@@ -23,7 +23,6 @@ VisualizeGapfill <- function(
   require(snow, warn.conflicts = FALSE, quietly = TRUE)
   require(snowfall, warn.conflicts = FALSE, quietly = TRUE)
   
-
   ## preparation
   setDefaultClusterOptions(port = sample(49152:65535, 1))
   sfInit(cpus = min(c(GetCoreLimit(), max.cores)), type = 'SOCK', parallel = TRUE)    
@@ -149,16 +148,21 @@ VisualizeGapfill <- function(
        col = c('red', 'black'), cex = 2)
 
 
+  if(interactive())
+    browser()
 
    
   ## plot example series
   for (characteristic in c('ratio na', 'range', 'sdev', 'mean')) {
     if (characteristic == 'ratio na') {
       ratios.take <- seq(0, max(cube.info.orig['ratio na', , ][cube.info.filled['ratio na', , ] == min(cube.info.filled['ratio na', , ], na.rm = TRUE)], na.rm = TRUE), length.out = n.series)
-      ind.plot <- which.closest(ratios.take, cube.info.orig[characteristic, , ], arr.ind = TRUE)       
+      ind.valid    <- which(cube.info.filled['ratio na inner',,] == 0)
+      ind.plot    <- VecInd2ArrInd(ind.valid[which.closest(ratios.take, cube.info.orig[characteristic, , ][ind.valid])], dim = dim(cube.info.orig)[-1])
     } else {
       ind.valid    <- which(cube.info.filled['ratio na inner',,] == 0 & cube.info.filled['ratio na',,] < 0.95)
       ind.sorted   <- ind.valid[order(cube.info.filled[characteristic, , ][ind.valid], decreasing = TRUE)]
+      if (is.element(characteristic, c( 'range', 'sdev')))
+        ind.sorted <- ind.sorted[cube.info.filled[characteristic, , ][ind.sorted] !=0]
       ind.plot     <- VecInd2ArrInd(ind.sorted[c(1:floor(n.series/2), (length(ind.sorted) - floor(n.series/2)):length(ind.sorted) )], dim = dim(cube.info.orig)[-1] )
     }
     if(names(dev.cur()) == 'X11')
