@@ -493,7 +493,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         ocean.mask = ocean.mask, dims.process = gapfill.results.step$dims.process,
         dims.process.id = gapfill.results.step$dims.process.id,
         var.name = var.name, process.cells = process.cells,
-        slices.process = gapfill.results.step$slices.process,
         file.name.copy = file.name.copy, keep.steps = keep.steps, 
         print.status = print.status, n.steps = n.steps)
     finished <- TRUE
@@ -625,20 +624,16 @@ GapfillNcdfOpenFiles <- function(file.name, var.name, n.steps, print.status)
 
 
 ##################################### save results #############################
-GapfillNcdfSaveResults <- function(datacube, reconstruction, args.call.global, 
-    slices.without.gaps, dims.cycle.id, ocean.mask, dims.process.id, var.name, 
-    dims.process, slices.process, file.name.copy, print.status, process.cells, 
-    n.steps, keep.steps)
+GapfillNcdfSaveResults <- function(args.call.global, datacube, dims.process,  
+                                   dims.cycle.id, dims.process.id, file.name.copy,  
+                                   keep.steps, n.steps, ocean.mask, print.status,
+                                   process.cells, reconstruction, slices.without.gaps,
+                                   var.name)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that saves the results ncdf file. 
 ##seealso<<
 ##\code{\link{GapfillNcdf}}  
 {
-  ##TODO remove
-  if (interactive())
-    save(list = ls(), file='/Net/Groups/BGI/people/jbuttlar/Scratch/GC_SSA_debug_1.RData')
-  
-
   dims.cycle.length   <- dim(datacube)[dims.cycle.id + 1]
 
   #prepare results
@@ -707,9 +702,6 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
 ##details<< helper function for GapfillNcdf that handles the main datacube transformations. 
 ##seealso<<
 ##\code{\link{GapfillNcdf}}    
-  
-##TODO
-#remove h, save.debug.info
 {
   slices.n            <- prod(dim(datacube)[dims.cycle.id + 1])
   dims.process.length <- dim(datacube)[dims.process.id + 1]
@@ -724,8 +716,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
 		                    slices.n = slices.n, dims.process.length = dims.process.length,
                         tresh.fill.dc = tresh.fill.dc, ratio.test.t = ratio.test.t,
                         g = g, ratio.const = ratio.const, algorithm = 'Gapfill', 
-                        tresh.const = tresh.const, args.call.SSA = args.call.SSA,
-                        file.name = file.name)
+                        tresh.const = tresh.const, args.call.SSA = args.call.SSA)
   if (g == 2)
     args.identify <- c(args.identify, list(slices.excluded = slices.excluded,
                                            values.constant = values.constant,
@@ -780,22 +771,18 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     data.variances           <- results.parallel$variances
 
     #fill all values to results array
-    ##TODO remove
-    if (interactive())
-          save(list = ls(), file='/Net/Groups/BGI/people/jbuttlar/Scratch/GC_SSA_debug_2.RData')
-  
     if (print.status)
       cat(paste(Sys.time(), ' : Transposing results. \n', sep = ''))
     data.results.all.cells                    <- array(NA, dim = c(slices.n, datapts.n))
     if (sum(slices.process) > 0)
       data.results.all.cells[index.MSSAseries, ]<- data.results.valid.cells
     data.results.all.cells[slices.constant, ] <- rep(values.constant[slices.constant], 
-                                                     each = datapts.n)
+                                                     times = datapts.n)
     #reshape results array to match original data cube
     data.results.rshp          <- array(data.results.all.cells, dim = c(dims.cycle.length, dims.process.length))
     dims.order.results         <- c(dims.cycle, dims.process)
     perm.array                 <- match(dims.info[, 'name'], dims.order.results)
-    data.results.finished          <- aperm(data.results.rshp, perm.array)
+    data.results.finished      <- aperm(data.results.rshp, perm.array)
   }
 
   return(list(reconstruction = data.results.finished, data.variances = data.variances,
@@ -992,12 +979,12 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       }
    
       series.filled       <- do.call(GapfillSSA, args.call.t)
-      reconstruction      <- aperm(array(series.filled$reconstr,
+      rcstr.local         <- aperm(array(series.filled$reconstr,
                                          dim = c(dims.process.length, n.series.steps[n])),
                                    aperm.extr.data)
       ind.results <- (1 : n.series.steps[n]) + (((n>1) * 
                                                  (sum( n.series.steps[1 : max(c(n - 1, 1))]))))  
-      data.results.iter[ind.results, ]  <- array(reconstruction, dim = c(n.series.steps[n], datapts.n))
+      data.results.iter[ind.results, ]  <- array(rcstr.local, dim = c(n.series.steps[n], datapts.n))
       variances[n, ]                    <- as.vector(series.filled$variances)
       iloops.converged[n]               <- sum(!(series.filled$iloop_converged))     
       'completed'      

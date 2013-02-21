@@ -2,8 +2,10 @@ VisualizeGapfill <- function(
   ##title<< visualize/plot an overview of a ncdf file
   file.orig                ##<< object to plot: file name or file.con object linking to a ncdf file
   , file.filled
+  , file.prefill = ''                          
   , data.orig = c()
-  , data.filled =c()                          
+  , data.filled = c()
+  , data.prefill = c()                          
   , n.series = 16
   , lwd = 2
   , max.cores = 36                           
@@ -40,6 +42,14 @@ VisualizeGapfill <- function(
     status.report('Loading gapfilled data ...')    
     data.filled <-  TransposeNcdfCube(data.object = con.filled)  
   }
+  if (length(data.prefill) == 0 & nchar(file.prefill)!=0) {
+    status.report('Loading pregapfilled data ...')
+    con.prefill<- open.nc(file.prefill)
+    data.prefill <-  TransposeNcdfCube(data.object = con.prefill)  
+  }
+  
+
+  
   
   ## calculate datacube info
   status.report('Doing calculations ...')
@@ -146,11 +156,6 @@ VisualizeGapfill <- function(
           cex = 1.1, xlab = 'ratio of missing values per grid point', main = '')
   text(trnsf.coords(c(0.7,0.9),c(0.9, 0.9)), labels =  c('filled', 'orig'),
        col = c('red', 'black'), cex = 2)
-
-
-  if(interactive())
-    browser()
-
    
   ## plot example series
   for (characteristic in c('ratio na', 'range', 'sdev', 'mean')) {
@@ -167,8 +172,6 @@ VisualizeGapfill <- function(
     }
     if(names(dev.cur()) == 'X11')
       x11()
-    #if (interactive() && characteristic == 'range')
-    #  browser()
     layout(matrix(1:n.series, n.series, 1))
     par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(0, 0, 0, 0), oma = c(2, 2, 2, 2))
     args.extract =  c(list(data.filled), list(TRUE, TRUE, TRUE))
@@ -176,21 +179,29 @@ VisualizeGapfill <- function(
     for (i in 1:n.series) {
       plot.bg(rgb(0.9,0.9,0.9))
       args.extract[[2]] <- ind.plot[i,1]
-      args.extract[[3]]  <- ind.plot[i,2]
+      args.extract[[3]] <- ind.plot[i,2]
       args.orig[[2]]    <- ind.plot[i,1]
       args.orig[[3]]    <- ind.plot[i,2]
       y.data            <- do.call('[', args.extract)
       y.data.orig       <- do.call('[', args.orig)
+      if (length(data.prefill) == 0) {
+        ind.prefill  <- is.na(data.orig[ind.plot[i,1], ind.plot[i,2], ]) & !is.na(data.prefill[ind.plot[i,1], ind.plot[i,2], ])
+      } else {
+        ind.prefill     <- rep(FALSE, dim(data.filled)[3])
+      }
       if (sum(!is.na(y.data)) > 0 ) {
-        plot(y.data, type = 'l', col = 'red', lwd = 2)
+        plot(y.data, col = 'red', pch = 16, type = 'b', lty = 2)
         text(UserCoords(0.01,0.5), pos = 4, paste(unlist(args.extract[c(2,3)]), collapse = ','), cex = 2 )
-        points(y.data.orig, type = 'l', col = 'black', lwd = 2)
+        points(y.data.orig, col = 'black', pch = 16)
+        if (sum(ind.prefill) > 0)
+           points(which(ind.prefill), y.data.orig[ind.prefill], col = 'green', pch = 16)
+
       } else {
         plot.new()      
       }
     }
-    text(UserCoords(c(0.8,0.9),c(0.4, 0.4)), labels =  c('filled', 'orig'),
-        col = c('red', 'black'), cex = 2)
+    text(UserCoords(c(0.7,0.8, 0.9),c(0.4, 0.4, 0.4)), labels =  c('filled', 'orig', 'prefilled'),
+        col = c('red', 'black', 'green'), cex = 2)
     mtext(characteristic, outer = TRUE, side = 3, cex = 2)
   }
  ## return stuff

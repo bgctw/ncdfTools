@@ -14,11 +14,6 @@ IdentifyCellsNcdfSSA = function(
 ##\code{\link{GapfillNcdf}}, \code{\link{GapfillNcdf}}    
 {  ##FIXME
   # possibility to identify gap less MSSA blocks
-
-
-  ##TODO remove
-  if (interactive())
-    save(list = ls(), file='/Net/Groups/BGI/people/jbuttlar/Scratch/GC_SSA_debug_3.RData')
   
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
@@ -46,8 +41,7 @@ IdentifyCellsNcdfSSA = function(
     ## slices checks specific to gap filling 
   } else if (algorithm == 'Gapfill') {
     if (!MSSA) {
-      if (g == 1) {
-        
+      if (g == 1) {      
         ## modifications in case of given ocean mask
         if ((length(ocean.mask) > 0 ) & (sum(!is.na(match(c('longitude','latitude'), 
                           dims.process))) == 2)) {
@@ -61,7 +55,6 @@ IdentifyCellsNcdfSSA = function(
         ## exclude non gappy slices
         if (process.cells == 'gappy') 
           slices.without.gaps       <- as.vector((amnt.na == 0))
-      
         
         ## exclude too gappy slices
         gaps     <- args.call.SSA$amnt.artgaps
@@ -114,10 +107,10 @@ IdentifyCellsNcdfSSA = function(
   }
   
   # identify constant slices
+
   slices.constant    <- as.vector(apply(datacube, MAR = dims.cycle.id + add.id,
                                         IsSeriesConstant, ratio.const = ratio.const,
                                         tresh.const = tresh.const))
-  
   slices.constant[slices.too.gappy | slices.empty | slices.ocean | slices.without.gaps] <- FALSE
   values.constant    <-  as.vector(apply(datacube, MAR = dims.cycle.id + add.id,
                                          median, na.rm = TRUE))
