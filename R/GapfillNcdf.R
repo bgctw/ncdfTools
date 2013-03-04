@@ -5,85 +5,91 @@ GapfillNcdf <- structure(function(
 file.name             ##<< character: name of the ncdf file to decompose.  The file has to be in the current working directory!
 , process.type = c('stepwise', 'variances')[1]
 , M                   ##<< list of single integers: window length  or embedding dimension in time steps. If not
-                      ##   given,  a default value of 0.5*length(time series) is computed.                             
+                      ##             given,  a default value of 0.5*length(time series) is computed.                             
 , dimensions = list(list('time'))
                       ##<< list of string vectors: setting along which dimensions to perform SSA. These names
-                      ##   have to be identical to the names of the dimensions in the ncdf file. Set this to
-                      ##   'time' to do only temporal gap filling or to (for example) c('latitude','longitude')
-                      ##   to do 2 dimensional spatial gap filling. See the description for details on how to
-                      ##   perform spatio-temporal gap filling.
+                      ##             have to be identical to the names of the dimensions in the ncdf file. Set this to
+                      ##             'time' to do only temporal gap filling or to (for example) c('latitude','longitude')
+                      ##             to do 2 dimensional spatial gap filling. See the description for details on how to
+                      ##             perform spatio-temporal gap filling.
 , MSSA =  rep(list(   rep(list(FALSE), times = length(dimensions[[1]]))) , times = length(dimensions))
-                      ##<< list of logicls: Whether to perform MSSA for this dimension (see description 
-                      ##   for details). Has to have the sam ind.extr e structure as dimensions.
+                      ##<< list of logicals: Whether to perform MSSA for this dimension (see description 
+                      ##             for details). Has to have the sam ind.extr e structure as dimensions.
 , MSSA.blocksize = 1  ##<< integer: size of the quadratical block used for MSSA.  
-, gaps.cv        = 0
-, MSSA.blck.trsh = tresh.fill[[1]][[1]]                                 
+, gaps.cv        = 0  ##<< numeric: ratio (between 0 and 1) of artificial gaps to be included prior to the first
+                      ##             cross validation loop that are used for cross validation.
+, MSSA.blck.trsh = tresh.fill[[1]][[1]]
+                      ##<< numeric: ratio (0-1) of gaps that a MSSA block may contain to be filled. 
 , amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of numeric vectors: the relative ratio (length gaps/series length) of
-                      ##  artificial gaps to include to determine the iteration with the best
-                      ##   prediction (c(ratio big gaps, ratio small gaps))
+                      ##             artificial gaps to include in the "innermost" SSA loop (e.g. the value used by the
+                      ##             SSA run for each indivuidual series/slice). These ratio is used to determine 
+                      ##             the iteration with the best prediction (c(ratio big gaps, ratio small gaps)) (see ?GapfillSSA for details )
 , size.biggap = rep(list(   rep(list(20) , times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of single integers: length of the big artificial gaps (in time steps) (see ?GapfillSSA for details)
 , amnt.iters = rep(list(   rep(list(c(10, 10)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of integer vectors: amount of iterations performed for the outer and inner
-                      ##   loop (c(outer,inner)) (see ?GapfillSSA for details)
+                      ##             loop (c(outer,inner)) (see ?GapfillSSA for details)
 , amnt.iters.start = rep(list(   rep(list(c(1, 1)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of integer vectors: index of the iteration to start with (outer, inner). If this
-                      ##   value is >1, the reconstruction (!) part is started with this iteration. Currently
-                      ##   it is only possible to set this to values >1 if amnt.artgaps and size.biggap == 0.
+                      ##             value is >1, the reconstruction (!) part is started with this iteration. Currently
+                      ##             it is only possible to set this to values >1 if amnt.artgaps and size.biggap == 0.
 , n.comp = lapply(amnt.iters, FUN = function(x)x[[1]][[1]][1] * 2)
                       ##<< list of single integers: amount of eigentriples to extract (default (if no values are
-                      ##   supplied) is 2*amnt.iters[1] (see ?GapfillSSA for details)
+                      ##             supplied) is 2*amnt.iters[1] (see ?GapfillSSA for details)
 , pad.series = rep(list(   rep(list(c(0, 0)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of integer vectors (of size 2): length of the extracts from series to use for
-                      ##   padding. Only possible in the one dimensional case. See the documentation of GapfillSSA for details!
+                      ##             padding. Only possible in the one dimensional case. See the documentation of GapfillSSA for details!
 , tresh.fill = c(list(list(0.1)), rep(list(list(0,0)), length(dimensions) - 1))
                       ##<< list of numeric fractions (0-1): This value determines the fraction of valid values below which
-                      ##   series/grids will not be filled in this step and are filled with the first guess from the
-                      ##   previous step (if any). For filling global maps while using a ocean.mask you need
-                      ##   to set this value relative to the global grid size (and not only the land mask). Setting this
-                      ##   value to zero would mean that also slices/series without any "real" values are tried to
-                      ##   be filled with the "first guess" value of the last iteration alone. This can only be done
-                      ##   if the cross validation scheme is switched off (e.g. by setting amnt.artgaps and size.biggap
-                      ##   to zero
+                      ##             series/grids will not be filled in this step and are filled with the first guess from the
+                      ##             previous step (if any). For filling global maps while using a ocean.mask you need
+                      ##             to set this value relative to the global grid size (and not only the land mask). Setting this
+                      ##             value to zero would mean that also slices/series without any "real" values are tried to
+                      ##             be filled with the "first guess" value of the last iteration alone. This can only be done
+                      ##             if the cross validation scheme is switched off (e.g. by setting amnt.artgaps and size.biggap
+                      ##             to zero
 , tresh.fill.first = list(tresh.fill[[1]])    ##<< single numeric value between 0 and 1 indicating a different treshold for the
-                      ##   run when no first guess values from previous runs are available. As this can be specified anyway
-                      ##   in the 'stepwise' sheme, supplying this value is only reasonable in the 'variances' sheme.
-, max.steps = 10
-, ratio.test = 1
-, force.all.dims = FALSE
+                      ##             run when no first guess values from previous runs are available. As this can be specified anyway
+                      ##             in the 'stepwise' sheme, supplying this value is only reasonable in the 'variances' sheme.
+, max.steps = 10      ##<< integer: maximum aount of steps in the variances scheme
+, ratio.test = 1      ##<< numeric: ratio (0-1) of the data that should be used in the cross validation step. If set to 1,
+                      ##             all data is used.
+, force.all.dims = FALSE ##<< logical: if this is set to true, results from dimensions not chosen as the best guess are used
+                      ##             to fill gaps that could not be filled by the buest guess dimensions due to too gappy slices etc. .
 , var.name = 'auto'   ##<< character string: name of the variable to fill. If set to 'auto' (default), the name
-                      ##   is taken from the file as the variable with a different name than the dimensions. An
-                      ##   error is produced here in cases where more than one such variable exists.
+                      ##             is taken from the file as the variable with a different name than the dimensions. An
+                      ##             error is produced here in cases where more than one such variable exists.
 , ocean.mask = c()    ##<< logical matrix: contains TRUE for every ocean grid cell and FALSE for land cells. Ocean grid
-                      ##   cells will be set to missing after spatial SSA and will be excluded from temporal SSA.
-                      ##   The matrix needs to have dimensions identical in order and size to the spatial dimensions
-                      ##   in the ncdf file. As an alternative to a R matrix, the name of a ncdf file can be supplied.
-                      ##   It should only contain one non coordinate variable with 1 at ocean cells and 0 at land cells.
+                      ##             cells will be set to missing after spatial SSA and will be excluded from temporal SSA.
+                      ##             The matrix needs to have dimensions identical in order and size to the spatial dimensions
+                      ##             in the ncdf file. As an alternative to a R matrix, the name of a ncdf file can be supplied.
+                      ##             It should only contain one non coordinate variable with 1 at ocean cells and 0 at land cells.
 , process.cells = c('gappy','all')[1]
                       ##<< character string: which grid/series to process. 'gappy' means that only series grids with actual
-                      ##   gaps will be processed, 'all' would result in also non gappy grids to be subjected to SSA. The
-                      ##   first option results in faster computation times as reconstructions for non gappy grids/series
-                      ##   are technically not needed for gap filling, whereas the second option provides a better
-                      ##   understanding of the results trajectory to the final results.
-, first.guess = 'mean'##<< character string: if 'mean', standard SSA procedure is followed (using zero as
-                      ##   the first guess. Otherwise this is the file name of a ncdf file with the same dimensions
-                      ##   (with identical size!) as the file to fill which contains values used as a
-                      ##   first guess (for the first step of the process!). This name need to be exactly
-                      ##   "<filename>_first_guess_step_1.nc".
+                      ##             gaps will be processed, 'all' would result in also non gappy grids to be subjected to SSA. The
+                      ##             first option results in faster computation times as reconstructions for non gappy grids/series
+                      ##             are technically not needed for gap filling, whereas the second option provides a better
+                      ##             understanding of the results trajectory to the final results.
+, first.guess = 'mean'##<< character string: if 'mean', standard SSA procedure is followed (using zero as the first guess). 
+                      ##             Otherwise this is the file name of a ncdf file with the same dimensions
+                      ##             (with identical size!) as the file to fill which contains values used as a
+                      ##             first guess (for the first step of the process!). This name need to be exactly
+                      ##             "<filename>_first_guess_step_1.nc".
 , tresh.const = 1e-12 ##<< numeric: value below which abs(values) are assumed to be constant and excluded
-                      ##   from the decomposition
+                      ##             from the decomposition
 , ratio.const = 0.05  ##<< numeric: max ratio of the time series that is allowed to be above tresh.const for the time series
-                      ##   still to be not cosidered constant.
+                      ##             still to be not cosidered constant.
 , keep.steps = TRUE   ##<< logical: whether to keep the files with the results from the single steps                      
 , print.status = TRUE ##<< logical: whether to print status information during the process
 , calc.parallel = TRUE##<< logical: whether to use parallel computing. Needs packages doMC, foreach or doSMP (and
-                      ##   their dependencies) to be installed.
-, package.parallel = 'doMC' ## character: package to use for linking foreach to
-                      ##       the parallel computing backend. Only doMC as the algorithm has been
-                      ##  extensively tested with this package.!
-, max.cores = 8       ##<< integer: maximum number of cores to use.
-, debugging = FALSE
+                      ##             their dependencies) to be installed.
+, package.parallel = 'doMC'
+                      ## character: package to use for linking foreach to the parallel computing backend. Only doMC
+                      ##            has been rigorously tested!
+, max.cores = 8       ##<< integer: maximum number of cores to use (if calc.parallel = TRUE).
+, debugging = FALSE   ##<< logical: if set to TRUE, debugging workspaces or dumpframes are saved at several stages
+                      ##            in case of an error.
 , reproducible = FALSE##<< logical: Whether a seed based on the characters of the file name should be set
                       ##            which forces all random steps, including the nutrlan SSA algorithm to be
                       ##            exactly reproducible.
@@ -301,7 +307,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
           pred.measures <- array(NA, dim = c(3, n.steps, n.dims.loop))
           dimnames(pred.measures) <- list(c('var.res.steps','RMSE','MEF'), 
                                           paste('step',1:n.steps), 
-                                          sapply(call.args$dimensions[[1]], function(x) paste(x, collapse='-')))
+                                          sapply(args.call.filecheck$dimensions[[1]], function(x) paste(x, collapse='-')))
         }
         
         for (g in 1:n.calc.repeat) {
@@ -329,18 +335,31 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             if (print.status)
               cat(paste(Sys.time(), ' : Starting process for filling dimension: ',
                       paste(dimensions[[ind]][[l]], collapse=','), ' \n', sep = ''))
+            drop.dim = FALSE
             dims.process        <- dimensions[[ind]][[l]]
             dims.process.id     <- dims.info[match(dims.process, dims.info$name), 1]
             dims.process.length <- dims.info[match(dims.process, dims.info$name), 3]
-            dims.cycle          <- dims.info[ - match(dims.process, dims.info$name), 2]
-            dims.cycle.id       <- dims.info[match(dims.cycle, dims.info$name), 1]
-            dims.cycle.amnt     <- length(dims.cycle.id)
-            dims.cycle.length   <- dims.info[match(dims.cycle, dims.info$name), 3]
+            if (length(dim(datacube)) == 1 &&  dims.process == 'time') {
+              dims.cycle.id     <- 0
+              dims.cycle.amnt   <- 1
+              dims.cycle.length <- 1
+              dims.process.id   <- 1
+              dims.cycle        <- 'series'
+              datacube          <- array(datacube, dim = c(1, length(datacube)))
+              drop.dim          <- TRUE
+            } else {
+              dims.cycle        <- dims.info[ - match(dims.process, dims.info$name), 2]
+              dims.cycle.id     <- dims.info[match(dims.cycle, dims.info$name), 1]
+              dims.cycle.amnt   <- length(dims.cycle.id)
+              dims.cycle.length <- dims.info[match(dims.cycle, dims.info$name), 3]
+            }  
             datapts.n           <- prod(dims.info[match(dims.process, dims.info$name), 3])
             slices.n            <- prod(dims.cycle.length)
+
+              
             diminfo.step <- list(dims.process = dims.process, dims.process.id = dims.process.id,
-                dims.process.length = dims.process.length, dims.cycle.id = dims.cycle.id,
-                dims.cycle.length = dims.cycle.length)
+                                 dims.process.length = dims.process.length, dims.cycle.id = dims.cycle.id,
+                                 dims.cycle.length = dims.cycle.length)
             
             ##determine call settings for SSA
             args.call.SSA <- list(amnt.artgaps = amnt.artgaps[[ind]][[l]],
@@ -389,6 +408,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             if (process.type == 'variances')
               assign(paste('gapfill.results.dim', l, sep=''), gapfill.results)
           }
+     
 
           ##test which dimension to be used for the next step
           ##TODO whole step can be excluded for "one step" processes
@@ -446,7 +466,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             }
           }        
         }
-       
+
         ##determine first guess for next step
         if (!is.null(gapfill.results.step$reconstruction)) {
           file.name.guess.curr              <- paste(sub('.nc$', '', file.name),
@@ -470,6 +490,8 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             }
           }
           #save first guess data
+          if (drop.dim)
+             results.reconstruction <- drop(results.reconstruction)
           var.put.nc(file.con.guess.next, var.name, results.reconstruction)
           close.nc(file.con.guess.next)
           step.use.frst.guess  <- step.chosen['step', max(which(!is.na(step.chosen['step',])))]
@@ -494,7 +516,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         dims.process.id = gapfill.results.step$dims.process.id,
         var.name = var.name, process.cells = process.cells,
         file.name.copy = file.name.copy, keep.steps = keep.steps, 
-        print.status = print.status, n.steps = n.steps)
+        print.status = print.status, n.steps = n.steps, drop.dim = drop.dim)
     finished <- TRUE
     if (process.type == 'variances') {
       out  <-list(pred.measures = pred.measures, step.chosen = step.chosen, finished = finished)
@@ -628,7 +650,7 @@ GapfillNcdfSaveResults <- function(args.call.global, datacube, dims.process,
                                    dims.cycle.id, dims.process.id, file.name.copy,  
                                    keep.steps, n.steps, ocean.mask, print.status,
                                    process.cells, reconstruction, slices.without.gaps,
-                                   var.name)
+                                   var.name, drop.dim)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that saves the results ncdf file. 
 ##seealso<<
@@ -657,6 +679,8 @@ GapfillNcdfSaveResults <- function(args.call.global, datacube, dims.process,
   if (print.status)
     cat(paste(Sys.time(), ' : Writing results to file. \n', sep = ''))
   file.con.copy                   <- open.nc(file.name.copy, write = TRUE)
+  if (drop.dim)
+    data.results.final <- drop(data.results.final)
   var.put.nc(file.con.copy, var.name, data.results.final)
   sync.nc(file.con.copy)
 
@@ -776,12 +800,16 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     data.results.all.cells                    <- array(NA, dim = c(slices.n, datapts.n))
     if (sum(slices.process) > 0)
       data.results.all.cells[index.MSSAseries, ]<- data.results.valid.cells
-    data.results.all.cells[slices.constant, ] <- rep(values.constant[slices.constant], 
-                                                     times = datapts.n)
+    data.results.all.cells[slices.constant, ] <- rep(values.constant[slices.constant], times = datapts.n)
+    
     #reshape results array to match original data cube
     data.results.rshp          <- array(data.results.all.cells, dim = c(dims.cycle.length, dims.process.length))
     dims.order.results         <- c(dims.cycle, dims.process)
-    perm.array                 <- match(dims.info[, 'name'], dims.order.results)
+    if (dim(datacube)[1] == 1 && length(dim(datacube)) == 2) {                      ## if only one series is existent
+      perm.array = c(1,2)
+    } else {
+      perm.array                 <- match(dims.info[, 'name'], dims.order.results)
+    }
     data.results.finished      <- aperm(data.results.rshp, perm.array)
   }
 
@@ -813,7 +841,7 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
   if (MSSA) {
     slices.remove    <- array(!slices.process, dim = dims.cycle.length)
     iters.n          <- prod(ceiling(dim(datacube)[dims.cycle.id + 1] / MSSA.blocksize))
-    ind.process.cube <- array(FALSE,dim = c(iters.n, dims.cycle.length))
+    ind.process.cube <- array(FALSE, dim = c(iters.n, dims.cycle.length))
     row.block        <- 1
     col.block        <- 1
     for (p in 1:iters.n) {      
@@ -850,7 +878,7 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
       args.expand.grid[[d]] <- 1:dim(datacube)[dims.cycle.id[d] + 1]    
     iter.grid.all <- cbind(1:slices.n, as.matrix(do.call("expand.grid",
                                                          args.expand.grid)))
-    ind.process.cube      <- iter.grid.all[slices.process, ]   
+    ind.process.cube     <- array(iter.grid.all[slices.process, ], dim = c(sum(slices.process), length(dims.cycle.id) + 1))
     index.MSSAseries     <- (1:slices.n)[slices.process]
   }
   max.cores              <- min(c(iters.n, max.cores))
@@ -944,11 +972,7 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
     ind.total       <- rep(FALSE, iters.n)
     ind.total[(iter.ind[1] : iter.ind[2])[n]] <- TRUE 
     data.results.iter.t = try({
-      if (iter.nr == 1 &&( diff(iter.ind) < 20  || 
-            (n %% (ceiling((diff(iter.ind)) / 20)) == 0)))
-        if (print.status)
-          cat(paste(Sys.time(), ' : Finished ~',
-                    round(n / (diff(iter.ind) + 1) * 100), '%. \n', sep=''))
+
       args.call.t             <- args.call.SSA
       args.call.t[['seed']]   <- iter.nr * n      
       dims.extr.data          <- dims.process.length
@@ -971,6 +995,7 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
         ind.extr              <- ind.datacube(datacube, ind.matrix, dims.cycle.id + 1)
         n.series.steps[n]     <- 1
       }
+
       series.noperm                  <- array(datacube[ind.extr], dim =  dims.extr.data)
       args.call.t[['series']]        <- aperm(series.noperm, perm = perm.before)
       if (!(class(first.guess) == 'character' && first.guess == 'mean')) {
@@ -1003,6 +1028,11 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       dump.frames(to.file = TRUE, dumpto = file.name.t)
       stop()
     }
+    if (iter.nr == 1 &&( diff(iter.ind) < 20  || 
+          (n %% (ceiling((diff(iter.ind)) / 20)) == 0)))
+      if (print.status)
+        cat(paste(Sys.time(), ' : Finished ~',
+                  round(n / (diff(iter.ind) + 1) * 100), '%. \n', sep=''))
   }
   return(list(reconstruction = data.results.iter, variances = variances, 
               lioops.converged = iloops.converged))
