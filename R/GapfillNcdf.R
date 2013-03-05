@@ -228,6 +228,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     ocean.mask    <- res.check$ocean.mask
 
     #open ncdf files and create step files
+    if (var.names == 'auto')
+      var.names = ncdf.get.varname(file.name)
     res.open      <- GapfillNcdfOpenFiles(file.name = file.name, var.names = var.names,
                                           n.steps = n.steps, print.status = print.status)
     dims.info     <- res.open$dims.info
