@@ -2,31 +2,11 @@ GapfillNcdf <- structure(function(
 ##title<< fill gaps in time series or spatial fields inside a ncdf file using SSA.
 ##description<< Wrapper function to automatically fill gaps in series or spatial fields inside a ncdf file and save the results
 ##              to another ncdf file.
-file.name             ##<< character: name of the ncdf file to decompose.  The file has to be in the current working directory!
-, process.type = c('stepwise', 'variances')[1]
-, M                   ##<< list of single integers: window length  or embedding dimension in time steps. If not
-                      ##             given,  a default value of 0.5*length(time series) is computed.                             
-, dimensions = list(list('time'))
-                      ##<< list of string vectors: setting along which dimensions to perform SSA. These names
-                      ##             have to be identical to the names of the dimensions in the ncdf file. Set this to
-                      ##             'time' to do only temporal gap filling or to (for example) c('latitude','longitude')
-                      ##             to do 2 dimensional spatial gap filling. See the description for details on how to
-                      ##             perform spatio-temporal gap filling.
-, MSSA =  rep(list(   rep(list(FALSE), times = length(dimensions[[1]]))) , times = length(dimensions))
-                      ##<< list of logicals: Whether to perform MSSA for this dimension (see description 
-                      ##             for details). Has to have the sam ind.extr e structure as dimensions.
-, MSSA.blocksize = 1  ##<< integer: size of the quadratical block used for MSSA.  
-, gaps.cv        = 0  ##<< numeric: ratio (between 0 and 1) of artificial gaps to be included prior to the first
-                      ##             cross validation loop that are used for cross validation.
-, MSSA.blck.trsh = tresh.fill[[1]][[1]]
-                      ##<< numeric: ratio (0-1) of gaps that a MSSA block may contain to be filled. 
-, amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1]]))) , times = length(dimensions))
+amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of numeric vectors: the relative ratio (length gaps/series length) of
                       ##             artificial gaps to include in the "innermost" SSA loop (e.g. the value used by the
                       ##             SSA run for each indivuidual series/slice). These ratio is used to determine 
-                      ##             the iteration with the best prediction (c(ratio big gaps, ratio small gaps)) (see ?GapfillSSA for details )
-, size.biggap = rep(list(   rep(list(20) , times = length(dimensions[[1]]))) , times = length(dimensions))
-                      ##<< list of single integers: length of the big artificial gaps (in time steps) (see ?GapfillSSA for details)
+                      ##             the iteration with the best prediction (c(ratio big gaps, ratio small gaps)) (see ?GapfillSSA for details )                                  
 , amnt.iters = rep(list(   rep(list(c(10, 10)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of integer vectors: amount of iterations performed for the outer and inner
                       ##             loop (c(outer,inner)) (see ?GapfillSSA for details)
@@ -34,12 +14,70 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
                       ##<< list of integer vectors: index of the iteration to start with (outer, inner). If this
                       ##             value is >1, the reconstruction (!) part is started with this iteration. Currently
                       ##             it is only possible to set this to values >1 if amnt.artgaps and size.biggap == 0.
+, calc.parallel = TRUE##<< logical: whether to use parallel computing. Needs packages doMC, foreach or doSMP (and
+                      ##             their dependencies) to be installed.                                  
+, debugging = FALSE   ##<< logical: if set to TRUE, debugging workspaces or dumpframes are saved at several stages
+                      ##            in case of an error.                                  
+, dimensions = list(list('time'))
+                      ##<< list of string vectors: setting along which dimensions to perform SSA. These names
+                      ##             have to be identical to the names of the dimensions in the ncdf file. Set this to
+                      ##             'time' to do only temporal gap filling or to (for example) c('latitude','longitude')
+                      ##             to do 2 dimensional spatial gap filling. See the description for details on how to
+                      ##             perform spatio-temporal gap filling.
+, file.name           ##<< character: name of the ncdf file to decompose.  The file has to be in the current working directory!                     
+, first.guess = 'mean'##<< character string: if 'mean', standard SSA procedure is followed (using zero as the first guess). 
+                      ##             Otherwise this is the file name of a ncdf file with the same dimensions
+                      ##             (with identical size!) as the file to fill which contains values used as a
+                      ##             first guess (for the first step of the process!). This name need to be exactly
+                      ##             "<filename>_first_guess_step_1.nc".                                  
+, force.all.dims = FALSE ##<< logical: if this is set to true, results from dimensions not chosen as the best guess are used
+                      ##             to fill gaps that could not be filled by the buest guess dimensions due to too gappy slices etc. .                                  
+, gaps.cv = 0         ##<< numeric: ratio (between 0 and 1) of artificial gaps to be included prior to the first
+                      ##             cross validation loop that are used for cross validation.
+, keep.steps = TRUE   ##<< logical: whether to keep the files with the results from the single steps                                                        
+, M                   ##<< list of single integers: window length  or embedding dimension in time steps. If not
+                      ##             given,  a default value of 0.5*length(time series) is computed.                                                               
+, max.cores = 8       ##<< integer: maximum number of cores to use (if calc.parallel = TRUE).                                  
+, max.steps = 10      ##<< integer: maximum aount of steps in the variances scheme                                 
+, MSSA =  rep(list(   rep(list(FALSE), times = length(dimensions[[1]]))) , times = length(dimensions))
+                      ##<< list of logicals: Whether to perform MSSA for this dimension (see description 
+                      ##             for details). Has to have the sam ind.extr e structure as dimensions.
+, MSSA.blck.trsh = tresh.fill[[1]][[1]]
+                      ##<< numeric: ratio (0-1) of gaps that a MSSA block may contain to be filled.                                   
+, MSSA.blocksize = 1  ##<< integer: size of the quadratical block used for MSSA.  
 , n.comp = lapply(amnt.iters, FUN = function(x)x[[1]][[1]][1] * 2)
                       ##<< list of single integers: amount of eigentriples to extract (default (if no values are
                       ##             supplied) is 2*amnt.iters[1] (see ?GapfillSSA for details)
+, ocean.mask = c()    ##<< logical matrix: contains TRUE for every ocean grid cell and FALSE for land cells. Ocean grid
+                      ##             cells will be set to missing after spatial SSA and will be excluded from temporal SSA.
+                      ##             The matrix needs to have dimensions identical in order and size to the spatial dimensions
+                      ##             in the ncdf file. As an alternative to a R matrix, the name of a ncdf file can be supplied.
+                      ##             It should only contain one non coordinate variable with 1 at ocean cells and 0 at land cells.
+, package.parallel = 'doMC'
+                      ## character: package to use for linking foreach to the parallel computing backend. Only doMC
+                      ##            has been rigorously tested!
 , pad.series = rep(list(   rep(list(c(0, 0)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of integer vectors (of size 2): length of the extracts from series to use for
                       ##             padding. Only possible in the one dimensional case. See the documentation of GapfillSSA for details!
+, print.status = TRUE ##<< logical: whether to print status information during the process                                  
+, process.cells = c('gappy','all')[1]
+                      ##<< character string: which grid/series to process. 'gappy' means that only series grids with actual
+                      ##             gaps will be processed, 'all' would result in also non gappy grids to be subjected to SSA. The
+                      ##             first option results in faster computation times as reconstructions for non gappy grids/series
+                      ##             are technically not needed for gap filling, whereas the second option provides a better
+                      ##             understanding of the results trajectory to the final results.                                  
+, process.type = c('stepwise', 'variances')[1]
+, ratio.const = 0.05  ##<< numeric: max ratio of the time series that is allowed to be above tresh.const for the time series
+                      ##             still to be not cosidered constant.                                 
+, ratio.test = 1      ##<< numeric: ratio (0-1) of the data that should be used in the cross validation step. If set to 1,
+                      ##             all data is used.
+, reproducible = FALSE##<< logical: Whether a seed based on the characters of the file name should be set
+                      ##            which forces all random steps, including the nutrlan SSA algorithm to be
+                      ##            exactly reproducible.
+, size.biggap = rep(list(   rep(list(20) , times = length(dimensions[[1]]))) , times = length(dimensions))
+                      ##<< list of single integers: length of the big artificial gaps (in time steps) (see ?GapfillSSA for details)
+, tresh.const = 1e-12 ##<< numeric: value below which abs(values) are assumed to be constant and excluded
+                      ##             from the decomposition                                  
 , tresh.fill = c(list(list(0.1)), rep(list(list(0,0)), length(dimensions) - 1))
                       ##<< list of numeric fractions (0-1): This value determines the fraction of valid values below which
                       ##             series/grids will not be filled in this step and are filled with the first guess from the
@@ -52,47 +90,9 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 , tresh.fill.first = list(tresh.fill[[1]])    ##<< single numeric value between 0 and 1 indicating a different treshold for the
                       ##             run when no first guess values from previous runs are available. As this can be specified anyway
                       ##             in the 'stepwise' sheme, supplying this value is only reasonable in the 'variances' sheme.
-, max.steps = 10      ##<< integer: maximum aount of steps in the variances scheme
-, ratio.test = 1      ##<< numeric: ratio (0-1) of the data that should be used in the cross validation step. If set to 1,
-                      ##             all data is used.
-, force.all.dims = FALSE ##<< logical: if this is set to true, results from dimensions not chosen as the best guess are used
-                      ##             to fill gaps that could not be filled by the buest guess dimensions due to too gappy slices etc. .
-, var.name = 'auto'   ##<< character string: name of the variable to fill. If set to 'auto' (default), the name
+, var.names = 'auto'  ##<< character string: name of the variable to fill. If set to 'auto' (default), the name
                       ##             is taken from the file as the variable with a different name than the dimensions. An
                       ##             error is produced here in cases where more than one such variable exists.
-, ocean.mask = c()    ##<< logical matrix: contains TRUE for every ocean grid cell and FALSE for land cells. Ocean grid
-                      ##             cells will be set to missing after spatial SSA and will be excluded from temporal SSA.
-                      ##             The matrix needs to have dimensions identical in order and size to the spatial dimensions
-                      ##             in the ncdf file. As an alternative to a R matrix, the name of a ncdf file can be supplied.
-                      ##             It should only contain one non coordinate variable with 1 at ocean cells and 0 at land cells.
-, process.cells = c('gappy','all')[1]
-                      ##<< character string: which grid/series to process. 'gappy' means that only series grids with actual
-                      ##             gaps will be processed, 'all' would result in also non gappy grids to be subjected to SSA. The
-                      ##             first option results in faster computation times as reconstructions for non gappy grids/series
-                      ##             are technically not needed for gap filling, whereas the second option provides a better
-                      ##             understanding of the results trajectory to the final results.
-, first.guess = 'mean'##<< character string: if 'mean', standard SSA procedure is followed (using zero as the first guess). 
-                      ##             Otherwise this is the file name of a ncdf file with the same dimensions
-                      ##             (with identical size!) as the file to fill which contains values used as a
-                      ##             first guess (for the first step of the process!). This name need to be exactly
-                      ##             "<filename>_first_guess_step_1.nc".
-, tresh.const = 1e-12 ##<< numeric: value below which abs(values) are assumed to be constant and excluded
-                      ##             from the decomposition
-, ratio.const = 0.05  ##<< numeric: max ratio of the time series that is allowed to be above tresh.const for the time series
-                      ##             still to be not cosidered constant.
-, keep.steps = TRUE   ##<< logical: whether to keep the files with the results from the single steps                      
-, print.status = TRUE ##<< logical: whether to print status information during the process
-, calc.parallel = TRUE##<< logical: whether to use parallel computing. Needs packages doMC, foreach or doSMP (and
-                      ##             their dependencies) to be installed.
-, package.parallel = 'doMC'
-                      ## character: package to use for linking foreach to the parallel computing backend. Only doMC
-                      ##            has been rigorously tested!
-, max.cores = 8       ##<< integer: maximum number of cores to use (if calc.parallel = TRUE).
-, debugging = FALSE   ##<< logical: if set to TRUE, debugging workspaces or dumpframes are saved at several stages
-                      ##            in case of an error.
-, reproducible = FALSE##<< logical: Whether a seed based on the characters of the file name should be set
-                      ##            which forces all random steps, including the nutrlan SSA algorithm to be
-                      ##            exactly reproducible.
 , ...                 ##<< further settings to be passed to GapfillSSA
 )
 ##details<<
@@ -225,15 +225,14 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
     #check input, check first guess, transfer and check ocean mask
     res.check     <- do.call(CheckInputNcdfSSA,
                              c(SSAprocess = 'Gapfill', args.call.filecheck))
-    var.name      <- res.check[[1]]
-    ocean.mask    <- res.check[[2]]
+    ocean.mask    <- res.check$ocean.mask
 
     #open ncdf files and create step files
-    res.open      <- GapfillNcdfOpenFiles(file.name = file.name, var.name = var.name,
+    res.open      <- GapfillNcdfOpenFiles(file.name = file.name, var.names = var.names,
                                           n.steps = n.steps, print.status = print.status)
     dims.info     <- res.open$dims.info
-    datacube      <- res.open$datacube
     file.name.copy<- res.open$file.name.copy
+    file.con.orig <- open.nc(file.name)
     
     # start parallel processing workers
     if (calc.parallel)
@@ -244,9 +243,13 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
       processes <- c('final') 
       art.gaps.values            <- NULL            
     }
-    ind.artgaps.out  <- array(FALSE, dim = dim(datacube))
-   
-    for (process in processes) {
+
+    for (var.name in var.names) {
+      datacube         <- var.get.nc(file.con.orig, var.name)
+      ind.artgaps.out  <- array(FALSE, dim = dim(datacube))
+
+      status.report(paste('Filling variable ', var.name, sep = ''))
+      for (process in processes) {
       # insert gaps for cross validation      
       if (process == 'cv') {
         if (print.status)
@@ -315,12 +318,6 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
             if (g == 2 && step.chosen['dim', h] != l)
               next
             tresh.fill.dc         <- tresh.fill[[ind]][[l]]                  
-            
-            ## ToDo remove
-            iterinf <- list(process = process, h = h, g = g, l = l, ratio.test.t = ratio.test.t,
-                            n.dims.loop = n.dims.loop, 
-                            n.calc.repeat = n.calc.repeat, dims.calc = dims.calc)
-            print(iterinf)
             
             ##prepare parallel iteration parameters
             if (process.type == 'stepwise') {
@@ -502,22 +499,24 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
         ##      check what happens if GapfillSSA stops further iterations due to limiting groups of eigentriples
       }
     }
-    # stop parallel workers
-    if (package.parallel == 'doSMP')
-      stopWorkers(w)
+      ## stop parallel workers
+      if (package.parallel == 'doSMP')
+        stopWorkers(w)
  
-    #save results 
-    GapfillNcdfSaveResults(datacube = datacube,
-        reconstruction = results.reconstruction,
-        args.call.global = args.call.global,
-        slices.without.gaps = gapfill.results.step$slices.without.gaps,
-        dims.cycle.id = gapfill.results.step$dims.cycle.id,
-        ocean.mask = ocean.mask, dims.process = gapfill.results.step$dims.process,
-        dims.process.id = gapfill.results.step$dims.process.id,
-        var.name = var.name, process.cells = process.cells,
-        file.name.copy = file.name.copy, keep.steps = keep.steps, 
-        print.status = print.status, n.steps = n.steps, drop.dim = drop.dim)
+      ##save results 
+      GapfillNcdfSaveResults(datacube = datacube, var.names = var.names, 
+                             reconstruction = results.reconstruction,
+                             args.call.global = args.call.global,
+                             slices.without.gaps = gapfill.results.step$slices.without.gaps,
+                             dims.cycle.id = gapfill.results.step$dims.cycle.id,
+                             ocean.mask = ocean.mask, dims.process = gapfill.results.step$dims.process,
+                             dims.process.id = gapfill.results.step$dims.process.id,
+                             var.name = var.name, process.cells = process.cells,
+                             file.name.copy = file.name.copy, keep.steps = keep.steps, 
+                             print.status = print.status, n.steps = n.steps, drop.dim = drop.dim)
+    }
     finished <- TRUE
+    close.nc(file.con.orig)
     if (process.type == 'variances') {
       out  <-list(pred.measures = pred.measures, step.chosen = step.chosen, finished = finished)
     } else {
@@ -595,7 +594,7 @@ file.name             ##<< character: name of the ncdf file to decompose.  The f
 
 ##################################      create files    ########################
 
-GapfillNcdfOpenFiles <- function(file.name, var.name, n.steps, print.status)
+GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that prepares the output files 
 ##seealso<<
@@ -618,30 +617,33 @@ GapfillNcdfOpenFiles <- function(file.name, var.name, n.steps, print.status)
     copied             <- file.copy(from = file.name, to = file.name.guess.t, 
                                     overwrite = TRUE)
     con.tmp            <- open.nc(file.name.guess.t, write = TRUE)
-    data.tmp           <- var.get.nc(con.tmp, var.name)
-    data.tmp[]         <- NA
-    var.put.nc(con.tmp, var.name, data.tmp)
+    for (var.name in var.names) {
+      data.tmp           <- var.get.nc(con.tmp, var.name)
+      data.tmp[]         <- NA
+      var.put.nc(con.tmp, var.name, data.tmp)
+    }
     close.nc(con.tmp)
     Sys.chmod(file.name.guess.t, mode = "0777")
   }
   
   #prepare results ncdf file
-  file.con.copy      <- open.nc(con = file.name.copy, write = TRUE)  
-  var.def.nc(file.con.copy,'flag.orig','NC_BYTE', 
-             var.inq.nc(file.con.copy, var.name)$dimids)
-  att.put.nc(file.con.copy,'flag.orig','long_name','NC_CHAR',
-             'flag indicating original values (1) and filled values (0)')
-  datacube                    <- var.get.nc(file.con.copy, var.name)
-  if(sum(is.na(datacube))==0)
-    stop('Data does not contain any gaps. Gap filling not possible.')
-  data.flag                   <- array(NA, dim = dim(datacube))
-  data.flag[is.na(datacube)]  <- 0
-  data.flag[!is.na(datacube)] <- 1
-  var.put.nc(file.con.copy, 'flag.orig', data.flag)
+  file.con.copy      <- open.nc(con = file.name.copy, write = TRUE)
+  for (var.name in var.names) {
+    var.def.nc(file.con.copy, paste(var.name, '_flag_orig', sep =''), 'NC_BYTE', 
+               var.inq.nc(file.con.copy, var.name)$dimids)
+    att.put.nc(file.con.copy,  paste(var.name, '_flag_orig', sep =''),'long_name','NC_CHAR',
+               paste('flag indicating original values (1) and filled values (0) in ', var.name, sep = ''))
+    datacube                    <- var.get.nc(file.con.copy, var.name)
+    if(sum(is.na(datacube)) == 0)
+      stop('Data does not contain any gaps. Gap filling not possible.')
+    data.flag                   <- array(NA, dim = dim(datacube))
+    data.flag[is.na(datacube)]  <- 0
+    data.flag[!is.na(datacube)] <- 1
+    var.put.nc(file.con.copy, paste(var.name, '_flag_orig', sep =''), data.flag)
+  }  
   dims.info                  <- ncdf.get.diminfo(file.con.copy)
   close.nc(file.con.copy)
-  return(list(dims.info = dims.info, datacube = datacube, 
-              file.name.copy = file.name.copy))
+  return(list(dims.info = dims.info, file.name.copy = file.name.copy))
 }
 
 
@@ -650,7 +652,7 @@ GapfillNcdfSaveResults <- function(args.call.global, datacube, dims.process,
                                    dims.cycle.id, dims.process.id, file.name.copy,  
                                    keep.steps, n.steps, ocean.mask, print.status,
                                    process.cells, reconstruction, slices.without.gaps,
-                                   var.name, drop.dim)
+                                   var.name, drop.dim, var.names)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that saves the results ncdf file. 
 ##seealso<<
@@ -685,29 +687,30 @@ GapfillNcdfSaveResults <- function(args.call.global, datacube, dims.process,
   sync.nc(file.con.copy)
 
   #add attributes with process information to ncdf files
-  string.args  <- args.call.global
-  att.put.nc(file.con.copy, 'NC_GLOBAL', 'Filled_by', 'NC_CHAR', compile.sysinfo())
-  att.put.nc(file.con.copy, 'NC_GLOBAL', 'Filled_on', 'NC_CHAR', as.character(Sys.time()))
-  att.put.nc(file.con.copy, 'NC_GLOBAL', 'Filling_settings', 'NC_CHAR', string.args)
-  hist.string.append <- paste('Gaps filled on ', as.character(Sys.time()), ' by ',
-      Sys.info()['user'], sep = '')
-  if (is.element('history', ncdf.get.attinfo(file.con.copy, 'NC_GLOBAL')[, 'name'])) {
-    hist.string    <- paste(att.get.nc(file.con.copy, 'NC_GLOBAL', 'history'), 
-                            '; ', hist.string.append)
-    att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string)
-  } else {
-    att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string.append)
-  }
-  close.nc(file.con.copy)
-  
-  #delete first guess files
-  if (!keep.steps) {
+  if (var.name == var.names[length(var.names)]) {
+    string.args  <- args.call.global
+    att.put.nc(file.con.copy, 'NC_GLOBAL', 'Filled_by', 'NC_CHAR', compile.sysinfo())
+    att.put.nc(file.con.copy, 'NC_GLOBAL', 'Filled_on', 'NC_CHAR', as.character(Sys.time()))
+    att.put.nc(file.con.copy, 'NC_GLOBAL', 'Filling_settings', 'NC_CHAR', string.args)
+    hist.string.append <- paste('Gaps filled on ', as.character(Sys.time()), ' by ',
+                                Sys.info()['user'], sep = '')
+    if (is.element('history', ncdf.get.attinfo(file.con.copy, 'NC_GLOBAL')[, 'name'])) {
+      hist.string    <- paste(att.get.nc(file.con.copy, 'NC_GLOBAL', 'history'), 
+                              '; ', hist.string.append)
+      att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string)
+    } else {
+      att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string.append)
+    }
+        
+    ## delete first guess files
+    if (!keep.steps) {
       file.name.guess.t  <- paste(sub('_gapfill.nc$', '', file.name.copy), 
                                   '_first_guess_step_', 
                                   formatC(2:(n.steps + 1), 2, flag = 0), '.nc', sep='')
       file.remove(file.name.guess.t)
+    }
   }
-
+  close.nc(file.con.copy)
   if (print.status)
     cat(paste(Sys.time(), ' : Gapfilling successfully finished. \n', sep = ''))
 }
