@@ -1,4 +1,7 @@
-gapfill.ind.core = function(iter.nr) {
+gapfill.ind.core = function(iter.nr) 
+##author<<
+## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+{
   library('jannis.misc')
   load.functions.package('ncdf.tools', path = '/Net/Groups/BGI/people/jbuttlar/Software/Own_packages')
   iter.ind                               <- iter.gridind[iter.nr, ]

@@ -23,6 +23,8 @@ gapinfo.temporal.ncdf = function(
 )
 ##seealso<< \code{\link{temporalGaps}}
 ##value<< nothing is returned but plots of the gap statistics are produced.
+##author<<
+## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     #test input
     if (class(ncdf.obj) == 'character' && !file.exists(ncdf.obj))

@@ -1,4 +1,13 @@
-ncdf.hist.add = function(file, string) {
+ncdf.hist.add = function(
+    ##title<< automatically append string to ncdf history
+    ##description << Convenience function to append a string together with the date
+    ##               and the user to the history attribute of an Ncdf file. 
+    file ##<< character sting or RNetCCDF file connection: file to write to.
+, string ##<< character string: string to append to teh history
+) 
+  ##author<<
+  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  {
    if (class(file) == 'character') {
      con <- open.nc(file, write = TRUE)
    } else {
@@ -12,4 +21,5 @@ ncdf.hist.add = function(file, string) {
    att.put.nc(con, 'NC_GLOBAL', 'history', 'NC_CHAR', history.new)
    if (class(file) == 'character')
      close.nc(file)
+   ##value<< nothing is returned
 }

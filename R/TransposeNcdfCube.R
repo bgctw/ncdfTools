@@ -1,6 +1,15 @@
-TransposeNcdfCube  = function(data.object, file.con = c(),
-  var.name = c()) {
-
+TransposeNcdfCube  = function(
+##title<< transpose Ncdf datacube
+##description<< convenience function to transpose an arbitrary datacube in a ncdf 
+##              file into a datacube with [latitude (decreasing), longitude (increasing),
+##              time (increasing)].
+    data.object ##<< RNetCDF file connection or R array: data object to be transposed.
+    , file.con = c() ##<< RNetCDF file connection: link to the data object to be transposed. 
+                ## Supplying both data.object and file.con only makes sense if data.object
+                ## is an array which saves time as the data does not have to be laoded again.              
+    , var.name = c() ##<< character string: name of the variable to transpose. If
+                ## not gives, this name is tried to be inferred by using ncdf.get.varname.
+) {
   if (inherits(data.object,  "NetCDF")) {
     file.con <- data.object
     if (length(var.name) == 0)
@@ -23,5 +32,6 @@ TransposeNcdfCube  = function(data.object, file.con = c(),
     datacube   <- datacube[order(lat.values, decreasing = TRUE), , ]
   if (sum(unique(diff(order(lon.values))) != 1) > 0)
     datacube   <- datacube[, order(lon.values), ]
+  ##value<<array: transposed datacube
   return(datacube = datacube)
 }

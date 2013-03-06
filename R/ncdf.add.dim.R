@@ -30,7 +30,7 @@ ncdf.add.dim <- function(
         stop('Variable name(s) not available in file.con.orig!')
     }
     if(dim.length == 0)
-        stop('Dimension of length Zero mekaes no sense!')
+        stop('Dimension of length Zero makes no sense!')
     if((!length(dim.values) == 0 ) && (!dim.length == length(dim.values)))
         stop('Wrong dim.length specified!')
 

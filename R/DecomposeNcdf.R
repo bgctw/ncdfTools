@@ -114,19 +114,16 @@ DecomposeNcdf = structure(function(
     if (length(var.names) == 1 && var.names == 'auto') 
       var.names       <- ncdf.get.varname(file.con.orig)
     
-    ## load data
-    data.all          <- var.get.nc(file.con.orig, var.names[1])
-    
     ## open ncdf files
     if (print.status)
-        cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep=''))
+       cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep=''))
     file.name.copy  <- paste(sub('.nc$','',file.name), '_specdecomp.nc', sep='')
     file.con.copy   <- create.nc(file.name.copy)
     Sys.chmod(file.name.copy, mode = "0777")
     
     ## set default parameters
     if (!calc.parallel)
-      max.cores                 <- 1
+      max.cores                   <- 1
     n.bands                       <- length(unlist(borders.wl))-length(borders.wl)
     n.steps                       <- length(borders.wl)
     n.timesteps                   <- dim.inq.nc(file.con.orig, 'time')$length
@@ -179,13 +176,16 @@ DecomposeNcdf = structure(function(
 
 
     for (var.name in var.names) {
+      data.all          <- var.get.nc(file.con.orig, var.name)
+      if (print.status)
+        status.report(paste('Processing variable ', var.name, sep = ''))
       ##prepare parallel iteration parameters
       dims.ids.data     <- var.inq.nc(file.con.orig, var.names[1])$dimids + 1   
       dims.info         <- ncdf.get.diminfo(file.con.orig)[dims.ids.data, ]
       drop.dim          <- FALSE
-      if (length(dim(data.all)) >1 ) {
+      if (length(dim(data.all)) > 1 ) {
         dims.cycle.id     <- sort(setdiff(1:length(dims.ids.data), match('time', dims.info$name) ))
-        dims.cycle.name   <- dims.info[dims.cycle.id,'name']
+        dims.cycle.name   <- dims.info[dims.cycle.id, 'name']
         dims.process.id    <- match('time', dims.info$name)
       } else {
         dims.cycle.id     <- 1

@@ -1,8 +1,10 @@
 ind.datacube = function(
 ##title<< create logical index matrices for multidimensional datacubes
+##description<< This function facilitates suppliying logical index array for some 
+##              of the dimensions of a data array. This mimics Matlabs indexing scheme.
   datacube       ##<< array: datacube from which to extract the subparts
   , logical.ind  ##<< logical array: TRUE/FALSE index matrix for a subset of the 
-                 ##   dimensions of datacube. The size of logical.ind`s dimesnions 
+                 ##   dimensions of datacube. The size of logical.ind`s dimensions 
                  ##   has to match the sizes of the corresponding dimensions in 
                  ##   datacube.
   , dims='auto'  ##<< integer vector or 'auto' : indices of the dimensions in 
@@ -10,6 +12,8 @@ ind.datacube = function(
                  ##   If set to 'auto' this matching is tried to be accomplished 
                  ##   by comparing the sizes of the dimensions of the two objects.
 )
+##author<<
+## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     if (sum(logical.ind) == 0) {
         stop('No TRUE value in index matrix!')

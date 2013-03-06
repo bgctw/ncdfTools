@@ -10,7 +10,6 @@ ncdf.get.varinfo  <- function(
 )
 ##seealso<<
 ##\code{\link{ncdf.get.diminfo}}, \code{\link{ncdf.get.varinfo}}
-
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {

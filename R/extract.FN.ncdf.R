@@ -1,4 +1,11 @@
-extract.FN.ncdf <- function(path = getwd(), sites, pars, time.ends, dim.borders) 
+extract.FN.ncdf <- function(
+    path = getwd()
+    , sites
+    , pars
+    , time.ends 
+    , dim.borders)
+##author<<
+## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de 
 {
   require(RNetCDF)
   require(chron)

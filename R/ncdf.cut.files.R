@@ -1,9 +1,15 @@
 ncdf.cut.files <- function(
-       file.names
+    ##title<< cut margins of ncdf files
+    ##description<< Convenience wrapper around cdo to cut outer (time) margins 
+    ##              of Ncdf files.
+       file.names ##<< vector of character stings: file names to process.
        , time.range.out = c()
-       , time.range.file =  c()
-       , fun.start = function(x) NULL
-       , fun.end = function(x) NULL
+       , time.range.file =  c() ##<< POSIXct vector of length two: time range of the 
+                                ##   original files. If not supplied, this is 
+                                ##   determined automatically from the file name 
+                                ##   via ncdf.name2date and fun.start/fun.end.
+       , fun.start = function(x) NULL ##<< see time.range.file
+       , fun.end = function(x) NULL  ##<< see time.range.file
        , format = ''
        , convert = function(x) chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y'))
 {
@@ -31,5 +37,6 @@ ncdf.cut.files <- function(
       file.names.out <- c(file.names.out, file.cut)
     }
   }
+  ##value<< character string: names of the file names after cutting.
   invisible(file.names.out)
 }  

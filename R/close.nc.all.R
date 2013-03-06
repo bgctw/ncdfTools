@@ -1,5 +1,7 @@
 close.nc.all = function()
 ##title<< close all open ncdf connections
+##description<< convenience function to close all ncdf connections that are 
+##              currently open. 
 {
     object.close=character(length=0)
     for (i in 1:length(ls(globalenv())))
@@ -12,5 +14,5 @@ close.nc.all = function()
         try(close.nc(get(object.close[j],envir=globalenv())),silent=TRUE)
         rm(list=(object.close[j]),envir=globalenv())
     }
-
+    ##value<< nothing is returned.
 }

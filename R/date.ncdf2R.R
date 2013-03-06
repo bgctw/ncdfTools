@@ -9,6 +9,8 @@ date.ncdf2R  =  function(
         , units = 'days'
         , origin = as.POSIXct('1582-10-14', tz = 'UTC')
 )
+##author<<
+## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     if (class(time.source) == 'NetCDF') {
         time.units      <- ncdf.get.attinfo(time.source, 'time')[, 'value'][ncdf.get.attinfo(time.source, 'time')[, 'name'] == 'units']

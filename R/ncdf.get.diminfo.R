@@ -2,7 +2,8 @@ ncdf.get.diminfo  <- function(
 ##title<< show info about all dimensions in a ncdf file
 ##description<< This function displays summary information about all dimensions in an open ncdf file
      file.con  ##<< a NetCDF object pointing to the respective ncdf file.
-     , extended = TRUE                         
+     , extended = TRUE ##<< logical: if TRUE, some extended dimension info that 
+                       ##   may take time to compute for large files is computed.
 )
 ##seealso<<
 ##\code{\link{ncdf.get.varinfo}}, \code{\link{dim.inq.nc}}

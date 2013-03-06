@@ -8,6 +8,8 @@ extract.datacube = function(
                  ##   to the dimensions of logical.ind. If set to 'auto' this matching is tried to
                  ##   be accomplished by comparing the sizes of the dimensions of the two objects.
 )
+##author<<
+## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     if (dims == 'auto')
     {

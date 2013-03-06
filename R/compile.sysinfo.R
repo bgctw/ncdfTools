@@ -1,5 +1,6 @@
 compile.sysinfo=function()
-##title<< extract some information from the system
+##title<< extract system information
+##description<< convenience function to compile some information about the system used.
 {
     package.names=sapply(sessionInfo()[['otherPkgs']],'[[','Package')
     package.versions=sapply(sessionInfo()[['otherPkgs']],'[[','Version')

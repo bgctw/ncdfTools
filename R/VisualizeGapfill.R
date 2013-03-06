@@ -1,5 +1,5 @@
 VisualizeGapfill <- function(
-  ##title<< visualize/plot an overview of a ncdf file
+  ##title<< visualize/plot an overview of a SSA gapfilled ncdf file.
   file.orig                ##<< object to plot: file name or file.con object linking to a ncdf file
   , file.filled
   , file.prefill = ''                          
@@ -13,8 +13,10 @@ VisualizeGapfill <- function(
 )
 ##details<<
 ##\if{html}{\out{<img src="../doc/visualize_ncdf_demo.png" alt="image ..visualize_ncdf_demo should be here"/>}}\ifelse{latex}{}{}
+##author<<
+## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
-  ##TODO facilitade datacube input
+  ##TODO facilitate datacube input
   ##TODO include plot.nlines capabilites
   require(ncdf.tools, warn.conflicts = FALSE, quietly = TRUE)
   require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
@@ -36,16 +38,17 @@ VisualizeGapfill <- function(
   ## load data
   if (length(data.orig) == 0) {
     status.report('Loading original data ...')
-    data.orig   <- TransposeNcdfCube(data.object = con.orig)
+    data.orig   <- TransposeNcdfCube(data.object = con.orig, var.name = var.orig)
   }
   if (length(data.filled) == 0) {
     status.report('Loading gapfilled data ...')    
-    data.filled <-  TransposeNcdfCube(data.object = con.filled)  
+    data.filled <-  TransposeNcdfCube(data.object = con.filled, var.name = var.filled)  
   }
   if (length(data.prefill) == 0 & nchar(file.prefill)!=0) {
     status.report('Loading pregapfilled data ...')
-    con.prefill<- open.nc(file.prefill)
-    data.prefill <-  TransposeNcdfCube(data.object = con.prefill)  
+    con.prefill  <- open.nc(file.prefill)
+    var.prefill  <- ncdf.get.varname(file.prefill)
+    data.prefill <-  TransposeNcdfCube(data.object = con.prefill, var.name = var.prefill)  
   }
   
 
@@ -158,17 +161,27 @@ VisualizeGapfill <- function(
        col = c('red', 'black'), cex = 2)
    
   ## plot example series
-  for (characteristic in c('ratio na', 'range', 'sdev', 'mean')) {
+  if (interactive())
+    browser()
+  chars.plot <- c('ratio na', 'range', 'sdev', 'mean')
+  if ( (length(data.prefill) != 0)) {
+    chars.plot <- c(chars.plot, 'prefilling')
+    ind.prefilled  <- is.na(data.prefill) & !is.na(data.orig)
+  }
+  for (characteristic in chars.plot) {
     if (characteristic == 'ratio na') {
       ratios.take <- seq(0, max(cube.info.orig['ratio na', , ][cube.info.filled['ratio na', , ] == min(cube.info.filled['ratio na', , ], na.rm = TRUE)], na.rm = TRUE), length.out = n.series)
-      ind.valid    <- which(cube.info.filled['ratio na inner',,] == 0)
-      ind.plot    <- VecInd2ArrInd(ind.valid[which.closest(ratios.take, cube.info.orig[characteristic, , ][ind.valid])], dim = dim(cube.info.orig)[-1])
+      ind.valid   <- which(cube.info.filled['ratio na inner',,] == 0)
+      ind.plot    <- IndVector2Array(ind.valid[which.closest(ratios.take, cube.info.orig[characteristic, , ][ind.valid])], dim = dim(cube.info.orig)[-1])
+    } else if (characteristic == 'prefilling') {
+      ind.use        <- order(as.vector(apply(ind.prefilled, c(1,2), sum))/dim(ind.prefilled)[3], decreasing = TRUE)[1:n.series]      
+      ind.plot    <- IndVector2Array(ind.use, dim = dim(cube.info.orig)[-1])
     } else {
       ind.valid    <- which(cube.info.filled['ratio na inner',,] == 0 & cube.info.filled['ratio na',,] < 0.95)
       ind.sorted   <- ind.valid[order(cube.info.filled[characteristic, , ][ind.valid], decreasing = TRUE)]
       if (is.element(characteristic, c( 'range', 'sdev')))
         ind.sorted <- ind.sorted[cube.info.filled[characteristic, , ][ind.sorted] !=0]
-      ind.plot     <- VecInd2ArrInd(ind.sorted[c(1:floor(n.series/2), (length(ind.sorted) - floor(n.series/2)):length(ind.sorted) )], dim = dim(cube.info.orig)[-1] )
+      ind.plot     <- IndVector2Array(ind.sorted[c(1:floor(n.series/2), (length(ind.sorted) - floor(n.series/2)):length(ind.sorted) )], dim = dim(cube.info.orig)[-1] )
     }
     if(names(dev.cur()) == 'X11')
       x11()
@@ -184,8 +197,8 @@ VisualizeGapfill <- function(
       args.orig[[3]]    <- ind.plot[i,2]
       y.data            <- do.call('[', args.extract)
       y.data.orig       <- do.call('[', args.orig)
-      if (length(data.prefill) == 0) {
-        ind.prefill  <- is.na(data.orig[ind.plot[i,1], ind.plot[i,2], ]) & !is.na(data.prefill[ind.plot[i,1], ind.plot[i,2], ])
+      if (length(data.prefill) != 0) {
+        ind.prefill  <- ind.prefilled[ind.plot[i,1], ind.plot[i,2], ]
       } else {
         ind.prefill     <- rep(FALSE, dim(data.filled)[3])
       }

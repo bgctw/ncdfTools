@@ -35,15 +35,11 @@ CheckInputNcdfSSA <- function(SSAprocess, ...)
   if (!check.passed)
     stop('NCDF file not consistent with CF ncdf conventions!')
   file.con.orig <- open.nc(args$file.name)
-  if (args$var.name == 'auto') {
-    var.name <- ncdf.get.varname(args$file.name)
-    if (length(var.name) > 1)
-      stop('More than one non-dimensional/coordinate variable available in file!')
-  } else {
-    var.name   <- args$var.name
-    if (!is.element(var.name, ncdf.get.varinfo(file.con.orig)$name))
-      stop('Specified variable name does not exist in ncdf file!')
-  }
+  if (args$var.names[1] != 'auto')
+    for (var.name in args$var.names)
+      if (!is.element(var.name, ncdf.get.varinfo(file.con.orig)$name))
+        stop(paste('Variable name ', var.name, 'does not exist in ncdf file!', sep = ''))
+  
   if(sum(is.na(match(unique(unlist(args$dimensions)), c('longitude', 'latitude', 'time')))) > 0)
     stop('Every dimensions value has to be one of time, longitude, latitude!')
   dims.not.exist <- is.na(match(unlist(args$dimensions), ncdf.get.diminfo(file.con.orig)[, 'name']))
@@ -76,8 +72,7 @@ CheckInputNcdfSSA <- function(SSAprocess, ...)
     ##transfer and check ocean mask
     lengths.dim.nontime <- ncdf.get.diminfo(file.con.orig)['length'][!(ncdf.get.diminfo(file.con.orig)['name'] == 'time')]
     
-    data.t                    <- var.get.nc(file.con.orig, var.name)
-    if (!is.null(args$ocean.mask) && class(args$ocean.mask)=='character') {
+    if (!is.null(args$ocean.mask) && class(args$ocean.mask) == 'character') {
       if (!(file.exists(args$ocean.mask)))
         stop('File for ocean mask not existent!')
       check.passed <- CheckNcdfFile(file.name = args$ocean.mask, 
@@ -99,11 +94,6 @@ CheckInputNcdfSSA <- function(SSAprocess, ...)
       args$ocean.mask  <- array(FALSE, dim = dim(ocean.cells))
       args$ocean.mask[ocean.cells == 1 ] <- TRUE
       close.nc(con.ocean)
-      ind.array <- ind.datacube(data.t, args$ocean.mask,
-                                (1:3)[is.element(ncdf.get.diminfo(file.con.orig)[, 'name'], 
-                                                 c('longitude', 'latitude'))])
-      if (sum(!is.na(data.t[ind.array])) > 0)
-        stop('Data contains non NA values at ocean grid positions!')
     }
     if (length(args$ocean.mask) > 0 && !(dim(args$ocean.mask) == lengths.dim.nontime))
     stop(paste('The ocean mask has to have identical dimensions as the spatial',
@@ -161,5 +151,5 @@ CheckInputNcdfSSA <- function(SSAprocess, ...)
     args.return <- list(ocean.mask = args$ocean.mask)
     
   }
-  return(invisible(c(var.name = var.name, args.return)))  
+  return(invisible(args.return))  
 }

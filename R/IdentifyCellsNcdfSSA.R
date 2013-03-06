@@ -12,9 +12,13 @@ IdentifyCellsNcdfSSA = function(
 ##details<< helper function for GapfillNcdf and DecomposeNcdf that identifies the grid cells to process. 
 ##seealso<<
 ##\code{\link{GapfillNcdf}}, \code{\link{GapfillNcdf}}    
-{  ##FIXME
+##author<<
+## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+{  
+  ##FIXME
   # possibility to identify gap less MSSA blocks
-  
+  require(jannis.misc, warn.conflicts = FALSE, quietly = TRUE)
+
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
   
@@ -32,8 +36,13 @@ IdentifyCellsNcdfSSA = function(
 
   ## slices checks specific to decomposition
   if (algorithm == 'Decompose') {
+
+ 
     slices.process              <- as.vector(amnt.na == 0)
-    slices.too.gappy            <- !slices.empty & !process
+    slices.too.gappy            <- !slices.empty & !slices.process
+    if (sum(slices.too.gappy) > 0) {
+
+    }
     if (sum(slices.too.gappy) > 0)
       cat(paste(Sys.time(), ' : ', sum(slices.too.gappy),' series with gaps were found. ',
                             'Spectral decomp. for these is not possible!\n',sep=''))

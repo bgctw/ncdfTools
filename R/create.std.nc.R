@@ -3,21 +3,28 @@ create.std.nc = function
     ##description<< This function writes an empty ncdf file with variable names, dimensions and
     ##              attributes formated in a standardized way.
        (
-    var.name                ##<< character string: name of the target variable in the file
-    , file.name = c()    
-    , units = '[]'          ##<< character string: units of variable (should be compatible with udunits)
-    , lat.values = c()
-    , long.values = c()
+    var.names            ##<< character string: name of the target variable in the file
+    , file.name = c()    ##<< character string: name of the file. If not given, this
+                         ##   is determined automatically in a standardized way from 
+                         ##   the variable name and the dimension extends.
+    , units = '[]'       ##<< character string: units of variable (should be compatible with udunits)
+    , lat.values = c()   ##<< numeric values: coordinate values for the latitude
+                         ##   positions.
+    , long.values = c()  ##<< numeric values: coordinate values for the latitude
+                         ##   positions.
     , time.values = c()                     ##<< POSIXct vector: time values for the time dimension
     , lat.length  = length(lat.values)      ##<< integer: length of the latitude dimension
     , long.length = length(long.values)     ##<< integer: length of the longitude dimension
-    , time.length = length(time.values)     ##<< integer: length of the time dimension
-    , year.start.end = c()
+    , year.start.end = c()   ##<< integer vector (length two): start and end year.
+                             ##   If not given, this is determined from the time
+                             ##   vector.
     , scale_factor = 1       ##<< numeric: scale factor
     , add_offset = 0         ##<< numeric: offset
     , type.var = 'NC_DOUBLE' ##<< character string: type of the data
     , missing_value = -9999  ##<< numeric: missing data value
-    , con.atts = c())
+    , con.atts = c()         ##<< RNetCDF file connection: Possible file to use as
+                             ##   for copying attributes to the new file.
+)
 {
   require(RNetCDF)
   #copy attributes etc from other ncdf file (if chosen)
@@ -45,7 +52,7 @@ create.std.nc = function
   if (time.length > 0 && length(year.start.end)!=2)
      stop('Supply values for the start and the end year!') 
   if(length(file.name) == 0) {
-     file.name = paste(var.name, paste(c(lat.length, long.length, time.length),collapse='.'), 'nc', sep = '.')
+     file.name = paste(var.names, paste(c(lat.length, long.length, time.length),collapse='.'), 'nc', sep = '.')
   } else if (!grepl('[.]nc',file.name)){
     file.name <- paste(file.name, '.nc', sep='')
   } 
@@ -76,14 +83,19 @@ create.std.nc = function
     if (length(time.values) > 0) {
       time.ncdf <- as.numeric(julian(time.values, origin = as.POSIXct("1582-10-14", tz="UTC")))
       var.put.nc(file.con, 'time', time.ncdf)
+
     }     
   }   
   
   dims.used  <- c('latitude', 'longitude', 'time')[c(0!=lat.length ,0!=long.length,0!=time.length)]
-  var.def.nc <- var.def.nc(file.con, var.name, type.var, dims.used)
-  ncdf.def.all.atts(file.con, var.name, atts = list(scale_factor = scale_factor, add_offset = add_offset,
-          missing_value = missing_value, `_FillValue` = missing_value, units = units))
+  for (var.name.t in var.names) {
+    var.def.nc <- var.def.nc(file.con, var.name.t, type.var, dims.used)
+    ncdf.def.all.atts(file.con, var.name.t, atts = list(scale_factor = scale_factor, add_offset = add_offset,
+                                              missing_value = missing_value, `_FillValue` = missing_value, units = units))
+  }
+  hist_string <- paste('File created on ', Sys.time(), ' by ', Sys.info()['user'] , sep = '')
+  att.put.nc(file.con, 'NC_GLOBAL', 'history', 'NC_CHAR', hist_string)
   close.nc(file.con)
-  cat(paste('Created file', file.path(getwd(), file.name), '.\n'))
-  invisible(file.path(getwd(), file.name))
+  cat(paste('Created file', file.name), '\n')
+  invisible(file.name)
 }
