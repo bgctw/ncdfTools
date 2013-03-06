@@ -12,8 +12,8 @@ ncdf.get.varname <- function(
 ##seealso<<
 ## \code{\link[RNetCDF:RNetCDF]{RNetCDF:RNetCDF}}, \code{\link{ncdf.get.varinfo}}
 
-  ##author<<
-  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+##author<<
+## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   require(RNetCDF)
   if (class(file) == 'character') {
@@ -22,8 +22,9 @@ ncdf.get.varname <- function(
     file.con <- file
   }  
   var.name         <- setdiff(ncdf.get.varinfo(file.con, order.var ='id')$name, ncdf.get.diminfo(file.con, extended = FALSE)$name)
-  names.excluded   <- c('time_bnds', 'flag.orig')
+  names.excluded   <- c('time_bnds')
   var.name         <- setdiff(var.name, names.excluded)
+  var.name         <- var.name[!grepl('flag.orig$', var.name)]
   if(length(var.name) > 1) {
     var.id.nocoord <- ncdf.get.varinfo(file.con, order.var ='id')[match(var.name, ncdf.get.varinfo(file.con, order.var ='id')$name), 1]
     var.nocoord.ndims <- ncdf.get.varinfo(file.con, order.var ='id')[var.id.nocoord + 1, 4]
