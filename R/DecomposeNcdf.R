@@ -90,7 +90,7 @@ DecomposeNcdf = structure(function(
     args.call.global    <- call.args2string()
     if (print.status & !interactive()) {
       print('Arguments supplied to function call:')
-      print(paste(paste(names(args.call.filecheck), args.call.filecheck, sep=':'), collapse = '; '))
+      print(paste(paste(names(args.call.filecheck), args.call.filecheck, sep = ':'), collapse = '; '))
     }
       
     ## load libraries
@@ -109,10 +109,9 @@ DecomposeNcdf = structure(function(
     ## check input
     res.check     <- do.call(CheckInputNcdfSSA,
                              c(SSAprocess = 'Decompose', args.call.filecheck))
-    file.con.orig <- res.check$file.con.orig
-    
+    file.con.orig <- res.check$file.con.orig    
     if (length(var.names) == 1 && var.names == 'auto') 
-      var.names       <- ncdf.get.varname(file.con.orig)
+      var.names   <- ncdf.get.varname(file.con.orig)
     
     ## open ncdf files
     if (print.status)
@@ -180,13 +179,13 @@ DecomposeNcdf = structure(function(
       if (print.status)
         status.report(paste('Processing variable ', var.name, sep = ''))
       ##prepare parallel iteration parameters
-      dims.ids.data     <- var.inq.nc(file.con.orig, var.names[1])$dimids + 1   
-      dims.info         <- ncdf.get.diminfo(file.con.orig)[dims.ids.data, ]
-      drop.dim          <- FALSE
+      dims.ids.data       <- var.inq.nc(file.con.orig, var.names[1])$dimids + 1   
+      dims.info           <- ncdf.get.diminfo(file.con.orig)[dims.ids.data, ]
+      drop.dim            <- FALSE
       if (length(dim(data.all)) > 1 ) {
         dims.cycle.id     <- sort(setdiff(1:length(dims.ids.data), match('time', dims.info$name) ))
         dims.cycle.name   <- dims.info[dims.cycle.id, 'name']
-        dims.process.id    <- match('time', dims.info$name)
+        dims.process.id   <- match('time', dims.info$name)
       } else {
         dims.cycle.id     <- 1
         dims.process.id   <- 2
@@ -194,41 +193,43 @@ DecomposeNcdf = structure(function(
         data.all          <- array(data.all, dim = c(1, length(data.all)))
         drop.dim          <- TRUE
       }
-      dims.cycle.length <- dim(data.all)[dims.cycle.id] 
-      slices.n          <- prod(dims.cycle.length)
-      dims.cycle.n      <- length(dims.cycle.id)
-      n.timesteps       <- dims.info[match('time', dims.info$name), 3]
+      dims.cycle.length   <- dim(data.all)[dims.cycle.id] 
+      slices.n            <- prod(dims.cycle.length)
+      dims.cycle.n        <- length(dims.cycle.id)
+      n.timesteps         <- dims.info[match('time', dims.info$name), 3]
 
       ## determine slices to process
       args.identify <- list(dims.cycle.id = dims.cycle.id, dims.process.id = dims.process.id,
                             datacube = data.all, ratio.const = ratio.const, 
                             tresh.const = tresh.const , print.status = print.status, 
                             slices.n = slices.n, algorithm = 'Decompose')
-      results.identify  <- do.call(IdentifyCellsNcdfSSA, args.identify)
+      results.identify        <- do.call(IdentifyCellsNcdfSSA, args.identify)
       AttachList(results.identify)
+      if (sum(results.identify$slices.process) == 0)
+        next
 
       ## create 'iterator'
-      args.expand.grid       <- alist()
+      args.expand.grid        <- alist()
       for (i in 1:dims.cycle.n)
         args.expand.grid[[i]] <- 1:dims.cycle.length[i]
-      iter.grid.all          <- as.matrix(do.call("expand.grid", args.expand.grid))
-      n.slices               <- dim(iter.grid.all)[1]
-      n.iters                <- sum(slices.process)
-      max.cores              <- min(c(max.cores, n.iters))
-      iter.grid              <- matrix(1, nrow = n.iters, ncol = length(dims.cycle.id) + 1)
-      colnames(iter.grid)    <- c('iter.nr', dims.cycle.name)
-      iter.grid[,'iter.nr']  <- 1:n.iters
+      iter.grid.all           <- as.matrix(do.call("expand.grid", args.expand.grid))
+      n.slices                <- dim(iter.grid.all)[1]
+      n.iters                 <- sum(slices.process)
+      max.cores               <- min(c(max.cores, n.iters))
+      iter.grid               <- matrix(1, nrow = n.iters, ncol = length(dims.cycle.id) + 1)
+      colnames(iter.grid)     <- c('iter.nr', dims.cycle.name)
+      iter.grid[,'iter.nr']   <- 1:n.iters
       iter.grid[, dims.cycle.id + 1] <- iter.grid.all[slices.process, ]
-      iters.per.cyc          <- rep(floor(n.iters/max.cores), times = max.cores)
+      iters.per.cyc           <- rep(floor(n.iters/max.cores), times = max.cores)
       if (!(n.iters %% max.cores) == 0)
         iters.per.cyc[1:((n.iters %% max.cores))] <- floor(n.iters / max.cores) + 1
-      iter.gridind           <- matrix(NA, ncol = 2, nrow = max.cores)
-      colnames(iter.gridind) <- c('first.iter','last.iter')
+      iter.gridind            <- matrix(NA, ncol = 2, nrow = max.cores)
+      colnames(iter.gridind)  <- c('first.iter','last.iter')
       if (max.cores > 1)  {
-        iter.gridind[, 1]  <- (cumsum(iters.per.cyc) + 1) - iters.per.cyc
-        iter.gridind[, 2]  <- cumsum(iters.per.cyc)
+        iter.gridind[, 1]     <- (cumsum(iters.per.cyc) + 1) - iters.per.cyc
+        iter.gridind[, 2]     <- cumsum(iters.per.cyc)
       } else {
-        iter.gridind[1, ]  <- c(1, n.iters)
+        iter.gridind[1, ]     <- c(1, n.iters)
       }
 
       ## define process during iteration
@@ -286,6 +287,7 @@ DecomposeNcdf = structure(function(
       if (drop.dim)
         data.results.final <- drop(data.results.final)
       var.put.nc(file.con.copy, var.name, data.results.final)
+      sync.nc(file.con.copy)
     }
     
     ## add attributes with process information to ncdf files
