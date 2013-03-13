@@ -36,6 +36,8 @@ gapfill.ind.core = function(iter.nr)
       path.debug                      <- file.path('/Net', 'Groups', 'BGI', 'tmp', 
                                                    'jbuttlar', 'Cluster_jobs_debugging',
                                                    sub('/Net/Groups/BGI/', '', getwd()))
+      if (!file.exists(path.debug))    
+         system(paste('mkdir -p ', path.debug, sep = ''))                                                    
       file.name.t                     <- paste(path.debug, '/workspace_error_', file.name, '_',iter.nr, '_', j, sep = '')
       print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
       dump.frames(to.file = TRUE, dumpto = file.name.t)

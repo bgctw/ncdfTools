@@ -80,239 +80,240 @@ DecomposeNcdf = structure(function(
   ##author<<
   ##Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
-    ##TODO add mechanism to get constant values in datacube after calculation.
-    ##TODO Try zero line crossings for frequency determination
-    ##TODO Make method reproducible (seed etc)
-    ##TODO Add way to handle non convergence
-    ##save argument values of call
+  ##TODO add mechanism to get constant values in datacube after calculation.
+  ##TODO Try zero line crossings for frequency determination
+  ##TODO Make method reproducible (seed etc)
+  ##TODO Add way to handle non convergence
+  ##save argument values of call
+
+  ## prepare parallel backend
+  if (calc.parallel)
+    RegisterParallel(package.parallel, max.cores)
   
-    args.call.filecheck <- as.list(environment())
-    args.call.global    <- call.args2string()
-    if (print.status & !interactive()) {
-      print('Arguments supplied to function call:')
-      print(paste(paste(names(args.call.filecheck), args.call.filecheck, sep = ':'), collapse = '; '))
-    }
-      
-    ## load libraries
+  args.call.filecheck <- as.list(environment())
+  args.call.global    <- call.args2string()
+  if (print.status & !interactive()) {
+    print('Arguments supplied to function call:')
+    print(paste(paste(names(args.call.filecheck), args.call.filecheck, sep = ':'), collapse = '; '))
+  }
+  
+  ## load libraries
+  if (print.status)
+    cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
+  require(foreach, warn.conflicts = FALSE, quietly = TRUE)
+  require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
+  require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
+  require(ncdf.tools, warn.conflicts = FALSE, quietly = TRUE)
+  require(Rssa, warn.conflicts = FALSE, quietly = TRUE)
+  require(abind, warn.conflicts = FALSE, quietly = TRUE)
+  if (calc.parallel) {
+    require(multicore, warn.conflicts = FALSE, quietly = TRUE)
+  }
+  
+  ## check input
+  res.check     <- do.call(CheckInputNcdfSSA,
+                           c(SSAprocess = 'Decompose', args.call.filecheck))
+  file.con.orig <- res.check$file.con.orig    
+  if (length(var.names) == 1 && var.names == 'auto') 
+    var.names   <- ncdf.get.varname(file.con.orig)
+  
+  ## open ncdf files
+  if (print.status)
+    cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep=''))
+  file.name.copy  <- paste(sub('.nc$','',file.name), '_specdecomp.nc', sep='')
+  file.con.copy   <- create.nc(file.name.copy)
+  Sys.chmod(file.name.copy, mode = "0777")
+  
+  ## set default parameters
+  if (!calc.parallel)
+    max.cores                   <- 1
+  n.bands                       <- length(unlist(borders.wl))-length(borders.wl)
+  n.steps                       <- length(borders.wl)
+  n.timesteps                   <- dim.inq.nc(file.con.orig, 'time')$length
+  if (length(M) == 0)
+    M              <- rep(round(n.timesteps / 2,  digits = 0), times = n.steps)
+  if (length(harmonics) == 0)
+    harmonics      <- rep(8, times = n.steps)
+  if (length(n.comp) == 0)
+    n.comp         <- rep(50, times = n.steps)
+  
+  ## determine call settings for SSA
+  args.call                     <- list(...)
+  args.call[['borders.wl']]     <- borders.wl
+  args.call[['M']]              <- M
+  args.call[['harmonics']]      <- harmonics
+  args.call[['n.comp']]         <- n.comp
+  args.call[['pad.series']]     <- pad.series
+  args.call[['print.stat']]     <- FALSE
+  args.call[['plot.spectra']]   <- FALSE
+  args.call[['center.series']]  <- center.series
+  args.call[['repeat.extr']]    <- repeat.extr
+  args.call[['debugging']]      <- debugging
+  dim.values                    <- 1:n.bands
+  borders.low                   <- rapply(borders.wl, function(x){x[-length(x)]})
+  borders.up                    <- rapply(borders.wl, function(x){x[-1]})
+  dim.name                      <- 'spectral_bands'
+  
+  ##prepare results file
+  ncdf.fileatts.copy(file.con.orig, file.con.copy)    
+  dim.def.nc(file.con.copy, 'spectral_bands', length(dim.values) )
+  var.def.nc(file.con.copy, 'borders.low', 'NC_DOUBLE',  'spectral_bands')
+  var.def.nc(file.con.copy, 'borders.up', 'NC_DOUBLE', 'spectral_bands')
+  var.put.nc(file.con.copy, 'borders.low', borders.low)
+  var.put.nc(file.con.copy, 'borders.up', borders.up)
+  att.put.nc(file.con.copy, 'borders.up', 'long_name', 'NC_CHAR',
+             'upper period border of spectral band')
+  att.put.nc(file.con.copy, 'borders.low', 'long_name', 'NC_CHAR',
+             'lower period border of spectral band')
+  att.put.nc(file.con.copy, 'borders.up', 'unit', 'NC_CHAR',
+             '[timesteps]')
+  att.put.nc(file.con.copy, 'borders.low', 'unit', 'NC_CHAR',
+             '[timesteps]')
+  for (var.name.create in var.names) {
+    var.def.nc(file.con.copy, var.name.create, var.inq.nc(file.con.orig, var.name.create)$type,
+               c(var.inq.nc(file.con.orig, var.name.create)$dimids,
+                 dim.inq.nc(file.con.copy, 'spectral_bands')$id))
+    ncdf.att.copy(file.con.orig, var.name.create, var.name.create, file.con.copy)
+  }
+  sync.nc(file.con.copy)
+
+
+  for (var.name in var.names) {
+    data.all          <- var.get.nc(file.con.orig, var.name)
     if (print.status)
-      cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
-    require(foreach, warn.conflicts = FALSE, quietly = TRUE)
-    require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
-    require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
-    require(ncdf.tools, warn.conflicts = FALSE, quietly = TRUE)
-    require(Rssa, warn.conflicts = FALSE, quietly = TRUE)
-    require(abind, warn.conflicts = FALSE, quietly = TRUE)
-    if (calc.parallel) {
-      require(multicore, warn.conflicts = FALSE, quietly = TRUE)
-    }
-    
-    ## check input
-    res.check     <- do.call(CheckInputNcdfSSA,
-                             c(SSAprocess = 'Decompose', args.call.filecheck))
-    file.con.orig <- res.check$file.con.orig    
-    if (length(var.names) == 1 && var.names == 'auto') 
-      var.names   <- ncdf.get.varname(file.con.orig)
-    
-    ## open ncdf files
-    if (print.status)
-       cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep=''))
-    file.name.copy  <- paste(sub('.nc$','',file.name), '_specdecomp.nc', sep='')
-    file.con.copy   <- create.nc(file.name.copy)
-    Sys.chmod(file.name.copy, mode = "0777")
-    
-    ## set default parameters
-    if (!calc.parallel)
-      max.cores                   <- 1
-    n.bands                       <- length(unlist(borders.wl))-length(borders.wl)
-    n.steps                       <- length(borders.wl)
-    n.timesteps                   <- dim.inq.nc(file.con.orig, 'time')$length
-    if (length(M) == 0)
-      M              <- rep(round(n.timesteps / 2,  digits = 0), times = n.steps)
-    if (length(harmonics) == 0)
-      harmonics      <- rep(8, times = n.steps)
-    if (length(n.comp) == 0)
-      n.comp         <- rep(50, times = n.steps)
-    
-    ## determine call settings for SSA
-    args.call                     <- list(...)
-    args.call[['borders.wl']]     <- borders.wl
-    args.call[['M']]              <- M
-    args.call[['harmonics']]      <- harmonics
-    args.call[['n.comp']]         <- n.comp
-    args.call[['pad.series']]     <- pad.series
-    args.call[['print.stat']]     <- FALSE
-    args.call[['plot.spectra']]   <- FALSE
-    args.call[['center.series']]  <- center.series
-    args.call[['repeat.extr']]    <- repeat.extr
-    args.call[['debugging']]      <- debugging
-    dim.values                    <- 1:n.bands
-    borders.low                   <- rapply(borders.wl, function(x){x[-length(x)]})
-    borders.up                    <- rapply(borders.wl, function(x){x[-1]})
-    dim.name                      <- 'spectral_bands'
-    
-    ##prepare results file
-    ncdf.fileatts.copy(file.con.orig, file.con.copy)    
-    dim.def.nc(file.con.copy, 'spectral_bands', length(dim.values) )
-    var.def.nc(file.con.copy, 'borders.low', 'NC_DOUBLE',  'spectral_bands')
-    var.def.nc(file.con.copy, 'borders.up', 'NC_DOUBLE', 'spectral_bands')
-    var.put.nc(file.con.copy, 'borders.low', borders.low)
-    var.put.nc(file.con.copy, 'borders.up', borders.up)
-    att.put.nc(file.con.copy, 'borders.up', 'long_name', 'NC_CHAR',
-                 'upper period border of spectral band')
-    att.put.nc(file.con.copy, 'borders.low', 'long_name', 'NC_CHAR',
-               'lower period border of spectral band')
-    att.put.nc(file.con.copy, 'borders.up', 'unit', 'NC_CHAR',
-               '[timesteps]')
-    att.put.nc(file.con.copy, 'borders.low', 'unit', 'NC_CHAR',
-               '[timesteps]')
-    for (var.name.create in var.names) {
-      var.def.nc(file.con.copy, var.name.create, var.inq.nc(file.con.orig, var.name.create)$type,
-                 c(var.inq.nc(file.con.orig, var.name.create)$dimids,
-                   dim.inq.nc(file.con.copy, 'spectral_bands')$id))
-      ncdf.att.copy(file.con.orig, var.name.create, var.name.create, file.con.copy)
-    }
-    close.nc(file.con.copy)
-
-
-    for (var.name in var.names) {
-      data.all          <- var.get.nc(file.con.orig, var.name)
-      if (print.status)
-        status.report(paste('Processing variable ', var.name, sep = ''))
-      ##prepare parallel iteration parameters
-      dims.ids.data       <- var.inq.nc(file.con.orig, var.names[1])$dimids + 1   
-      dims.info           <- ncdf.get.diminfo(file.con.orig)[dims.ids.data, ]
-      drop.dim            <- FALSE
-      if (length(dim(data.all)) > 1 ) {
-        dims.cycle.id     <- sort(setdiff(1:length(dims.ids.data), match('time', dims.info$name) ))
-        dims.cycle.name   <- dims.info[dims.cycle.id, 'name']
-        dims.process.id   <- match('time', dims.info$name)
-      } else {
-        dims.cycle.id     <- 1
-        dims.process.id   <- 2
-        dims.cycle.name   <- 'series'
-        data.all          <- array(data.all, dim = c(1, length(data.all)))
-        drop.dim          <- TRUE
-      }
-      dims.cycle.length   <- dim(data.all)[dims.cycle.id] 
-      slices.n            <- prod(dims.cycle.length)
-      dims.cycle.n        <- length(dims.cycle.id)
-      n.timesteps         <- dims.info[match('time', dims.info$name), 3]
-
-      ## determine slices to process
-      args.identify <- list(dims.cycle.id = dims.cycle.id, dims.process.id = dims.process.id,
-                            datacube = data.all, ratio.const = ratio.const, 
-                            tresh.const = tresh.const , print.status = print.status, 
-                            slices.n = slices.n, algorithm = 'Decompose')
-      results.identify        <- do.call(IdentifyCellsNcdfSSA, args.identify)
-      AttachList(results.identify)
-      if (sum(results.identify$slices.process) == 0)
-        next
-
-      ## create 'iterator'
-      args.expand.grid        <- alist()
-      for (i in 1:dims.cycle.n)
-        args.expand.grid[[i]] <- 1:dims.cycle.length[i]
-      iter.grid.all           <- as.matrix(do.call("expand.grid", args.expand.grid))
-      n.slices                <- dim(iter.grid.all)[1]
-      n.iters                 <- sum(slices.process)
-      max.cores               <- min(c(max.cores, n.iters))
-      iter.grid               <- matrix(1, nrow = n.iters, ncol = length(dims.cycle.id) + 1)
-      colnames(iter.grid)     <- c('iter.nr', dims.cycle.name)
-      iter.grid[,'iter.nr']   <- 1:n.iters
-      iter.grid[, dims.cycle.id + 1] <- iter.grid.all[slices.process, ]
-      iters.per.cyc           <- rep(floor(n.iters/max.cores), times = max.cores)
-      if (!(n.iters %% max.cores) == 0)
-        iters.per.cyc[1:((n.iters %% max.cores))] <- floor(n.iters / max.cores) + 1
-      iter.gridind            <- matrix(NA, ncol = 2, nrow = max.cores)
-      colnames(iter.gridind)  <- c('first.iter','last.iter')
-      if (max.cores > 1)  {
-        iter.gridind[, 1]     <- (cumsum(iters.per.cyc) + 1) - iters.per.cyc
-        iter.gridind[, 2]     <- cumsum(iters.per.cyc)
-      } else {
-        iter.gridind[1, ]     <- c(1, n.iters)
-      }
-
-      ## define process during iteration
-      
-      abind.mod=function(...)abind(..., along=3)
-
-      ## prepare parallel backend
-      if (calc.parallel)
-        RegisterParallel(package.parallel, max.cores)
-
-      ## perform calculation
-      if (print.status)
-        cat(paste(Sys.time(), ' : Starting calculation: Decomposing ', sum(slices.process),
-                  ' timeseries of length ', n.timesteps, '. \n', sep=''))
-      if (calc.parallel) {
-        data.results.valid.cells <- foreach(i = 1:max.cores, .combine = abind.mod, .multicombine = TRUE) %dopar% DecomposeNcdfCoreprocess(
-                                                                       iter.nr = i, print.status = print.status, data.all = data.all, 
-                                                                       n.timesteps = n.timesteps, file.name = file.name,
-                                                                       n.bands = n.bands, dims.cycle.n = dims.cycle.n,
-                                                                       iter.grid = iter.grid, args.call = args.call,
-                                                                       var.name = var.name, iter.gridind = iter.gridind, 
-                                                                       dims.process.id = dims.process.id, dims.cycle.id = dims.cycle.id)
-      } else {
-        data.results.valid.cells <- foreach(i = 1:max.cores
-                                            ,  .combine = abind.mod,  .multicombine = TRUE) %do% DecomposeNcdfCoreprocess(iter.nr = i,
-                                                                        n.timesteps = n.timesteps,  print.status = print.status,
-                                                                        n.bands = n.bands, dims.cycle.n = dims.cycle.n, data.all = data.all, 
-                                                                        iter.grid = iter.grid, args.call = args.call, file.name = file.name,
-                                                                        var.name = var.name, dims.process.id = dims.process.id,
-                                                                        dims.cycle.id = dims.cycle.id, iter.gridind = iter.gridind)
-      }
-      if (package.parallel=='doSMP')
-        stopWorkers(w)
-
-      ## transpose results
-      if (print.status)
-        cat(paste(Sys.time(), ' : Transposing results. \n', sep=''))
-      data.results.all.cells                     <- array(NA, dim = c(n.timesteps, n.bands, n.slices))
-      data.results.all.cells[, , slices.process] <- data.results.valid.cells
-      data.results.all.cells.trans               <- aperm(data.results.all.cells, perm = c(3, 1, 2))
-      file.con.copy                              <- open.nc(file.name.copy, write=TRUE)
-      data.results.final                         <- array(as.vector(data.results.all.cells.trans),
-                                                          dim = c(dims.cycle.length, n.timesteps, n.bands))
-      aperm.array                                <- c(order(c(dims.cycle.id, dims.process.id)), length(c(dims.cycle.id, dims.process.id)) + 1)
-      data.results.final                         <- aperm(data.results.final, aperm.array)
-
-      ## save results
-      if(sum(is.infinite(data.results.final)) > 0)
-        save.image(paste('workspace_before_writing_', file.name, '.RData', sep = ''))
-      if (print.status)
-        cat(paste(Sys.time(), ' : Writing results to file. \n', sep=''))
-      if (!is.element('missing_value', ncdf.get.attinfo(file.con.copy, var.name)[,'name']) &&
-          sum(is.na(data.results.final)) > 0)
-        att.put.nc(file.con.copy, var.name, 'missing_value', var.inq.nc(file.con.copy, var.name)$type, -9999.0)
-      if (drop.dim)
-        data.results.final <- drop(data.results.final)
-      var.put.nc(file.con.copy, var.name, data.results.final)
-      sync.nc(file.con.copy)
-    }
-    
-    ## add attributes with process information to ncdf files
-    all.args     <- formals(FilterTSeriesSSA)
-    all.args[na.omit(match(names(args.call), names(all.args)))] <- args.call[is.element(names(args.call), names(all.args))]
-    red.args     <- all.args[c('borders.wl', 'M', 'n.comp', 'harmonics', 'tolerance.harmonics',
-                        'var.thresh.ratio', 'grouping', 'pad.series', 'SSA.methods', 'repeat.extr')]
-    string.args  <- paste(paste(names(red.args), sapply(red.args, function(x)paste(x, collapse=', '))
-                                   , sep=': '), collapse='; ')
-    att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposed_by', 'NC_CHAR', compile.sysinfo())
-    att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposed_on', 'NC_CHAR', as.character(Sys.time()))
-    att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposition_settings', 'NC_CHAR', string.args)
-    hist.string.append <- paste('Spectrally decomposed on ', as.character(Sys.time()),
-                                ' by ', Sys.info()['user'], sep='')
-    if (is.element('history', ncdf.get.attinfo(file.con.copy, 'NC_GLOBAL')[, 'name'])) {
-        hist.string <- paste(att.get.nc(file.con.copy, 'NC_GLOBAL', 'history'), '; ', hist.string.append)
-        att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string)
+      status.report(paste('Processing variable ', var.name, sep = ''))
+    ##prepare parallel iteration parameters
+    dims.ids.data       <- var.inq.nc(file.con.orig, var.names[1])$dimids + 1   
+    dims.info           <- ncdf.get.diminfo(file.con.orig)[dims.ids.data, ]
+    drop.dim            <- FALSE
+    if (length(dim(data.all)) > 1 ) {
+      dims.cycle.id     <- sort(setdiff(1:length(dims.ids.data), match('time', dims.info$name) ))
+      dims.cycle.name   <- dims.info[dims.cycle.id, 'name']
+      dims.process.id   <- match('time', dims.info$name)
     } else {
-        att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string.append)
+      dims.cycle.id     <- 1
+      dims.process.id   <- 2
+      dims.cycle.name   <- 'series'
+      data.all          <- array(data.all, dim = c(1, length(data.all)))
+      drop.dim          <- TRUE
     }
-    close.nc(file.con.copy)
-    close.nc(file.con.orig)
+    dims.cycle.length   <- dim(data.all)[dims.cycle.id] 
+    slices.n            <- prod(dims.cycle.length)
+    dims.cycle.n        <- length(dims.cycle.id)
+    n.timesteps         <- dims.info[match('time', dims.info$name), 3]
+
+    ## determine slices to process
+    args.identify <- list(dims.cycle.id = dims.cycle.id, dims.process.id = dims.process.id,
+                          datacube = data.all, ratio.const = ratio.const, 
+                          tresh.const = tresh.const , print.status = print.status, 
+                          slices.n = slices.n, algorithm = 'Decompose')
+    results.identify        <- do.call(IdentifyCellsNcdfSSA, args.identify)
+    AttachList(results.identify)
+    if (sum(results.identify$slices.process) == 0) {
+      status.report(paste('Specdecomp for ', var.name,' not possible. Next step ...', sep = ''))
+      next
+    }
+
+    ## create 'iterator'
+    args.expand.grid        <- alist()
+    for (i in 1:dims.cycle.n)
+      args.expand.grid[[i]] <- 1:dims.cycle.length[i]
+    iter.grid.all           <- as.matrix(do.call("expand.grid", args.expand.grid))
+    n.slices                <- dim(iter.grid.all)[1]
+    n.iters                 <- sum(slices.process)
+    max.cores               <- min(c(max.cores, n.iters))
+    iter.grid               <- matrix(1, nrow = n.iters, ncol = length(dims.cycle.id) + 1)
+    colnames(iter.grid)     <- c('iter.nr', dims.cycle.name)
+    iter.grid[,'iter.nr']   <- 1:n.iters
+    iter.grid[, dims.cycle.id + 1] <- iter.grid.all[slices.process, ]
+    iters.per.cyc           <- rep(floor(n.iters/max.cores), times = max.cores)
+    if (!(n.iters %% max.cores) == 0)
+      iters.per.cyc[1:((n.iters %% max.cores))] <- floor(n.iters / max.cores) + 1
+    iter.gridind            <- matrix(NA, ncol = 2, nrow = max.cores)
+    colnames(iter.gridind)  <- c('first.iter','last.iter')
+    if (max.cores > 1)  {
+      iter.gridind[, 1]     <- (cumsum(iters.per.cyc) + 1) - iters.per.cyc
+      iter.gridind[, 2]     <- cumsum(iters.per.cyc)
+    } else {
+      iter.gridind[1, ]     <- c(1, n.iters)
+    }
+
+    ## define process during iteration
+    
+    abind.mod=function(...)abind(..., along=3)
+
+    ## perform calculation
     if (print.status)
-        cat(paste(Sys.time(), ' : Calculation successfully finished. \n', sep=''))
-    return(NULL)
+      cat(paste(Sys.time(), ' : Starting calculation: Decomposing ', sum(slices.process),
+                ' timeseries of length ', n.timesteps, '. \n', sep=''))
+    if (calc.parallel) {
+      data.results.valid.cells <- foreach(i = 1:max.cores, .combine = abind.mod, .multicombine = TRUE) %dopar% DecomposeNcdfCoreprocess(
+                                                                                   iter.nr = i, print.status = print.status, data.all = data.all, 
+                                                                                   n.timesteps = n.timesteps, file.name = file.name,
+                                                                                   n.bands = n.bands, dims.cycle.n = dims.cycle.n,
+                                                                                   iter.grid = iter.grid, args.call = args.call,
+                                                                                   var.name = var.name, iter.gridind = iter.gridind, 
+                                                                                   dims.process.id = dims.process.id, dims.cycle.id = dims.cycle.id)
+    } else {
+      data.results.valid.cells <- foreach(i = 1:max.cores
+                                          ,  .combine = abind.mod,  .multicombine = TRUE) %do% DecomposeNcdfCoreprocess(iter.nr = i,
+                                                                      n.timesteps = n.timesteps,  print.status = print.status,
+                                                                      n.bands = n.bands, dims.cycle.n = dims.cycle.n, data.all = data.all, 
+                                                                      iter.grid = iter.grid, args.call = args.call, file.name = file.name,
+                                                                      var.name = var.name, dims.process.id = dims.process.id,
+                                                                      dims.cycle.id = dims.cycle.id, iter.gridind = iter.gridind)
+    }
+    
+    if (print.status)
+      cat(paste(Sys.time(), ' : Transposing results. \n', sep=''))
+    data.results.all.cells                     <- array(NA, dim = c(n.timesteps, n.bands, n.slices))
+    data.results.all.cells[, , slices.process] <- data.results.valid.cells
+    data.results.all.cells.trans               <- aperm(data.results.all.cells, perm = c(3, 1, 2))
+    data.results.final                         <- array(as.vector(data.results.all.cells.trans),
+                                                        dim = c(dims.cycle.length, n.timesteps, n.bands))
+    aperm.array                                <- c(order(c(dims.cycle.id, dims.process.id)), length(c(dims.cycle.id, dims.process.id)) + 1)
+    data.results.final                         <- aperm(data.results.final, aperm.array)
+
+    ## save results
+    if(sum(is.infinite(data.results.final)) > 0)
+      save.image(paste('workspace_before_writing_', file.name, '.RData', sep = ''))
+    if (print.status)
+      cat(paste(Sys.time(), ' : Writing results to file. \n', sep=''))
+    if (!is.element('missing_value', ncdf.get.attinfo(file.con.copy, var.name)[,'name']) &&
+        sum(is.na(data.results.final)) > 0)
+      att.put.nc(file.con.copy, var.name, 'missing_value', var.inq.nc(file.con.copy, var.name)$type, -9999.0)
+    if (drop.dim)
+      data.results.final <- drop(data.results.final)
+    var.put.nc(file.con.copy, var.name, data.results.final)
+    sync.nc(file.con.copy)
+  }
+  
+  ## add attributes with process information to ncdf files
+  all.args     <- formals(FilterTSeriesSSA)
+  all.args[na.omit(match(names(args.call), names(all.args)))] <- args.call[is.element(names(args.call), names(all.args))]
+  red.args     <- all.args[c('borders.wl', 'M', 'n.comp', 'harmonics', 'tolerance.harmonics',
+                             'var.thresh.ratio', 'grouping', 'pad.series', 'SSA.methods', 'repeat.extr')]
+  string.args  <- paste(paste(names(red.args), sapply(red.args, function(x)paste(x, collapse=', '))
+                              , sep=': '), collapse='; ')
+  att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposed_by', 'NC_CHAR', compile.sysinfo())
+  att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposed_on', 'NC_CHAR', as.character(Sys.time()))
+  att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposition_settings', 'NC_CHAR', string.args)
+  hist.string.append <- paste('Spectrally decomposed on ', as.character(Sys.time()),
+                              ' by ', Sys.info()['user'], sep='')
+  if (is.element('history', ncdf.get.attinfo(file.con.copy, 'NC_GLOBAL')[, 'name'])) {
+    hist.string <- paste(att.get.nc(file.con.copy, 'NC_GLOBAL', 'history'), '; ', hist.string.append)
+    att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string)
+  } else {
+    att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string.append)
+  }
+  close.nc(file.con.copy)
+  close.nc(file.con.orig)
+  if (print.status)
+    cat(paste(Sys.time(), ' : Calculation successfully finished. \n', sep=''))
+  
+  if (package.parallel=='doSMP')
+    stopWorkers(w)
+  return(NULL)
 }
 , ex = function(){
   ## Example for the filtering of monthly data
@@ -365,6 +366,8 @@ DecomposeNcdfCoreprocess = function(iter.nr, n.timesteps, n.bands, dims.cycle.n,
         system.info                     <- sessionInfo()
         path.file                       <- file.path('/', 'Net', 'Groups', 'BGI', 'tmp', 
                                                      'jbuttlar', 'Cluster_jobs_debugging', sub('/Net/Groups/BGI/', '', getwd()))
+        if (!file.exists(path.file))
+          system(paste('mkdir -p ', path.file, sep = ''))                      
         file.name.t                     <- file.path(path.file, paste('workspace_error_', file.name, '_',
                                                                       iter.nr, '_', j, sep = ''))
         print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))

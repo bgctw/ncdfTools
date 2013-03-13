@@ -248,6 +248,10 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 
     for (var.name in var.names) {
       datacube         <- var.get.nc(file.con.orig, var.name)
+      if (sum(is.na(datacube)) == 0) {
+        print(paste(var.name, 'does not contain gaps. Gap filling for this data omitted!'))
+        next
+      } 
       ind.artgaps.out  <- array(FALSE, dim = dim(datacube))
 
       status.report(paste('Filling variable ', var.name, sep = ''))
@@ -636,8 +640,6 @@ GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
     att.put.nc(file.con.copy,  paste(var.name, '_flag_orig', sep =''),'long_name','NC_CHAR',
                paste('flag indicating original values (1) and filled values (0) in ', var.name, sep = ''))
     datacube                    <- var.get.nc(file.con.copy, var.name)
-    if(sum(is.na(datacube)) == 0)
-      stop('Data does not contain any gaps. Gap filling not possible.')
     data.flag                   <- array(NA, dim = dim(datacube))
     data.flag[is.na(datacube)]  <- 0
     data.flag[!is.na(datacube)] <- 1
@@ -925,20 +927,6 @@ rbindMod <- function(...)
       iloops.converged<- unlist(lapply(dummy, function(x)as.vector(t(x[[3]]))))
       'finished'
     })
-##TODO: remove this stuff
-    if (class(results) == 'try-error') {
-      print(paste('Error occoured at data assembling.', sep = ''))
-      error.from.calc                 <- data.results.iter.t
-      data.results.iter.t             <- matrix(Inf, ncol = datapts.n, nrow = 1)
-      system.info                     <- sessionInfo()
-      path.debug                      <- file.path('/Net', 'Groups', 'BGI', 'tmp', 
-                                                   'jbuttlar', 'Cluster_jobs_debugging',
-                                                   sub('/Net/Groups/BGI/', '', getwd()))
-      file.name.t                     <- paste(path.debug, '/workspace_error_', file.name, '_assembling', sep = '')
-      print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
-      dump.frames(to.file = TRUE, dumpto = file.name.t)
-      stop()
-    }
     return(list(reconstruction = reconstruction, variances = variances, 
                 iloops.converged = iloops.converged))
 
@@ -1026,6 +1014,8 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       system.info                     <- sessionInfo()    
       path.file                       <- file.path('/', 'Net', 'Groups', 'BGI', 'tmp', 
           'jbuttlar', 'Cluster_jobs_debugging', sub('/Net/Groups/BGI/', '', getwd()))
+      if (!file.exists(path.file))  
+        system(paste('mkdir -p ', path.file, sep = ''))     
       file.name.t                     <- file.path(path.file, paste('workspace_error_', file.name, '_',
               iter.nr, '_', n, sep = '')) 
 
