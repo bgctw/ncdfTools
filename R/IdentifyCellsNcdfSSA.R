@@ -16,7 +16,9 @@ IdentifyCellsNcdfSSA = function(
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {  
   ##FIXME
-  # possibility to identify gap less MSSA blocks
+  ## possibility to identify gap less MSSA blocks
+  ## ToDo include possibility to infer slices.continuous max border
+  
   require(jannis.misc, warn.conflicts = FALSE, quietly = TRUE)
 
   if (print.status)
@@ -35,13 +37,13 @@ IdentifyCellsNcdfSSA = function(
   slices.empty <- as.vector(amnt.na == 1)
 
   ## slices checks specific to decomposition
-  if (algorithm == 'Decompose') {
-
- 
+  if (algorithm == 'Decompose') { 
     slices.process              <- as.vector(amnt.na == 0)
     slices.too.gappy            <- !slices.empty & !slices.process
     if (sum(slices.too.gappy) > 0) {
-
+       slices.continuous         <- apply(datacube, MAR = dims.cycle.id + add.id , isSeriesContinuous)
+       slices.continuous[(1-amnt.na[slices.continuous]) * dim(datacube)[dims.process.id] < 20] <- FALSE
+       slices.too.gappy[slices.continuous] <- FALSE
     }
     if (sum(slices.too.gappy) > 0)
       cat(paste(Sys.time(), ' : ', sum(slices.too.gappy),' series with gaps were found. ',
@@ -129,7 +131,7 @@ IdentifyCellsNcdfSSA = function(
                                          
   ## get slices to process                                       
   slices.process             <- !slices.constant & !slices.ocean & 
-                                !slices.too.gappy & !slices.without.gaps
+                                !slices.too.gappy & !slices.without.gaps &!slices.empty
   
   if (algorithm == 'Gapfill'){
     ##extract only a ratio of the slices to calculate for variance testing
