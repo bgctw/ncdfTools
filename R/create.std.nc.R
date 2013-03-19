@@ -15,6 +15,7 @@ create.std.nc = function
     , time.values = c()                     ##<< POSIXct vector: time values for the time dimension
     , lat.length  = length(lat.values)      ##<< integer: length of the latitude dimension
     , long.length = length(long.values)     ##<< integer: length of the longitude dimension
+    , time.length = length(time.values)     ##<< integer: length of the time dimension
     , year.start.end = c()   ##<< integer vector (length two): start and end year.
                              ##   If not given, this is determined from the time
                              ##   vector.
@@ -44,7 +45,7 @@ create.std.nc = function
   if (length(year.start.end) == 0 & length(time.values) != 0)
     year.start.end  <- as.integer(format(time.values[c(1,length(time.values))], '%Y'))
   
-  if(sum(c(lat.length,long.length,time.length) == 
+  if (sum(c(lat.length,long.length,time.length) == 
           c(length(lat.values),length(long.values), length(time.values)))!=3)
      stop('lat(long/time.values need to have the same length as the respective length arguments!')
   if (length(time.values) > 0 && !is.element(class(time.values)[1],c('POSIXlt', 'POSIXct')))
@@ -52,7 +53,7 @@ create.std.nc = function
   if (time.length > 0 && length(year.start.end)!=2)
      stop('Supply values for the start and the end year!') 
   if(length(file.name) == 0) {
-     file.name = paste(var.names, paste(c(lat.length, long.length, time.length),collapse='.'), 'nc', sep = '.')
+     file.name = paste(var.names[1], paste(c(lat.length, long.length, time.length),collapse='.'), 'nc', sep = '.')
   } else if (!grepl('[.]nc',file.name)){
     file.name <- paste(file.name, '.nc', sep='')
   } 
