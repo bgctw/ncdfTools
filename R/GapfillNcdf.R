@@ -219,7 +219,9 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       step.chosen[1, ]    <- 1
       step.chosen[2, ]    <- 1:n.steps
     }
-    finished <- FALSE
+    finished              <- FALSE
+    iterpath              <- data.frame(time = Sys.time(), var.name = 'none', process = 'none', step = 0,
+                                        calc.repeat = 0, dimensions = 0)
 
     
     #check input, check first guess, transfer and check ocean mask
@@ -337,7 +339,10 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
             }
             if (print.status)
               cat(paste(Sys.time(), ' : Starting process for filling dimension: ',
-                      paste(dimensions[[ind]][[l]], collapse=','), ' \n', sep = ''))
+                        paste(dimensions[[ind]][[l]], collapse=','), ' \n', sep = ''))
+            iterpath = rbind(iterpath, data.frame(time = Sys.time(), var.name = var.name,
+                                                  process = process, step = h, calc.repeat = g
+                                                  , dimensions = paste(dimensions[[ind]][[l]], collapse=',')))
             drop.dim = FALSE
             dims.process        <- dimensions[[ind]][[l]]
             dims.process.id     <- dims.info[match(dims.process, dims.info$name), 1]
@@ -485,10 +490,10 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
               ind.array     <- array(gapfill.results.step$slices.too.gappy,
                                      dim = results.dim.other$dims.process.length)
               if (sum(ind.array) > 0) {
-                ind.datacube  <- ind.datacube(datacube, ind.array,
+                index.datacube  <- ind.datacube(datacube = datacube, logical.ind = ind.array,
                                               dims = results.dim.other$dims.process.id + 1)
                 if (!is.null(results.dim.other$reconstruction))
-                  results.reconstruction[ind.datacube] <- results.dim.other$reconstruction[ind.datacube]
+                  results.reconstruction[index.datacube] <- results.dim.other$reconstruction[index.datacube]
               }
             }
           }
@@ -524,10 +529,12 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     finished <- TRUE
     close.nc(file.con.orig)
     if (process.type == 'variances') {
-      out  <-list(pred.measures = pred.measures, step.chosen = step.chosen, finished = finished)
+      out  <-list(pred.measures = pred.measures, step.chosen = step.chosen, finished = finished,
+                  iterpath = iterpath)
     } else {
       out  <- list(finished = finished)
     }
+    return(out)
 }, ex = function(){
   #prerequesites: go to dir with ncdf file and specify file.name
   setwd('')
@@ -670,14 +677,16 @@ GapfillNcdfSaveResults <- function(args.call.global, datacube, dims.process,
       reconstruction[is.na(data.results.final)]
   if (sum(slices.without.gaps) > 0 & process.cells == 'gappy') {
     dim(slices.without.gaps)      <- dims.cycle.length
-    ind.array                     <- ind.datacube(datacube, slices.without.gaps, 
-                                                  dims.cycle.id + 1)
+    ind.array                     <- ind.datacube(datacube = datacube, 
+                                                 logical.ind = slices.without.gaps, 
+                                                 dims = dims.cycle.id + 1)
     data.results.final[ind.array] <- datacube[ind.array]
   }
   if (sum(!is.na(match(dims.process, c('longitude','latitude')))) == 2 & 
       length(ocean.mask) > 0) {
-    ind.array                     <- ind.datacube(datacube, ocean.mask, 
-                                                  dims.process.id + 1)
+    ind.array                     <- ind.datacube(datacube = datacube, 
+                                                  logical.ind = ocean.mask, 
+                                                  dims = dims.process.id + 1)
     data.results.final[ind.array] <- NA
   }
 
@@ -871,7 +880,8 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
     
     ##remove ocean cells
     if (sum(!slices.process) > 0) {
-      ind.process.cube[ind.datacube(ind.process.cube, slices.remove, c(2, 3))] <- FALSE
+      ind.process.cube[ind.datacube(datacube = ind.process.cube, 
+                                    logical.ind = slices.remove, dims = c(2, 3))] <- FALSE
     }
     rows.remove <- apply(ind.process.cube, 1, function(x){sum(x) == 0})
     if (sum(rows.remove) > 0) {
@@ -952,8 +962,8 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
   if (MSSA){
     ind.t           <- rep(FALSE, times = dim(ind.process.cube)[1])
     ind.t[iter.ind[1]:iter.ind[2]]       <- TRUE
-    n.series.core   <- sum(ind.process.cube[ind.datacube(ind.process.cube, 
-                                                        ind.t, dims = 1)])
+    n.series.core   <- sum(ind.process.cube[ind.datacube(datacube = ind.process.cube, 
+                                                         logical.ind = ind.t, dims = 1)])
   } else {
     n.series.core   <- (diff(iter.ind) + 1)
   }  
@@ -971,21 +981,26 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
       dims.extr.data          <- dims.process.length
       aperm.extr.data         <- 1:(length(dims.process.id) + 1) 
       if (MSSA) {
-        ind.act.cube          <- array(ind.process.cube[ind.datacube(ind.process.cube, 
-                                                                     ind.total, 1)],
+        ind.act.cube          <- array(ind.process.cube[ind.datacube(datacube = ind.process.cube, 
+                                                                     logical.ind = ind.total, 
+                                                                     dims = 1)],
                                        dim = dims.cycle.length)
         n.series.steps[n]     <- sum(ind.act.cube)
         dims.extr.data        <- c(dims.extr.data, n.series.steps[n])
         aperm.extr.data       <- c(2,1)
         perm.before           <- 1:2
-        ind.extr              <- ind.datacube(datacube, ind.act.cube, dims.cycle.id+1)
+        ind.extr              <- ind.datacube(datacube = datacube, 
+                                              logical.ind = ind.act.cube, 
+                                              dims = dims.cycle.id + 1)
       } else {
         perm.before           <- order(dims.process.id)
         ind.matrix            <- array(FALSE, dims.cycle.length)
         ind.matrix.list       <- matrix(ind.process.cube[(iter.ind[1] : iter.ind[2])[n], -1], byrow=TRUE,
                                         ncol = length(dims.cycle.length))
         ind.matrix[ind.matrix.list] <- TRUE
-        ind.extr              <- ind.datacube(datacube, ind.matrix, dims.cycle.id + 1)
+        ind.extr              <- ind.datacube(datacube = datacube, 
+                                              logical.ind = ind.matrix, 
+                                              dims = dims.cycle.id + 1)
         n.series.steps[n]     <- 1
       }
 

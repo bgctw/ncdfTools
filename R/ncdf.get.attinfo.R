@@ -3,7 +3,7 @@ ncdf.get.attinfo <- function(
 ##description<< This function returns a summary of all attributes of a single variable
 ## in a ncdf file
    file.con   ##<< a NetCDF object pointing to the respective ncdf file.
-   , var.id   ##<< the name or id of the variable for which to display atributes.
+   , var.id ='NC_GLOBAL'  ##<< the name or id of the variable for which to display atributes.
 )
 ##details<<
 ## If an id or variable name is given for 'vaar.id ', attributes from one variable are returned.
