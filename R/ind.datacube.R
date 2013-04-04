@@ -3,7 +3,6 @@ ind.datacube = function(
 ##description<< This function facilitates suppliying logical index array for some 
 ##              of the dimensions of a data array. This mimics Matlabs indexing scheme.
   datacube = c() ##<< array: datacube from which to extract the subparts
-  , dims.datacube = dim(datacube) ##<< integer vector: dimensions of datacube. Only one of
                  ##   datacube and dims.datacube should be supplied.
   , logical.ind  ##<< logical array: TRUE/FALSE index matrix for a subset of the 
                  ##   dimensions of datacube. The size of logical.ind`s dimensions 
@@ -13,6 +12,9 @@ ind.datacube = function(
                  ##   datacube corresponding to the dimensions of logical.ind. 
                  ##   If set to 'auto' this matching is tried to be accomplished 
                  ##   by comparing the sizes of the dimensions of the two objects.
+  , dims.datacube = dim(datacube) ##<< integer vector: dimensions of datacube. Only one of
+                 ##   dims.datacube or datacube should be supplied!
+             
 )
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
@@ -23,6 +25,8 @@ ind.datacube = function(
     stop('Argument dims needs to have one entry for each dimension in logical.ind!')
   if (dims[1] != 'auto' && max(dims) > length(dims.datacube))
     stop('Index in dims exceed dimensions of target datacube!')
+  if (length(datacube) != 0 && !identical(dim(datacube), dims.datacube))
+    stop('dims.datacube does not match dim(datacube)! Supplying values for both does not make sense!')
   
   
   if (dims[1] == 'auto') {
