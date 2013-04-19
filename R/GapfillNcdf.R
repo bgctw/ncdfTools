@@ -221,7 +221,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     }
     finished              <- FALSE
     iterpath              <- data.frame(time = Sys.time(), var.name = 'none', process = 'none', step = 0,
-                                        calc.repeat = 0, dimensions = 0)
+                                        calc.repeat = 0, dimensions = 0,  otherdim = NA)
+    included.otherdim     <- rep(FALSE, n.steps)
 
     
     #check input, check first guess, transfer and check ocean mask
@@ -340,9 +341,10 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
             if (print.status)
               cat(paste(Sys.time(), ' : Starting process for filling dimension: ',
                         paste(dimensions[[ind]][[l]], collapse=','), ' \n', sep = ''))
-            iterpath = rbind(iterpath, data.frame(time = Sys.time(), var.name = var.name,
-                                                  process = process, step = h, calc.repeat = g
-                                                  , dimensions = paste(dimensions[[ind]][[l]], collapse=',')))
+            iterpath <- rbind(iterpath, data.frame(time = Sys.time(), var.name = var.name,
+                                                   process = process, step = h, calc.repeat = g
+                                                   , dimensions = paste(dimensions[[ind]][[l]], collapse=','),
+                                                   otherdim = NA))
             drop.dim = FALSE
             dims.process        <- dimensions[[ind]][[l]]
             dims.process.id     <- dims.info[match(dims.process, dims.info$name), 1]
@@ -474,32 +476,43 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
             }
           }        
         }
-
+        
         ##determine first guess for next step
         if (!is.null(gapfill.results.step$reconstruction)) {
-          file.name.guess.curr              <- paste(sub('.nc$', '', file.name),
-              '_first_guess_step_',formatC(h + 1, 2, flag = '0'),
-              '.nc', sep = '')
-          file.con.guess.next               <- open.nc(file.name.guess.curr, write = TRUE)
-          results.reconstruction            <- gapfill.results.step$reconstruction
-          #use first guess from other dimensions in case of too gappy series
+          file.name.guess.curr   <- paste(sub('.nc$', '', file.name),
+                                          '_first_guess_step_',formatC(h + 1, 2, flag = '0'),
+                                          '.nc', sep = '')
+          file.con.guess.next    <- open.nc(file.name.guess.curr, write = TRUE)
+          results.reconstruction <- gapfill.results.step$reconstruction
+          
+          ## use first guess from other dimensions in case of too gappy series
           if (force.all.dims) {
-            dim.other          <- setdiff(1:n.dims.loop, step.chosen['dim', h])
+            dim.other            <- setdiff(1:n.dims.loop, step.chosen['dim', h])
             if (length(dim.other) != 0) {
               results.dim.other  <- get(paste('gapfill.results.dim', dim.other, sep = ''))           
-              ind.array     <- array(gapfill.results.step$slices.too.gappy,
-                                     dim = results.dim.other$dims.process.length)
-              if (sum(ind.array) > 0) {
-                index.datacube  <- ind.datacube(datacube = datacube, logical.ind = ind.array,
-                                              dims = results.dim.other$dims.process.id + 1)
-                if (!is.null(results.dim.other$reconstruction))
-                  results.reconstruction[index.datacube] <- results.dim.other$reconstruction[index.datacube]
+              if (!is.null(results.dim.other$reconstruction)) {
+                slices.fill.other <- !(gapfill.results.step$slices.process | gapfill.results.step$slices.too.gappy)
+                dim(slices.fill.other) <- dim(datacube)[gapfill.results.step$dims.cycle.id + 1]
+                ind.fill.other <- ind.datacube(datacube = datacube, logical.ind = slices.fill.other,
+                                               dims = gapfill.results.step$dims.cycle.id + 1)
+                data.fill.otherdim     <- results.dim.other$reconstruction
+                data.fill.otherdim[!is.na(results.reconstruction)] <- NA
+                data.fill.otherdim[ind.fill.other] <- NA
+                n.data.fill.otherdim   <-  sum(!is.na(data.fill.otherdim))
+                if (n.data.fill.otherdim > 0) {
+                  ratio                <- round(n.data.fill.otherdim / sum(!is.na(results.reconstruction)) * 100, 2)
+                  status.report(paste('Including ',ratio, ' % values from dropped dimension ', paste(dimensions[[ind]][[dim.other]], collapse=','), sep = ''))
+                  included.otherdim[h] <- TRUE
+                  iterpath[dim(iterpath)[1], 'otherdim'] <- TRUE
+                  results.reconstruction[is.na(results.reconstruction)] <- data.fill.otherdim[is.na(results.reconstruction)]
+                }
               }
             }
           }
-          #save first guess data
+          
+          ##save first guess data
           if (drop.dim)
-             results.reconstruction <- drop(results.reconstruction)
+            results.reconstruction <- drop(results.reconstruction)
           var.put.nc(file.con.guess.next, var.name, results.reconstruction)
           close.nc(file.con.guess.next)
           step.use.frst.guess  <- step.chosen['step', max(which(!is.na(step.chosen['step',])))]
@@ -513,7 +526,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       ## stop parallel workers
       if (package.parallel == 'doSMP')
         stopWorkers(w)
- 
+      
       ##save results 
       GapfillNcdfSaveResults(datacube = datacube, var.names = var.names, 
                              reconstruction = results.reconstruction,
@@ -530,79 +543,79 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     close.nc(file.con.orig)
     if (process.type == 'variances') {
       out  <-list(pred.measures = pred.measures, step.chosen = step.chosen, finished = finished,
-                  iterpath = iterpath)
+                  iterpath = iterpath, included.otherdim = included.otherdim)
     } else {
       out  <- list(finished = finished)
     }
     return(out)
-}, ex = function(){
-  #prerequesites: go to dir with ncdf file and specify file.name
-  setwd('')
-  file.name        = 'scen_3_0.5_small.nc'
-  max.cores        = 8
-  calc.parallel    = TRUE
-
-  #example settings for traditional one dimensional "onlytime" setting and
-  # one step
-  amnt.artgaps     <- list(list(c(0.05, 0.05)));
-  amnt.iters       <- list(list(c(3, 10)));
-  dimensions       <- list(list("time")); 
-  M                <- list(list(12)); 
-  n.comp           <- list(list(6)); 
-  size.biggap      <- list(list(5)); 
-  var.name         <- "auto"
-  process.type     <- "stepwise"
-  GapfillNcdf(file.name = file.name, dimensions = dimensions, amnt.iters = amnt.iters, 
-              amnt.iters.start = amnt.iters.start, amnt.artgaps = amnt.artgaps, 
-              size.biggap = size.biggap, n.comp = n.comp, tresh.fill = tresh.fill,
-              M = M, process.type = process.type)
-
-
-  
-  #example settings for 3 steps, stepwise and mono dimensional
-  dimensions       = list(list('time'), list('time'), list('time'))
-  amnt.iters       = list(list(c(1,5)), list(c(2,5)), list(c(3,5)))
-  amnt.iters.start = list(list(c(1,1)), list(c(2,1)), list(c(3,1)))
-  amnt.artgaps     = list(list(c(0,0)), list(c(0,0)), list(c(0,0)))
-  size.biggap      = list(list(0),      list(0),      list(0))
-  n.comp           = list(list(6),      list(6),      list(6))
-  tresh.fill       = list(list(.2),     list(.2),     list(.2))
-  M                = list(list(12),     list(12),     list(12))
-  process.type     = 'stepwise'
-  GapfillNcdf(file.name = file.name, dimensions = dimensions, amnt.iters = amnt.iters, 
-              amnt.iters.start = amnt.iters.start, amnt.artgaps = amnt.artgaps, 
-              size.biggap = size.biggap, n.comp = n.comp, tresh.fill = tresh.fill,
-              M = M, process.type = process.type)
-
-  #example settings for 4 steps, stepwise and alternating between temporal and spatial
-  dimensions       = list(list('time'), list(c('longitude','latitude')), list('time'), list(c('longitude','latitude')))
-  amnt.iters       = list(list(c(1,5)), list(c(1,5)),                    list(c(2,5)), list(c(2,5)))
-  amnt.iters.start = list(list(c(1,1)), list(c(1,1)),                    list(c(2,1)), list(c(4,1)))
-  amnt.artgaps     = list(list(c(0,0)), list(c(0,0)),                    list(c(0,0)), list(c(0,0)))
-  size.biggap      = list(list(0),      list(0),                         list(0),      list(0))
-  n.comp           = list(list(15),     list(15),                        list(15),     list(15))
-  tresh.fill       = list(list(.2),     list(0),                         list(0),     list(0))
-  M                = list(list(23),     list(c(20,20)),                  list(23),     list(c(20,20)))
-  process.type     = 'stepwise'
-  GapfillNcdf(file.name = file.name, dimensions = dimensions, 
-      amnt.iters = amnt.iters, amnt.iters.start = amnt.iters.start, 
-      amnt.artgaps = amnt.artgaps, size.biggap = size.biggap, n.comp = n.comp, 
-      tresh.fill = tresh.fill, M = M, process.type = process.type, max.cores = max.cores)
-
-  #example setting for process with alternating dimensions but variance criterium
-  dimensions       = list(list('time', c('longitude','latitude')))
-  n.comp           = list(list(5,      5))
-  M                = list(list(10,     c(10,10)))
-  amnt.artgaps     = list(list(c(0,0), c(0,0)))
-  size.biggap      = list(list(0,      0))
-  process.type     = 'variances'
-  tresh.fill       = list(list(0.1,    0.1))
-  max.steps        = 2
-  GapfillNcdf(file.name = file.name, dimensions = dimensions, n.comp = n.comp, 
-              tresh.fill = tresh.fill, max.steps = max.steps, M = M, 
-              process.type = process.type, amnt.artgaps = amnt.artgaps, 
-              size.biggap = size.biggap, max.cores = max.cores)
-})
+  }, ex = function(){
+    ## prerequesites: go to dir with ncdf file and specify file.name
+    setwd('')
+    file.name        = 'scen_3_0.5_small.nc'
+    max.cores        = 8
+    calc.parallel    = TRUE
+    
+    ##example settings for traditional one dimensional "onlytime" setting and
+    ## one step
+    amnt.artgaps     <- list(list(c(0.05, 0.05)));
+    amnt.iters       <- list(list(c(3, 10)));
+    dimensions       <- list(list("time")); 
+    M                <- list(list(12)); 
+    n.comp           <- list(list(6)); 
+    size.biggap      <- list(list(5)); 
+    var.name         <- "auto"
+    process.type     <- "stepwise"
+    GapfillNcdf(file.name = file.name, dimensions = dimensions, amnt.iters = amnt.iters, 
+                amnt.iters.start = amnt.iters.start, amnt.artgaps = amnt.artgaps, 
+                size.biggap = size.biggap, n.comp = n.comp, tresh.fill = tresh.fill,
+                M = M, process.type = process.type)
+    
+    
+    
+    ##example settings for 3 steps, stepwise and mono dimensional
+    dimensions       = list(list('time'), list('time'), list('time'))
+    amnt.iters       = list(list(c(1,5)), list(c(2,5)), list(c(3,5)))
+    amnt.iters.start = list(list(c(1,1)), list(c(2,1)), list(c(3,1)))
+    amnt.artgaps     = list(list(c(0,0)), list(c(0,0)), list(c(0,0)))
+    size.biggap      = list(list(0),      list(0),      list(0))
+    n.comp           = list(list(6),      list(6),      list(6))
+    tresh.fill       = list(list(.2),     list(.2),     list(.2))
+    M                = list(list(12),     list(12),     list(12))
+    process.type     = 'stepwise'
+    GapfillNcdf(file.name = file.name, dimensions = dimensions, amnt.iters = amnt.iters, 
+                amnt.iters.start = amnt.iters.start, amnt.artgaps = amnt.artgaps, 
+                size.biggap = size.biggap, n.comp = n.comp, tresh.fill = tresh.fill,
+                M = M, process.type = process.type)
+    
+    ##example settings for 4 steps, stepwise and alternating between temporal and spatial
+    dimensions       = list(list('time'), list(c('longitude','latitude')), list('time'), list(c('longitude','latitude')))
+    amnt.iters       = list(list(c(1,5)), list(c(1,5)),                    list(c(2,5)), list(c(2,5)))
+    amnt.iters.start = list(list(c(1,1)), list(c(1,1)),                    list(c(2,1)), list(c(4,1)))
+    amnt.artgaps     = list(list(c(0,0)), list(c(0,0)),                    list(c(0,0)), list(c(0,0)))
+    size.biggap      = list(list(0),      list(0),                         list(0),      list(0))
+    n.comp           = list(list(15),     list(15),                        list(15),     list(15))
+    tresh.fill       = list(list(.2),     list(0),                         list(0),     list(0))
+    M                = list(list(23),     list(c(20,20)),                  list(23),     list(c(20,20)))
+    process.type     = 'stepwise'
+    GapfillNcdf(file.name = file.name, dimensions = dimensions, 
+                amnt.iters = amnt.iters, amnt.iters.start = amnt.iters.start, 
+                amnt.artgaps = amnt.artgaps, size.biggap = size.biggap, n.comp = n.comp, 
+                tresh.fill = tresh.fill, M = M, process.type = process.type, max.cores = max.cores)
+    
+    ##example setting for process with alternating dimensions but variance criterium
+    dimensions       = list(list('time', c('longitude','latitude')))
+    n.comp           = list(list(5,      5))
+    M                = list(list(10,     c(10,10)))
+    amnt.artgaps     = list(list(c(0,0), c(0,0)))
+    size.biggap      = list(list(0,      0))
+    process.type     = 'variances'
+    tresh.fill       = list(list(0.1,    0.1))
+    max.steps        = 2
+    GapfillNcdf(file.name = file.name, dimensions = dimensions, n.comp = n.comp, 
+                tresh.fill = tresh.fill, max.steps = max.steps, M = M, 
+                process.type = process.type, amnt.artgaps = amnt.artgaps, 
+                size.biggap = size.biggap, max.cores = max.cores)
+  })
 
 
 ##################################      create files    ########################
@@ -639,7 +652,7 @@ GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
     Sys.chmod(file.name.guess.t, mode = "0777")
   }
   
-  #prepare results ncdf file
+  #Prepare Results Ncdf File
   file.con.copy      <- open.nc(con = file.name.copy, write = TRUE)
   for (var.name in var.names) {
     var.def.nc(file.con.copy, paste(var.name, '_flag_orig', sep =''), 'NC_BYTE', 
@@ -782,7 +795,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                                          tresh.fill.dc = tresh.fill.dc))
     AttachList(results.crtitercube)                                                           
     
-    #perform (parallelized) calculation 
+    #perform (parallelized) calculation
     if (print.status)
       cat(paste(Sys.time(), ' : Starting calculation: Filling ', sum(slices.process),
               ' time series/grids of size ', datapts.n, '. \n', sep = ''))
@@ -915,7 +928,6 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
 }
 
 
-
 ##################  combine data from foreach iteration ########################
 rbindMod <- function(...) 
 ##title<< helper function for GapfillNcdf
@@ -1003,7 +1015,7 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
                                               dims = dims.cycle.id + 1)
         n.series.steps[n]     <- 1
       }
-
+      
       series.noperm                  <- array(datacube[ind.extr], dim =  dims.extr.data)
       args.call.t[['series']]        <- aperm(series.noperm, perm = perm.before)
       if (!(class(first.guess) == 'character' && first.guess == 'mean')) {
