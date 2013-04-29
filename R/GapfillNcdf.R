@@ -491,22 +491,31 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
             if (length(dim.other) != 0) {
               results.dim.other  <- get(paste('gapfill.results.dim', dim.other, sep = ''))           
               if (!is.null(results.dim.other$reconstruction)) {
-                slices.fill.other <- !(gapfill.results.step$slices.process | gapfill.results.step$slices.too.gappy)
-                dim(slices.fill.other) <- dim(datacube)[gapfill.results.step$dims.cycle.id + 1]
-                ind.fill.other <- ind.datacube(datacube = datacube, logical.ind = slices.fill.other,
-                                               dims = gapfill.results.step$dims.cycle.id + 1)
                 data.fill.otherdim     <- results.dim.other$reconstruction
                 data.fill.otherdim[!is.na(results.reconstruction)] <- NA
-                data.fill.otherdim[ind.fill.other] <- NA
+
+                ## exclude not to be filled slices (oceans etc)
+                slices.fill.other <- !(gapfill.results.step$slices.process |
+                                       gapfill.results.step$slices.too.gappy)               
+                if (sum(slices.fill.other) > 0) {
+                  dim(slices.fill.other) <- dim(datacube)[gapfill.results.step$dims.cycle.id + 1]
+                  ind.fill.other <- ind.datacube(datacube = datacube, logical.ind = slices.fill.other,
+                                                 dims = gapfill.results.step$dims.cycle.id + 1)
+                  data.fill.otherdim[ind.fill.other] <- NA
+                }
+                
                 n.data.fill.otherdim   <-  sum(!is.na(data.fill.otherdim))
                 if (n.data.fill.otherdim > 0) {
-                  ratio                <- round(n.data.fill.otherdim / sum(!is.na(results.reconstruction)) * 100, 2)
-                  status.report(paste('Including ',ratio, ' % values from dropped dimension ', paste(dimensions[[ind]][[dim.other]], collapse=','), sep = ''))
+                  ratio <- round(n.data.fill.otherdim / sum(!is.na(results.reconstruction)) * 100, 2)
+                  status.report(paste('Including ',ratio, ' % values from dropped dimension ',
+                                      paste(dimensions[[ind]][[dim.other]], collapse=','),
+                                      sep = ''))
                   included.otherdim[h] <- TRUE
                   iterpath[dim(iterpath)[1], 'otherdim'] <- TRUE
-                  results.reconstruction[is.na(results.reconstruction)] <- data.fill.otherdim[is.na(results.reconstruction)]
+                  results.reconstruction[is.na(results.reconstruction)] <-
+                    data.fill.otherdim[is.na(results.reconstruction)]
                 }
-              }
+              }              
             }
           }
           
