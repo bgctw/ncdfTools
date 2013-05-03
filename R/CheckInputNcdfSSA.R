@@ -5,7 +5,7 @@ CheckInputNcdfSSA <- function(SSAprocess, ...)
   ##          input paramters.
   ##seealso<<
   ##\code{\link{GapfillNcdf}}, \code{\link{DecomposeNcdf}} 
-  
+    
   ##TODO
   # include test for MSSA and windowlength=1
   

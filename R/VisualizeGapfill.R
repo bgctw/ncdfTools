@@ -64,17 +64,16 @@ VisualizeGapfill <- function(
   cube.info.agg       <- array(NA, dim=c(2, 9))
   dimnames(cube.info.agg) <- list(c('orig', 'filled'), c('min', 'max', 'mean', 'sd', 'range', 'ratio_full', 'ratio_empty', 'ratio_partial', 'ratio_continous'))
   for (dataset in c('orig', 'filled')) {
+    data.t = get(paste('cube.info.', dataset, sep = ''))
     for (measure in c('min', 'max')) 
-      cube.info.agg[dataset, measure] <- do.call(measure, list(get(paste('cube.info.', dataset, sep = ''))[measure, ,], na.rm = TRUE))
+      cube.info.agg[dataset, measure] <- do.call(measure, list(data.t[measure, ,], na.rm = TRUE))
     for (measure in c('mean', 'sd')) 
       cube.info.agg[dataset, measure] <- do.call(measure, list(get(paste('data.', dataset, sep = '')), na.rm = TRUE))
-    cube.info.agg[dataset, 'range'] <-   do.call('max', list(get(paste('cube.info.', dataset, sep = ''))['range', ,], na.rm = TRUE))
-
-    cube.info.agg[dataset, 'ratio_empty'] <- sum(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]==1) / prod(dim(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]))
-    cube.info.agg[dataset, 'ratio_full']  <- sum(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]==0) / prod(dim(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]))
-    cube.info.agg[dataset, 'ratio_partial']  <- sum(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]>0 & get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]<1)/prod(dim(get(paste('cube.info.', dataset, sep = ''))['ratio na', , ]))
-    cube.info.agg[dataset, 'ratio_continous']  <- sum(get(paste('cube.info.', dataset, sep = ''))['ratio na inner', , ]==0, na.rm = TRUE) / prod(dim(get(paste('cube.info.', dataset, sep = ''))['ratio na inner', , ]))
-
+    cube.info.agg[dataset, 'range']   <-   do.call('max', list(data.t['range', ,], na.rm = TRUE))
+    cube.info.agg[dataset, 'ratio_empty']      <- sum(data.t['ratio na', , ]==1) / prod(dim(data.t['ratio na', , ]))
+    cube.info.agg[dataset, 'ratio_full']       <- sum(data.t['ratio na', , ]==0) / prod(dim(data.t['ratio na', , ]))
+    cube.info.agg[dataset, 'ratio_partial']    <- sum((data.t['ratio na', , ] > 0 & data.t['ratio na', , ] < 1)) / prod(dim(data.t['ratio na', , ]))
+    cube.info.agg[dataset, 'ratio_continous']  <- sum(data.t['ratio na inner', , ]==0, na.rm = TRUE) / prod(dim(data.t['ratio na inner', , ]))
   }
 
   ## do plots

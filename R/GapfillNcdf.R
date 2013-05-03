@@ -176,7 +176,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     args.call.global    <- call.args2string()
     if (print.status & !interactive()) {
       print('Arguments supplied to function call:')
-      cat(paste(paste(paste(names(args.call.filecheck), args.call.filecheck, sep=':'), collapse = '; '), '\n\n'))
+      cat(paste(paste(paste(names(args.call.filecheck), args.call.filecheck, sep=':'),
+                      collapse = '; '), '\n\n'))
     }
     
     #set seed based on file name
@@ -220,8 +221,9 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       step.chosen[2, ]    <- 1:n.steps
     }
     finished              <- FALSE
-    iterpath              <- data.frame(time = Sys.time(), var.name = 'none', process = 'none', step = 0,
-                                        calc.repeat = 0, dimensions = 0,  otherdim = NA)
+    iterpath              <- data.frame(time = Sys.time(), var.name = 'none',
+                                        process = 'none', step = 0, calc.repeat = 0,
+                                        dimensions = 0,  otherdim = NA)
     included.otherdim     <- rep(FALSE, n.steps)
 
     
@@ -319,7 +321,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
           pred.measures <- array(NA, dim = c(3, n.steps, n.dims.loop))
           dimnames(pred.measures) <- list(c('var.res.steps','RMSE','MEF'), 
                                           paste('step',1:n.steps), 
-                                          sapply(args.call.filecheck$dimensions[[1]], function(x) paste(x, collapse='-')))
+                                          sapply(args.call.filecheck$dimensions[[1]],
+                                                 function(x) paste(x, collapse='-')))
         }
         
         for (g in 1:n.calc.repeat) {
@@ -341,9 +344,10 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
             if (print.status)
               cat(paste(Sys.time(), ' : Starting process for filling dimension: ',
                         paste(dimensions[[ind]][[l]], collapse=','), ' \n', sep = ''))
-            iterpath <- rbind(iterpath, data.frame(time = Sys.time(), var.name = var.name,
-                                                   process = process, step = h, calc.repeat = g
-                                                   , dimensions = paste(dimensions[[ind]][[l]], collapse=','),
+            iterpath <- rbind(iterpath, data.frame(time = Sys.time(), var.name = var.name
+                                                   , process = process, step = h, calc.repeat = g
+                                                   , dimensions = paste(dimensions[[ind]][[l]],
+                                                                        collapse = ','),
                                                    otherdim = NA))
             drop.dim = FALSE
             dims.process        <- dimensions[[ind]][[l]]
@@ -368,7 +372,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 
               
             diminfo.step <- list(dims.process = dims.process, dims.process.id = dims.process.id,
-                                 dims.process.length = dims.process.length, dims.cycle.id = dims.cycle.id,
+                                 dims.process.length = dims.process.length,
+                                 dims.cycle.id = dims.cycle.id,
                                  dims.cycle.length = dims.cycle.length)
             
             ##determine call settings for SSA
@@ -411,7 +416,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
             gapfill.results   <- c(gapfill.results, diminfo.step)
             if (is.null(gapfill.results$reconstruction) && is.null(gapfill.results$data.variances) &&
                 n.steps == 1) {
-              print('No series available for filling and only one step process chosen. Stopping gapfilling.')
+              print(paste('No series available for filling and only one step process',
+                          'chosen. Stopping gapfilling.',  sep = ''))
               file.remove(file.name.copy)
               return(list(finished = FALSE))
             }  
@@ -667,7 +673,8 @@ GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
     var.def.nc(file.con.copy, paste(var.name, '_flag_orig', sep =''), 'NC_BYTE', 
                var.inq.nc(file.con.copy, var.name)$dimids)
     att.put.nc(file.con.copy,  paste(var.name, '_flag_orig', sep =''),'long_name','NC_CHAR',
-               paste('flag indicating original values (1) and filled values (0) in ', var.name, sep = ''))
+               paste('flag indicating original values (1) and filled values (0) in ',
+                     var.name, sep = ''))
     datacube                    <- var.get.nc(file.con.copy, var.name)
     data.flag                   <- array(NA, dim = dim(datacube))
     data.flag[is.na(datacube)]  <- 0
@@ -811,24 +818,24 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
     
     if (calc.parallel) {
       results.parallel = foreach(i = 1:max.cores
-              , .combine = rbindMod
-              , .multicombine = TRUE, .packages = 'spectral.methods') %dopar% GapfillNcdfCoreprocess(
-              iter.nr = i, datacube = datacube,
-              dims.process.id = dims.process.id, datapts.n = datapts.n, args.call.SSA = args.call.SSA,
-              iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
-              print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
-              dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)
+        , .combine = rbindMod
+        , .multicombine = TRUE, .packages = 'spectral.methods') %dopar% GapfillNcdfCoreprocess(
+                                  iter.nr = i, datacube = datacube,
+                                  dims.process.id = dims.process.id, datapts.n = datapts.n, args.call.SSA = args.call.SSA,
+                                  iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
+                                  print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
+                                  dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
+                                  MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)
     } else {
        results.parallel = foreach(i = 1:1
-              , .combine =  rbindMod
-              , .multicombine = TRUE, packages = 'spectral.methods') %do% GapfillNcdfCoreprocess(iter.nr = i, datacube = datacube,
-              dims.process.id = dims.process.id, datapts.n = datapts.n, args.call.SSA = args.call.SSA,
-              iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
-              print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
-              dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-              MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)            
-    }
+         , .combine =  rbindMod
+         , .multicombine = TRUE, packages = 'spectral.methods') %do% GapfillNcdfCoreprocess(iter.nr = i, datacube = datacube,
+                                   dims.process.id = dims.process.id, datapts.n = datapts.n, args.call.SSA = args.call.SSA,
+                                   iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
+                                   print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
+                                   dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
+                                   MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)            
+     }
     data.results.valid.cells <- results.parallel$reconstruction
     data.variances           <- results.parallel$variances
 
