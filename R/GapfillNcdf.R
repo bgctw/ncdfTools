@@ -209,7 +209,6 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       library(raster, warn.conflicts = FALSE, quietly = TRUE)
 
     # necessary variables
-    dimnames(step.chosen) <- list(c('dim','step'), paste('step', 1:max.steps))
     if (process.type == 'variances') {
       step.chosen         <- matrix(NA, 2, max.steps)      
       n.steps             <- max.steps
@@ -221,6 +220,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       step.chosen[1, ]    <- 1
       step.chosen[2, ]    <- 1:n.steps
     }
+    dimnames(step.chosen) <- list(c('dim','step'), paste('step', 1:dim(step.chosen)[2]))
 
     # debugging and information variables
     finished              <- FALSE
