@@ -183,9 +183,9 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     #set seed based on file name
     if (reproducible) {
        file.name.cl <-  gsub('[[:punct:]]', '', file.name)
-       ind.rev      <-  round(seq(1,nchar(file.name.cl),length.out=5),digits=0)
-       seed         <-  as.numeric(paste(match(unlist(strsplit(file.name.cl,''))[ind.rev], 
-                                   c(letters,LETTERS,0:9)) ,collapse='' )   ) 
+       ind.rev      <-  round(seq(1, nchar(file.name.cl), length.out = 5),digits = 0)
+       seed         <-  as.numeric(paste(match(unlist(strsplit(file.name.cl, ''))[ind.rev], 
+                                   c(letters, LETTERS, 0:9)) , collapse = '' )   ) 
     } else {
       seed <- c()
     }
@@ -216,15 +216,18 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       var.steps           <- array(NA, dim = c(max.steps, max(unlist(n.comp)), 
                                    length(dimensions[[1]])))
     } else {
-      n.steps             <- length(amnt.artgaps)
+      n.steps             <- length(dimensions)
       step.chosen[1, ]    <- 1
       step.chosen[2, ]    <- 1:n.steps
     }
+
+    # debugging and information variables
     finished              <- FALSE
     iterpath              <- data.frame(time = Sys.time(), var.name = 'none',
                                         process = 'none', step = 0, calc.repeat = 0,
                                         dimensions = 0,  otherdim = NA)
     included.otherdim     <- rep(FALSE, n.steps)
+    args2SSA              <- list()
 
     
     #check input, check first guess, transfer and check ocean mask
@@ -337,7 +340,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
               amnt.iters.start.loop <- amnt.iters.start[[h]][[1]]
             } else if (process.type == 'variances') {
               if (h == 1)
-                tresh.fill.dc         <- tresh.fill.first[[ind]][[l]]
+                tresh.fill.dc       <- tresh.fill.first[[ind]][[l]]
               amnt.iters.loop       <- c(h, amnt.iters[[1]][[l]][2])
               amnt.iters.start.loop <- c(max(c(1, h - 1)), 1)
             }
@@ -386,7 +389,12 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                 amnt.iters.start = amnt.iters.start.loop,
                 print.stat   = FALSE,
                 plot.results = FALSE,
-                debugging = debugging)         
+                debugging = debugging)
+            if (debugging) {
+              data.step <- list(iterinf = list(process = process, h = h, g = g, l = l), args = args.call.SSA)
+              args2SSA[[length(args2SSA) + 1]] <- data.step
+            }
+            
             ##get first guess
             if (h > 1 && exists('file.name.guess.next')) {
               file.con.guess   <- open.nc(file.name.guess.next)
@@ -484,6 +492,14 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         }
         
         ##determine first guess for next step
+        ## FIXME remove after debugging
+        if (debugging) {
+          file.name.t <- paste('/Net/Groups/BGI/people/jbuttlar/Scratch/Debug_Gapfill/',
+                               Sys.time(), sep = '') 
+          print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
+          dump.frames(to.file = TRUE, dumpto = file.name.t)
+        }
+          
         if (!is.null(gapfill.results.step$reconstruction)) {
           file.name.guess.curr   <- paste(sub('.nc$', '', file.name),
                                           '_first_guess_step_',formatC(h + 1, 2, flag = '0'),
@@ -558,7 +574,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     close.nc(file.con.orig)
     if (process.type == 'variances') {
       out  <-list(pred.measures = pred.measures, step.chosen = step.chosen, finished = finished,
-                  iterpath = iterpath, included.otherdim = included.otherdim)
+                  iterpath = iterpath, included.otherdim = included.otherdim, SSAcallargs = args2SSA)
     } else {
       out  <- list(finished = finished)
     }
