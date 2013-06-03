@@ -227,7 +227,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     iterpath              <- data.frame(time = Sys.time(), var.name = 'none',
                                         process = 'none', step = 0, calc.repeat = 0,
                                         dimensions = 0,  otherdim = NA, fg.filename.nxt = '',
-                                        fg.used = FALSE)
+                                        fg.used = FALSE, stringsAsFactors = FALSE)
     included.otherdim     <- rep(FALSE, n.steps)
     args2SSA              <- list()
 
