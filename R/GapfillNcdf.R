@@ -226,7 +226,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     finished              <- FALSE
     iterpath              <- data.frame(time = Sys.time(), var.name = 'none',
                                         process = 'none', step = 0, calc.repeat = 0,
-                                        dimensions = 0,  otherdim = NA)
+                                        dimensions = 0,  otherdim = NA, fg.filename.nxt = '',
+                                        fg.used = FALSE)
     included.otherdim     <- rep(FALSE, n.steps)
     args2SSA              <- list()
 
@@ -352,7 +353,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                                                    , process = process, step = h, calc.repeat = g
                                                    , dimensions = paste(dimensions[[ind]][[l]],
                                                                         collapse = ','),
-                                                   otherdim = NA))
+                                                   otherdim = NA,  fg.filename.nxt= NA, fg.used = FALSE))
             drop.dim = FALSE
             dims.process        <- dimensions[[ind]][[l]]
             dims.process.id     <- dims.info[match(dims.process, dims.info$name), 1]
@@ -401,6 +402,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
               file.con.guess   <- open.nc(file.name.guess.next)
               first.guess      <- var.get.nc(file.con.guess, var.name)
               close.nc(file.con.guess)
+              iterpath[dim(iterpath)[1], 'fg.filename.nxt'] <- file.name.guess.next
+              iterpath[dim(iterpath)[1], 'fg.used'] <- TRUE            
             }
             ##run calculation
             ##TODO try to stop foreach loop at first error message!
