@@ -376,7 +376,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
             slices.n            <- prod(dims.cycle.length)
 
               
-            diminfo.step <- list(dims.process = dims.process, dims.process.id = dims.process.id,
+            diminfo.step <- list(dims.process = dims.process,
+                                 dims.process.id = dims.process.id,
                                  dims.process.length = dims.process.length,
                                  dims.cycle.id = dims.cycle.id,
                                  dims.cycle.length = dims.cycle.length)
@@ -393,7 +394,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                 plot.results = FALSE,
                 debugging = debugging)
             if (debugging) {
-              data.step <- list(iterinf = list(process = process, h = h, g = g, l = l), args = args.call.SSA)
+              data.step <- list(iterinf = list(process = process, h = h, g = g, l = l),
+                                args = args.call.SSA)
               args2SSA[[length(args2SSA) + 1]] <- data.step
             }
             
@@ -408,7 +410,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
             ##run calculation
             ##TODO try to stop foreach loop at first error message!
             args.Datacube <- c(list(datacube = datacube, max.cores = max.cores,
-                    tresh.fill.dc = tresh.fill.dc,first.guess = first.guess,
+                    tresh.fill.dc = tresh.fill.dc, first.guess = first.guess,
                     dims.process.id = dims.process.id, dims.cycle.id = dims.cycle.id,
                     dims.process = dims.process, dims.cycle = dims.cycle, 
                     print.status = print.status, datapts.n = datapts.n, dims.info = dims.info,
@@ -505,10 +507,6 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         }
           
         if (!is.null(gapfill.results.step$reconstruction)) {
-          file.name.guess.curr   <- paste(sub('.nc$', '', file.name),
-                                          '_first_guess_step_',formatC(h + 1, 2, flag = '0'),
-                                          '.nc', sep = '')
-          file.con.guess.next    <- open.nc(file.name.guess.curr, write = TRUE)
           results.reconstruction <- gapfill.results.step$reconstruction
           
           ## use first guess from other dimensions in case of too gappy series
@@ -548,9 +546,13 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
           ##save first guess data
           if (drop.dim)
             results.reconstruction <- drop(results.reconstruction)
+          file.name.guess.curr   <- paste(sub('.nc$', '', file.name),
+                                          '_first_guess_step_', formatC(h + 1, 2, flag = '0'),
+                                          '.nc', sep = '')
+          file.con.guess.next    <- open.nc(file.name.guess.curr, write = TRUE)         
           var.put.nc(file.con.guess.next, var.name, results.reconstruction)
           close.nc(file.con.guess.next)
-          step.use.frst.guess  <- step.chosen['step', max(which(!is.na(step.chosen['step',])))]
+          step.use.frst.guess  <- min(c(h, step.chosen['step', max(which(!is.na(step.chosen['step',])))]))
           file.name.guess.next <- paste(sub('.nc$', '', file.name), '_first_guess_step_',
                                         formatC(step.use.frst.guess + 1, 2, flag = '0'), '.nc', sep = '')
         }
@@ -625,7 +627,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     ##example settings for 4 steps, stepwise and alternating between temporal and spatial
     dimensions       = list(list('time'), list(c('longitude','latitude')), list('time'), list(c('longitude','latitude')))
     amnt.iters       = list(list(c(1,5)), list(c(1,5)),                    list(c(2,5)), list(c(2,5)))
-    amnt.iters.start = list(list(c(1,1)), list(c(1,1)),                    list(c(2,1)), list(c(4,1)))
+    amnt.iters.start = list(list(c(1,1)), list(c(1,1)),                    list(c(2,1)), list(c(2,1)))
     amnt.artgaps     = list(list(c(0,0)), list(c(0,0)),                    list(c(0,0)), list(c(0,0)))
     size.biggap      = list(list(0),      list(0),                         list(0),      list(0))
     n.comp           = list(list(15),     list(15),                        list(15),     list(15))
