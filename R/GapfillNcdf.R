@@ -344,7 +344,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
               if (h == 1)
                 tresh.fill.dc       <- tresh.fill.first[[ind]][[l]]
               amnt.iters.loop       <- c(h, amnt.iters[[1]][[l]][2])
-              amnt.iters.start.loop <- c(max(h, 1)
+              amnt.iters.start.loop <- c(max(h, 1))
             }
             if (print.status)
               cat(paste(Sys.time(), ' : Starting process for filling dimension: ',
