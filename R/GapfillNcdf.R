@@ -581,7 +581,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       out  <-list(pred.measures = pred.measures, step.chosen = step.chosen, finished = finished,
                   iterpath = iterpath, included.otherdim = included.otherdim, SSAcallargs = args2SSA)
     } else {
-      out  <- list(finished = finished)
+      out  <- list(finished = finished, args2SSA = args2SSA, iterpath = iterpath)
     }
     return(out)
   }, ex = function(){
@@ -945,7 +945,8 @@ GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length,
       args.expand.grid[[d]] <- 1:dim(datacube)[dims.cycle.id[d] + 1]    
     iter.grid.all <- cbind(1:slices.n, as.matrix(do.call("expand.grid",
                                                          args.expand.grid)))
-    ind.process.cube     <- array(iter.grid.all[slices.process, ], dim = c(sum(slices.process), length(dims.cycle.id) + 1))
+    ind.process.cube     <- array(iter.grid.all[slices.process, ],
+                                  dim = c(sum(slices.process), length(dims.cycle.id) + 1))
     index.MSSAseries     <- (1:slices.n)[slices.process]
   }
   max.cores              <- min(c(iters.n, max.cores))
