@@ -393,11 +393,10 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                 print.stat   = FALSE,
                 plot.results = FALSE,
                 debugging = debugging)
-            if (debugging) {
-              data.step <- list(iterinf = list(process = process, h = h, g = g, l = l),
-                                args = args.call.SSA)
-              args2SSA[[length(args2SSA) + 1]] <- data.step
-            }
+            data.step <- list(iterinf = list(process = process, h = h, g = g, l = l),
+                              args = args.call.SSA)
+            args2SSA[[length(args2SSA) + 1]] <- data.step
+            
             
             ##get first guess
             if (h > 1 && exists('file.name.guess.next')) {
