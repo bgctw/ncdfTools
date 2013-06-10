@@ -210,17 +210,21 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 
     # necessary variables
     if (process.type == 'variances') {
-      step.chosen         <- matrix(NA, 2, max.steps)      
+      step.chosen         <- matrix(NA, 2, max.steps)
+      iter.chosen         <- matrix(NA, 3, max.steps)      
       n.steps             <- max.steps
       var.steps           <- array(NA, dim = c(max.steps, max(unlist(n.comp)), 
                                          length(dimensions[[1]])))
     } else {
       n.steps             <- length(dimensions)
       step.chosen         <- matrix(NA, 2, n.steps)
+      iter.chosen         <- matrix(NA, 3, n.steps)      
       step.chosen[1, ]    <- 1
       step.chosen[2, ]    <- 1:n.steps
     }
     dimnames(step.chosen) <- list(c('dim','step'), paste('step', 1:dim(step.chosen)[2]))
+    dimnames(iter.chosen) <- list(c('outer','inner', 'amnt.na'), paste('step', 1:dim(iter.chosen)[2]))
+
 
     # debugging and information variables
     finished              <- FALSE
@@ -497,14 +501,6 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         }
         
         ##determine first guess for next step
-        ## FIXME remove after debugging
-        if (debugging) {
-          file.name.t <- paste('/Net/Groups/BGI/people/jbuttlar/Scratch/Debug_Gapfill/',
-                               Sys.time(), sep = '') 
-          print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
-          dump.frames(to.file = TRUE, dumpto = file.name.t)
-        }
-          
         if (!is.null(gapfill.results.step$reconstruction)) {
           results.reconstruction <- gapfill.results.step$reconstruction
           
@@ -557,6 +553,21 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         }
         ##TODO: add break criterium to get out of h loop
         ##      check what happens if GapfillSSA stops further iterations due to limiting groups of eigentriples
+
+        
+        
+        ##FIXME
+        # remove after implementation of iter.chosen scheme
+        if (debugging) {
+          file.name.t <- paste('/Net/Groups/BGI/people/jbuttlar/Scratch/Test_iter_chosen/',
+                               Sys.time(), sep = '') 
+          print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
+          dump.frames(to.file = TRUE, dumpto = file.name.t)
+        }
+
+        ##save iter.chosen information
+        iter.chosen[1:2, h] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
+        iter.chosen[3, h]   <- sum(is.na(gapfill.results.step$iters.chosen))
       }
     }
       ## stop parallel workers
@@ -578,10 +589,12 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     finished <- TRUE
     close.nc(file.con.orig)
     if (process.type == 'variances') {
-      out  <-list(pred.measures = pred.measures, step.chosen = step.chosen, finished = finished,
-                  iterpath = iterpath, included.otherdim = included.otherdim, SSAcallargs = args2SSA)
+      out  <-list(pred.measures = pred.measures, step.chosen = step.chosen,
+                  finished = finished, iterpath = iterpath, included.otherdim = included.otherdim,
+                  SSAcallargs = args2SSA, iter.chosen = iter.chosen)
     } else {
-      out  <- list(finished = finished, args2SSA = args2SSA, iterpath = iterpath)
+      out  <- list(finished = finished, args2SSA = args2SSA, iterpath = iterpath,
+                   iter.chosen = iter.chosen)
     }
     return(out)
   }, ex = function(){
@@ -859,6 +872,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
      }
     data.results.valid.cells <- results.parallel$reconstruction
     data.variances           <- results.parallel$variances
+    iters.chosen             <- results.parallel$iters.chosen
 
     #fill all values to results array
     if (print.status)
@@ -883,7 +897,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
               slices.without.gaps = slices.without.gaps, slices.process = slices.process, 
               max.cores = max.cores, slices.process = slices.process, slices.too.gappy = slices.too.gappy,
               slices.constant = slices.constant, values.constant = values.constant, 
-              slices.excluded = slices.excluded))
+              slices.excluded = slices.excluded, iters.chosen = iters.chosen))
 }
 
 
@@ -985,10 +999,12 @@ rbindMod <- function(...)
       variances      <- matrix(unlist(lapply(dummy, function(x)as.vector(t(x[[2]])))),
                                ncol = vars.amnt, byrow = TRUE)
       iloops.converged<- unlist(lapply(dummy, function(x)as.vector(t(x[[3]]))))
+      iters.chosen   <- matrix(unlist(lapply(dummy, function(x)as.vector(t(x[[4]])))),
+                               ncol = 2, byrow = TRUE)
       'finished'
     })
     return(list(reconstruction = reconstruction, variances = variances, 
-                iloops.converged = iloops.converged))
+                iloops.converged = iloops.converged, iters.chosen = iters.chosen))
 
     
 }
@@ -1020,6 +1036,8 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
   data.results.iter <- array(NA, dim = c(n.series.core , datapts.n))
   variances         <- array(NA, dim = c(diff(iter.ind) + 1, args.call.SSA[['n.comp']]))
   iloops.converged  <- array(NA, dim = c(diff(iter.ind) + 1))
+  iters.chosen      <- array(NA, dim = c(diff(iter.ind) + 1, 2))
+
   
   for (n in 1:(diff(iter.ind) + 1)) {
     ind.total       <- rep(FALSE, iters.n)
@@ -1069,7 +1087,8 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
                                                  (sum( n.series.steps[1 : max(c(n - 1, 1))]))))  
       data.results.iter[ind.results, ]  <- array(rcstr.local, dim = c(n.series.steps[n], datapts.n))
       variances[n, ]                    <- as.vector(series.filled$variances)
-      iloops.converged[n]               <- sum(!(series.filled$iloop_converged))     
+      iloops.converged[n]               <- sum(!(series.filled$iloop_converged))
+      iters.chosen[n, ]                 <- series.filled$iter.chosen
       'completed'      
     })  
     if (class(data.results.iter.t) == 'try-error') {
@@ -1095,5 +1114,5 @@ GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube,
                   round(n / (diff(iter.ind) + 1) * 100), '%. \n', sep=''))
   }
   return(list(reconstruction = data.results.iter, variances = variances, 
-              lioops.converged = iloops.converged))
+              lioops.converged = iloops.converged, iters.chosen = iters.chosen))
 }
