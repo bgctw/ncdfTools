@@ -679,6 +679,13 @@ GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
 {
   if (print.status)
     cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep = ''))
+
+  # delete files
+  file.remove(paste('results_', file.name, '.RData', sep = ''))
+  file.remove(list.files()[grepl(paste(sub('[.]nc', '', file.name), '_first_guess_', sep = ''),
+                                 list.files())])
+
+  #create new files
   file.name.copy     <- paste(sub('[.]nc$','', file.name), '_gapfill.nc', sep = '')
   copied             <- file.copy(from = file.name, to = file.name.copy, overwrite = TRUE)
   Sys.chmod(file.name.copy, mode = "0777")
