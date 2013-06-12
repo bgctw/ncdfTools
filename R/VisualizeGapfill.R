@@ -128,7 +128,7 @@ VisualizeGapfill <- function(
       }   
     }
   }
-  LabelMargins(c(rev(pars.plot)), las = 3, side = 2, outer = TRUE, cex= 2, line = .2)
+  LabelMargins(pars.plot, las = 3, side = 2, outer = TRUE, cex= 2, line = .2)
   LabelMargins(c('orig', 'filled', 'orig - filled'), side = 3, outer = TRUE, cex = 2, line =0.5)
 
   if(names(dev.cur()) == 'X11')
@@ -136,8 +136,8 @@ VisualizeGapfill <- function(
   layout(matrix(c(1:2),byrow=TRUE,ncol=1),
          height=c(1,1))
   par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(2, 0, 0, 2), oma = c(0, 2, 4, 0))
-  breaks = seq(min(cube.info.filled['min', , ], na.rm = TRUE),
-    max(cube.info.filled['max', , ], na.rm = TRUE), length.out = 500)
+  breaks = seq(min(c(cube.info.orig['min', , ], cube.info.filled['min', , ]), na.rm = TRUE),
+    max(c(cube.info.orig['max', , ], cube.info.filled['max', , ]), na.rm = TRUE), length.out = 200)
   hst.orig    <- hist(data.orig, breaks = breaks, plot = FALSE)
   hst.filled  <- hist(data.filled, breaks = breaks, plot = FALSE)
   plot.bg(rgb(.5,.5,.5))
