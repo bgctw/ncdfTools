@@ -76,6 +76,19 @@ VisualizeGapfill <- function(
     cube.info.agg[dataset, 'ratio_continous']  <- sum(data.t['ratio na inner', , ]==0, na.rm = TRUE) / prod(dim(data.t['ratio na inner', , ]))
   }
 
+
+  ## check consistency
+  range.filled <- range(c(cube.info.filled['min', , ], cube.info.filled['max', , ]), na.rm = TRUE)
+  range.orig   <- range(c(cube.info.orig['min', , ], cube.info.orig['max', , ]), na.rm = TRUE)
+
+  if (!identical((range.orig <= range.filled), c(FALSE, TRUE)))
+    stop('Range orig is bigger than filled! Check code and input files!')
+  ratios.wrong <- sum(cube.info.agg['filled', c('ratio_full', 'ratio_continous', 'ratio_partial', 'ratio_empty')] * c(1,1,-1,-1) <
+                      cube.info.agg['orig', c('ratio_full', 'ratio_continous', 'ratio_partial', 'ratio_empty')] * c(1,1,-1,-1) )
+  if(ratios.wrong > 0)
+    stop('Filled dataset seems to have more missings than orig. Check code and input data!')
+ 
+  
   ## do plots
   status.report('Doing plots ...')
   grids.valid   <- which(cube.info.orig['ratio na', , ] < 1, arr.ind = TRUE)
@@ -130,14 +143,14 @@ VisualizeGapfill <- function(
   }
   LabelMargins(pars.plot, las = 3, side = 2, outer = TRUE, cex= 2, line = .2)
   LabelMargins(c('orig', 'filled', 'orig - filled'), side = 3, outer = TRUE, cex = 2, line =0.5)
-
+  
   if(names(dev.cur()) == 'X11')
     x11()
   layout(matrix(c(1:2),byrow=TRUE,ncol=1),
          height=c(1,1))
   par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(2, 0, 0, 2), oma = c(0, 2, 4, 0))
-  breaks = seq(min(c(cube.info.orig['min', , ], cube.info.filled['min', , ]), na.rm = TRUE),
-    max(c(cube.info.orig['max', , ], cube.info.filled['max', , ]), na.rm = TRUE), length.out = 200)
+  breaks = seq(min(cube.info.filled['min', , ], na.rm = TRUE),
+               max(cube.info.filled['max', , ], na.rm = TRUE), length.out = 200)
   hst.orig    <- hist(data.orig, breaks = breaks, plot = FALSE)
   hst.filled  <- hist(data.filled, breaks = breaks, plot = FALSE)
   plot.bg(rgb(.5,.5,.5))
