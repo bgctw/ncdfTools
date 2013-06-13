@@ -681,9 +681,13 @@ GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
     cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep = ''))
 
   # delete files
-  file.remove(paste('results_', file.name, '.RData', sep = ''))
-  file.remove(list.files()[grepl(paste(sub('[.]nc', '', file.name), '_first_guess_', sep = ''),
-                                 list.files())])
+  file.results.name <- paste('results_', file.name, '.RData', sep = '')
+  if (file.exists(file.results.name))
+    file.remove(file.results.name)
+  files.steps <- list.files()[grepl(sub('[.]', '[.]', paste(sub('[.]nc', '', file.name), '_first_guess_', sep = '')),
+                                 list.files())]
+  if (length(files.steps) > 0)
+    file.remove(files.steps)
 
   #create new files
   file.name.copy     <- paste(sub('[.]nc$','', file.name), '_gapfill.nc', sep = '')
@@ -729,8 +733,7 @@ GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
 
 
 ##################################### save results #############################
-GapfillNcdfSaveResults <- function(args.call.global, datacube, dims.process,  
-                                   dims.cycle.id, dims.process.id, file.name.copy,  
+GapfillNcdfSaveResults<- function(args.call.global, datacube, dims.cycle.id, file.name.copy,  
                                    keep.steps, n.steps, ocean.mask, print.status,
                                    process.cells, reconstruction, slices.without.gaps,
                                    var.name, drop.dim, var.names)
@@ -752,11 +755,10 @@ GapfillNcdfSaveResults <- function(args.call.global, datacube, dims.process,
                                                  dims = dims.cycle.id + 1)
     data.results.final[ind.array] <- datacube[ind.array]
   }
-  if (sum(!is.na(match(dims.process, c('longitude','latitude')))) == 2 & 
-      length(ocean.mask) > 0) {
+  if (length(ocean.mask) > 0) {
     ind.array                     <- ind.datacube(datacube = datacube, 
                                                   logical.ind = ocean.mask, 
-                                                  dims = dims.process.id + 1)
+                                                  dims = c(1,2))
     data.results.final[ind.array] <- NA
   }
 
