@@ -12,25 +12,26 @@ date.ncdf2R  =  function(
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
-    if (class(time.source) == 'NetCDF') {
-        time.units      <- ncdf.get.attinfo(time.source, 'time')[, 'value'][ncdf.get.attinfo(time.source, 'time')[, 'name'] == 'units']
-        origin.file     <- try({as.POSIXct(sub('^.*since ', '', time.units), tz = 'UTC')}, silent = TRUE)
-        if ((class(origin.file) == 'try-error') || !(sub(' since.*$', '', time.units) == 'days')) {
-          if(!interactive())
-            cat('Date format in ncdf file is in a non implemented format.\n')
-          return(var.get.nc(time.source, 'time'))
-        }    
-        units          <- sub(' since.*$', '', time.units)
-        date.vec.conv  <- as.numeric(var.get.nc(time.source, 'time') + julian(origin.file, as.POSIXct(origin)))
-    } else {
-        if (!is.numeric(time.source))
-            stop('time.source needs to be numeric if not a ncdf file connection!')
-        date.vec.conv  <- time.source
-    }
-    if (!is.element(units, c('seconds', 'minutes', 'hours', 'days')))
-        stop(paste('Unit ', units, ' is not implemented.', sep  =  ''))
-    multiplicator      <- switch(units, days = 60 * 60 * 24, hours = 60 * 60, minutes = 60, seconds = 1)
-    time.out           <- as.POSIXct(date.vec.conv * multiplicator, origin = origin, tz = 'UTC')
-    time.out                ##value<< POSIXct vector: time vector in native R format
+  if (class(time.source) == 'NetCDF') {
+    attget.result <- try({
+      time.units      <- ncdf.get.attinfo(time.source, 'time')[, 'value'][ncdf.get.attinfo(time.source, 'time')[, 'name'] == 'units']
+      origin.file     <- as.POSIXct(sub('^.*since ', '', time.units), tz = 'UTC')
+    }, silent = TRUE)
+    if ((class(attget.result) == 'try-error') || !(sub(' since.*$', '', time.units) == 'days')) {
+      cat('Date format in ncdf file is in a non implemented format.\n')
+      return(var.get.nc(time.source, 'time'))
+    }    
+    units          <- sub(' since.*$', '', time.units)
+    date.vec.conv  <- as.numeric(var.get.nc(time.source, 'time') + julian(origin.file, as.POSIXct(origin)))
+  } else {
+    if (!is.numeric(time.source))
+      stop('time.source needs to be numeric if not a ncdf file connection!')
+    date.vec.conv  <- time.source
+  }
+  if (!is.element(units, c('seconds', 'minutes', 'hours', 'days')))
+    stop(paste('Unit ', units, ' is not implemented.', sep  =  ''))
+  multiplicator      <- switch(units, days = 60 * 60 * 24, hours = 60 * 60, minutes = 60, seconds = 1)
+  time.out           <- as.POSIXct(date.vec.conv * multiplicator, origin = origin, tz = 'UTC')
+  time.out                ##value<< POSIXct vector: time vector in native R format
 }
 

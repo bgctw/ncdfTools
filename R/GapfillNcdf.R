@@ -1019,9 +1019,7 @@ rbindMod <- function(...)
       'finished'
     })
     return(list(reconstruction = reconstruction, variances = variances, 
-                iloops.converged = iloops.converged, iters.chosen = iters.chosen))
-
-    
+                iloops.converged = iloops.converged, iters.chosen = iters.chosen))    
 }
 
 

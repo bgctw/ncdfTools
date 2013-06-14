@@ -11,6 +11,7 @@ ncdf.get.diminfo  <- function(
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
+  require(RNetCDF)
   n.dims            <- file.inq.nc(file.con)$ndims
   dim.info          <- as.data.frame(matrix(NA, n.dims, 6))
   colnames(dim.info)<- c('id', 'name', 'length', 'min', 'max', 'step')

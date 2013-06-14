@@ -15,9 +15,9 @@ IdentifyCellsNcdfSSA = function(
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {  
-  ##FIXME
-  ## possibility to identify gap less MSSA blocks
-  ## ToDo include possibility to infer slices.continuous max border
+  ## TODO
+  ## -possibility to identify gap less MSSA blocks
+  ## -include possibility to infer slices.continuous max border
   
   require(jannis.misc, warn.conflicts = FALSE, quietly = TRUE)
 
@@ -118,7 +118,6 @@ IdentifyCellsNcdfSSA = function(
   }
   
   # identify constant slices
-
   slices.constant    <- as.vector(apply(datacube, MAR = dims.cycle.id + add.id,
                                         IsSeriesConstant, ratio.const = ratio.const,
                                         tresh.const = tresh.const))
@@ -162,7 +161,3 @@ IdentifyCellsNcdfSSA = function(
               slices.excluded = slices.excluded,
               slices.too.gappy = slices.too.gappy))
 }
-
-
-
-

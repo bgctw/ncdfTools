@@ -49,7 +49,7 @@ CheckInputNcdfSSA <- function(SSAprocess, ...)
 
   if (SSAprocess == 'Decompose' ) {
     if (is.null(args$borders.wl))
-      stop('Argumnet borders.wl needs to be supplied!')
+      stop('Argument borders.wl needs to be supplied!')
     if (!class(args$borders.wl) == 'list')
       stop('Wrong class for borders.wl! Needs to be a list!')
     args.return    <- list(file.con.orig = file.con.orig)    
@@ -113,23 +113,22 @@ CheckInputNcdfSSA <- function(SSAprocess, ...)
       args.check <- c('dimensions', 'n.comp', 'M', 'amnt.artgaps', 'size.biggap', 'tresh.fill')
       n.dims     <- length(args$dimensions[[1]])
       for (m in 1:length(args.check)) {
-        if (length(get(args.check[m])[[1]]) != n.dims)
+        if (length(args[[args.check[m]]][[1]]) != n.dims)
           stop(paste(args.check[m],' needs to be of the same length as dimensions',
                      '[[1]] for process.type == \'variances\'!', sep = ''))
-        if(!(class(get(args.check[m]))) == 'list')
+        if(!(class(args[[args.check[m]]])) == 'list')
           stop(paste('Argument ',args.check[m], ' is not a list!'))
-        if (length(get(args.check[m])) != 1)
+        if (length(args[[args.check[m]]]) != 1)
           stop(paste(args.check[m],' needs to be of length 1 for process.type ==',
                    ' \'variances\' !', sep = ''))
       }
-    }
-    if (args$process.type == 'stepwise') {
+    }  else if (args$process.type == 'stepwise') {
       args.list = c('amnt.artgaps', 'size.biggap', 'n.comp', 'M', 'pad.series', 
         'tresh.fill', 'amnt.iters', 'amnt.iters.start', 'MSSA')
       for (n in 1:length(args.list)) {
-        if(class(args[args.list[n]]) != 'list')
+        if(class(args[[args.list[n]]]) != 'list')
           stop(paste('Argument ', args.list[n], ' is not a list!'))
-        if (length(args[args.list[n]]) != length(args$dimensions[[1]]))
+        if (length(args[[args.list[n]]]) != length(args$dimensions))
           stop(paste('Argument ', args.list[n], ' has to be a list of the same ',
                      'length as dimensions for process.type == \'stepwise\'!'))
         ##      if (! all(sapply(get(args.list[n]), length) == 1 ))

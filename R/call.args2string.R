@@ -17,6 +17,6 @@ call.args2string = function()
     }
     string.args  <- paste(paste(names(args.call),sapply(args.call,extract.names)
                                    ,sep=': '),collapse='; ')
-    ##value<< character string: arguments givesn to function converted into a string.         
+    ##value<< character string: arguments given to function converted into a string.         
     return(string.args)
 }
