@@ -575,16 +575,20 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         stopWorkers(w)
       
       ##save results 
-      GapfillNcdfSaveResults(datacube = datacube, var.names = var.names, 
-                             reconstruction = results.reconstruction,
-                             args.call.global = args.call.global,
-                             slices.without.gaps = gapfill.results.step$slices.without.gaps,
+      GapfillNcdfSaveResults(args.call.global = args.call.global,
+                             datacube = datacube,
                              dims.cycle.id = gapfill.results.step$dims.cycle.id,
-                             ocean.mask = ocean.mask, dims.process = gapfill.results.step$dims.process,
-                             dims.process.id = gapfill.results.step$dims.process.id,
-                             var.name = var.name, process.cells = process.cells,
-                             file.name.copy = file.name.copy, keep.steps = keep.steps, 
-                             print.status = print.status, n.steps = n.steps, drop.dim = drop.dim)
+                             drop.dim = drop.dim,
+                             file.name.copy = file.name.copy,                             
+                             keep.steps = keep.steps,
+                             n.steps = n.steps,
+                             ocean.mask = ocean.mask,
+                             print.status = print.status, 
+                             process.cells = process.cells,
+                             reconstruction = results.reconstruction,
+                             slices.without.gaps = gapfill.results.step$slices.without.gaps,                           
+                             var.name = var.name,
+                             var.names = var.names)
     }
     finished <- TRUE
     close.nc(file.con.orig)
@@ -686,6 +690,7 @@ GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
     file.remove(file.results.name)
   files.steps <- list.files()[grepl(sub('[.]', '[.]', paste(sub('[.]nc', '', file.name), '_first_guess_', sep = '')),
                                  list.files())]
+  files.steps <- files.steps[files.steps != file.name]
   if (length(files.steps) > 0)
     file.remove(files.steps)
 
@@ -733,10 +738,11 @@ GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
 
 
 ##################################### save results #############################
-GapfillNcdfSaveResults<- function(args.call.global, datacube, dims.cycle.id, file.name.copy,  
-                                   keep.steps, n.steps, ocean.mask, print.status,
-                                   process.cells, reconstruction, slices.without.gaps,
-                                   var.name, drop.dim, var.names)
+GapfillNcdfSaveResults<- function(args.call.global, datacube, dims.cycle.id,
+                                  drop.dim, file.name.copy, keep.steps, n.steps,
+                                  ocean.mask, print.status, process.cells,
+                                  reconstruction, slices.without.gaps, var.name,
+                                  var.names)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that saves the results ncdf file. 
 ##seealso<<
@@ -868,7 +874,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                                   iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
                                   print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
                                   dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-                                  MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)
+                                  file.name = file.name)
     } else {
        results.parallel = foreach(i = 1:1
          , .combine =  rbindMod
@@ -877,7 +883,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                                    iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
                                    print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
                                    dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-                                   MSSA.blocksize = MSSA.blocksize, h = h, file.name = file.name)            
+                                   file.name = file.name)            
      }
     data.results.valid.cells <- results.parallel$reconstruction
     data.variances           <- results.parallel$variances
@@ -1020,11 +1026,11 @@ rbindMod <- function(...)
 
 
 ########################## gapfill function for single core ####################
-GapfillNcdfCoreprocess <- function(iter.nr = i, print.status = TRUE, datacube, 
-                                   dims.process.id, iters.n, dims.cycle.length, 
-                                   dims.cycle.id, iter.gridind, ind.process.cube, 
-                                   first.guess, datapts.n, args.call.SSA, file.name, 
-                                   dims.process.length, MSSA, MSSA.blocksize, h)
+GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, dims.cycle.length,
+                                   dims.cycle.id, dims.process.id,
+                                   dims.process.length, file.name, first.guess,
+                                   datapts.n, ind.process.cube, iter.gridind,
+                                   iter.nr, iters.n, print.status)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf performs each individual series/grid 
 ##          extracion and handing it over to GapfillSSA
