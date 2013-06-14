@@ -1028,7 +1028,7 @@ GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, dims.cycle.length,
                                    dims.cycle.id, dims.process.id,
                                    dims.process.length, file.name, first.guess,
                                    datapts.n, ind.process.cube, iter.gridind,
-                                   iter.nr, iters.n, print.status)
+                                   iter.nr, iters.n, MSSA, print.status)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf performs each individual series/grid 
 ##          extracion and handing it over to GapfillSSA
