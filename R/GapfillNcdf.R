@@ -693,8 +693,9 @@ GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
   file.results.name <- paste('results_', file.name, '.RData', sep = '')
   if (file.exists(file.results.name))
     file.remove(file.results.name)
-  files.steps <- list.files()[grepl(sub('[.]', '[.]', paste(sub('[.]nc', '', file.name), '_first_guess_', sep = '')),
-                                 list.files())]
+  files.steps <- list.files()[grepl(sub('[.]', '[[:punct:]]{1}',
+                                        paste(sub('[.]nc$', '', file.name),
+                                              '_first_guess_', sep = '')), list.files())]
   files.steps <- files.steps[files.steps != file.name]
   if (length(files.steps) > 0)
     file.remove(files.steps)
