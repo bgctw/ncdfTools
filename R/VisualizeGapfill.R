@@ -81,7 +81,7 @@ VisualizeGapfill <- function(
   range.filled <- range(c(cube.info.filled['min', , ], cube.info.filled['max', , ]), na.rm = TRUE)
   range.orig   <- range(c(cube.info.orig['min', , ], cube.info.orig['max', , ]), na.rm = TRUE)
 
-  if (!identical((range.orig <= range.filled), c(FALSE, TRUE)))
+  if (sum((c(-1, 1) * range.orig) <= (c(-1 , 1) * range.filled)) != 2)   # if range orig exceeds range filled
     stop('Range orig is bigger than filled! Check code and input files!')
   ratios.wrong <- sum(cube.info.agg['filled', c('ratio_full', 'ratio_continous', 'ratio_partial', 'ratio_empty')] * c(1,1,-1,-1) <
                       cube.info.agg['orig', c('ratio_full', 'ratio_continous', 'ratio_partial', 'ratio_empty')] * c(1,1,-1,-1) )
