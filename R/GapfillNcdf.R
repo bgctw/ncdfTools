@@ -86,7 +86,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                       ##             value to zero would mean that also slices/series without any "real" values are tried to
                       ##             be filled with the "first guess" value of the last iteration alone. This can only be done
                       ##             if the cross validation scheme is switched off (e.g. by setting amnt.artgaps and size.biggap
-                      ##             to zero
+                      ##             to zero.
 , tresh.fill.first = list(tresh.fill[[1]])    ##<< single numeric value between 0 and 1 indicating a different treshold for the
                       ##             run when no first guess values from previous runs are available. As this can be specified anyway
                       ##             in the 'stepwise' sheme, supplying this value is only reasonable in the 'variances' sheme.
@@ -688,17 +688,6 @@ GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
 {
   if (print.status)
     cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep = ''))
-
-  # delete files
-  file.results.name <- paste('results_', file.name, '.RData', sep = '')
-  if (file.exists(file.results.name))
-    file.remove(file.results.name)
-  files.steps <- list.files()[grepl(sub('[.]', '[[:punct:]]{1}',
-                                        paste(sub('[.]nc$', '', file.name),
-                                              '_first_guess_', sep = '')), list.files())]
-  files.steps <- files.steps[files.steps != file.name]
-  if (length(files.steps) > 0)
-    file.remove(files.steps)
 
   #create new files
   file.name.copy     <- paste(sub('[.]nc$','', file.name), '_gapfill.nc', sep = '')
