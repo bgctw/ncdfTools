@@ -317,7 +317,6 @@ DecomposeNcdf = structure(function(
 }
 , ex = function(){
   ## Example for the filtering of monthly data
-  setwd('<path to input file>')
   filename   <- '<filename>.nc'
   # Extract yearly cycle, intra annual part and high frequency residual in several steps
   borders.wl <- list(a = c(10, 14)
