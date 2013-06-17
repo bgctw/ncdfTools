@@ -567,11 +567,11 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 #        }
 
         ##save iter.chosen information
-        if (!is.null(gapfill.results.step$iters.chosen)) {
+        if (sum(is.na(gapfill.results.step$iters.chosen)) == 2) {
           iter.chosen[1:2, h] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
           iter.chosen[3, h]   <- sum(is.na(gapfill.results.step$iters.chosen))
         } else {
-          iter.chosen[,h] <- 9999
+          iter.chosen[, h] <- 9999
         }
       }
     }
