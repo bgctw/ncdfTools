@@ -423,12 +423,13 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                     MSSA.blck.trsh = MSSA.blck.trsh, file.name = file.name), 
                     list(args.call.SSA = args.call.SSA), ratio.const = ratio.const,
                     tresh.const = tresh.const)
-            if (g > 1)
+            if (g > 1) {
               args.Datacube <- c(args.Datacube, list(slices.process = slices.process,
                       slices.constant = slices.constant,
                       values.constant = values.constant, 
                       slices.excluded = slices.excluded,
                       slices.without.gaps = slices.without.gaps))
+            }
             gapfill.results   <- do.call(GapfillNcdfDatacube, args.Datacube)
             gapfill.results   <- c(gapfill.results, diminfo.step)
             if (is.null(gapfill.results$reconstruction) && is.null(gapfill.results$data.variances) &&
@@ -558,16 +559,20 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         
         ##FIXME
         # remove after implementation of iter.chosen scheme
-        if (debugging) {
-          file.name.t <- paste('/Net/Groups/BGI/people/jbuttlar/Scratch/Test_iter_chosen/',
-                               Sys.time(), sep = '') 
-          print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
-          dump.frames(to.file = TRUE, dumpto = file.name.t)
-        }
+#        if (debugging) {
+#          file.name.t <- paste('/Net/Groups/BGI/people/jbuttlar/Scratch/Test_iter_chosen/',
+#                               Sys.time(), sep = '') 
+#          print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
+#          dump.frames(to.file = TRUE, dumpto = file.name.t)
+#        }
 
         ##save iter.chosen information
-        iter.chosen[1:2, h] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
-        iter.chosen[3, h]   <- sum(is.na(gapfill.results.step$iters.chosen))
+        if (!is.null(gapfill.results.step$iters.chosen)) {
+          iter.chosen[1:2, h] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
+          iter.chosen[3, h]   <- sum(is.na(gapfill.results.step$iters.chosen))
+        } else {
+          iter.chosen[,h] <- 9999
+        }
       }
     }
       ## stop parallel workers
@@ -847,6 +852,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
   if (sum(slices.process) == 0) {
     data.results.finished <- array(NA, dim(datacube))
     data.variances        <- NULL
+    iters.chosen          <- c(NA, NA)
   } else {
     results.crtitercube  <- do.call(GapfillNcdfCreateItercube, 
                                     list(datacube = datacube, 
@@ -856,8 +862,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                                          dims.cycle.id = dims.cycle.id, 
                                          max.cores = max.cores, MSSA = MSSA, 
                                          MSSA.blocksize = MSSA.blocksize,
-                                         MSSA.blck.trsh = MSSA.blck.trsh,
-                                         tresh.fill.dc = tresh.fill.dc))
+                                         MSSA.blck.trsh = MSSA.blck.trsh))
     AttachList(results.crtitercube)                                                           
     
     #perform (parallelized) calculation
@@ -922,7 +927,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
 
 GapfillNcdfCreateItercube  <- function(datacube, iters.n, dims.cycle.length, 
     dims.cycle.id, slices.process, max.cores, slices.n, MSSA, MSSA.blocksize,
-    MSSA.blck.trsh, tresh.fill.dc)
+    MSSA.blck.trsh)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that creates the index array used
 ##          in the foreach iterations to extract data.     
