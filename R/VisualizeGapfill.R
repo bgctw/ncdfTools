@@ -50,7 +50,7 @@ VisualizeGapfill <- function(
     var.prefill  <- ncdf.get.varname(file.prefill)
     data.prefill <-  TransposeNcdfCube(data.object = con.prefill, var.name = var.prefill)  
   }
-  
+
 
   
   
@@ -83,8 +83,8 @@ VisualizeGapfill <- function(
 
   if (sum((c(-1, 1) * range.orig) <= (c(-1 , 1) * range.filled)) != 2)   # if range orig exceeds range filled
     stop('Range orig is bigger than filled! Check code and input files!')
-  ratios.wrong <- sum(cube.info.agg['filled', c('ratio_full', 'ratio_continous', 'ratio_partial', 'ratio_empty')] * c(1,1,-1,-1) <
-                      cube.info.agg['orig', c('ratio_full', 'ratio_continous', 'ratio_partial', 'ratio_empty')] * c(1,1,-1,-1) )
+  ratios.wrong <- sum(cube.info.agg['filled', c('ratio_full', 'ratio_continous', 'ratio_empty')] * c(1,1,-1) <
+                      cube.info.agg['orig', c('ratio_full', 'ratio_continous', 'ratio_empty')] * c(1,1,-1) )
   if(ratios.wrong > 0)
     stop('Filled dataset seems to have more missings than orig. Check code and input data!')
  
