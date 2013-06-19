@@ -1,8 +1,7 @@
 IdentifyCellsNcdfSSA = function(
 ##title<< helper function for Ncdf SSA algorithms 
     dims.cycle.id, dims.process.id, datacube, ratio.const, tresh.const , print.status,
-    slices.n, algorithm, file.name, 
-    g = c() ,process.cells = c('gappy','all')[1], dims.cycle = c(), 
+    slices.n, algorithm,  g = c() ,process.cells = c('gappy','all')[1], dims.cycle = c(), 
     args.call.SSA = list(), tresh.fill.dc = 0, ratio.test.t =1, first.guess = 'mean', 
     ocean.mask = c(), dims.process = c(), dims.process.length = 0, 
     slices.without.gaps = rep(FALSE, slices.n), slices.too.gappy = rep(FALSE, slices.n),

@@ -13,6 +13,7 @@ CreateLatLongTime <- function(
   , add_offset = 0         ##<< numeric: offset
   , type.var = 'NC_DOUBLE' ##<< character string: type of the data
   , missing_value = -9999  ##<< numeric: missing data value
+  , units = '[]'
 ) {
   require(RNetCDF)
   file.con  <- create.nc(file.name)
@@ -20,7 +21,7 @@ CreateLatLongTime <- function(
   if (0 != lat.length) {
     dim.def.nc(file.con, 'latitude', dimlength = lat.length)
     var.def.nc(file.con, 'latitude','NC_DOUBLE', 'latitude')
-    ncdf.def.all.atts(file.con,'latitude',atts = list(long_name = "latitude",units = "degrees_north" ,
+    ncdf.def.all.atts(file.con, 'latitude', atts = list(long_name = "latitude",units = "degrees_north" ,
             standard_name = "latitude"))       
     if (length(lat.values) > 0)
       var.put.nc(file.con, 'latitude', lat.values[order(lat.values, decreasing = TRUE)])  
@@ -50,8 +51,7 @@ CreateLatLongTime <- function(
   dims.used  <- c('latitude', 'longitude', 'time')[c(0 != lat.length, 0 != long.length, 0 != time.length)]
   for (var.name.t in var.names) {
     var.def.nc <- var.def.nc(file.con, var.name.t, type.var, dims.used)
-    ncdf.def.all.atts(file.con, var.name.t, atts = list(scale_factor = scale_factor, add_offset = add_offset,
-                                              missing_value = missing_value, `_FillValue` = missing_value, units = units))
+    ncdf.def.all.atts(file.con, var.name.t, atts = list(scale_factor = scale_factor, add_offset = add_offset, missing_value = missing_value, `_FillValue` = missing_value, units = units))
   }
   hist_string <- paste('File created on ', Sys.time(), ' by ', Sys.info()['user'] , sep = '')
   att.put.nc(file.con, 'NC_GLOBAL', 'history', 'NC_CHAR', hist_string)

@@ -77,7 +77,9 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 , size.biggap = rep(list(   rep(list(20) , times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of single integers: length of the big artificial gaps (in time steps) (see ?GapfillSSA for details)
 , tresh.const = 1e-12 ##<< numeric: value below which abs(values) are assumed to be constant and excluded
-                      ##             from the decomposition                                  
+                      ##             from the decomposition.
+, tresh.converged = 0.9 ##<< numeric: ratio (0-1): determines the amount of SSA iterations that have to converge so that no error
+                      ##             is produced.
 , tresh.fill = c(list(list(0.1)), rep(list(list(0,0)), length(dimensions) - 1))
                       ##<< list of numeric fractions (0-1): This value determines the fraction of valid values below which
                       ##             series/grids will not be filled in this step and are filled with the first guess from the
@@ -183,9 +185,12 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     #set seed based on file name
     if (reproducible) {
        file.name.cl <-  gsub('[[:punct:]]', '', file.name)
-       ind.rev      <-  round(seq(1, nchar(file.name.cl), length.out = 5),digits = 0)
+       ind.rev      <-  round(seq(1, nchar(file.name.cl), length.out = 5), digits = 0)
        seed         <-  as.numeric(paste(match(unlist(strsplit(file.name.cl, ''))[ind.rev], 
-                                   c(letters, LETTERS, 0:9)) , collapse = '' )   ) 
+                                   c(letters, LETTERS, 0:9)) , collapse = '' )   )
+       if (print.status)
+         cat(paste(Sys.time(), ' : Using seed ', seed, ' for calculations.\n', sep=''))
+       
     } else {
       seed <- c()
     }
@@ -209,16 +214,19 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       library(raster, warn.conflicts = FALSE, quietly = TRUE)
 
     # necessary variables
+    process_converged_detail = list()
     if (process.type == 'variances') {
       step.chosen         <- matrix(NA, 2, max.steps)
-      iter.chosen         <- matrix(NA, 3, max.steps)      
+      iter.chosen         <- matrix(NA, 3, max.steps)
+      process_converged   <- matrix(NA, 1, max.steps)      
       n.steps             <- max.steps
       var.steps           <- array(NA, dim = c(max.steps, max(unlist(n.comp)), 
                                          length(dimensions[[1]])))
     } else {
       n.steps             <- length(dimensions)
       step.chosen         <- matrix(NA, 2, n.steps)
-      iter.chosen         <- matrix(NA, 3, n.steps)      
+      iter.chosen         <- matrix(NA, 3, n.steps)
+      process_converged   <- matrix(NA, 1, n.steps)      
       step.chosen[1, ]    <- 1
       step.chosen[2, ]    <- 1:n.steps
     }
@@ -422,7 +430,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                     MSSA.blocksize = MSSA.blocksize, ratio.test.t = ratio.test.t, g = g,
                     MSSA.blck.trsh = MSSA.blck.trsh, file.name = file.name), 
                     list(args.call.SSA = args.call.SSA), ratio.const = ratio.const,
-                    tresh.const = tresh.const)
+                    tresh.const = tresh.const, reproducible = reproducible)
             if (g > 1) {
               args.Datacube <- c(args.Datacube, list(slices.process = slices.process,
                       slices.constant = slices.constant,
@@ -555,23 +563,27 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         ##TODO: add break criterium to get out of h loop
         ##      check what happens if GapfillSSA stops further iterations due to limiting groups of eigentriples
 
-        
-        
-        ##FIXME
-        # remove after implementation of iter.chosen scheme
-#        if (debugging) {
-#          file.name.t <- paste('/Net/Groups/BGI/people/jbuttlar/Scratch/Test_iter_chosen/',
-#                               Sys.time(), sep = '') 
-#          print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
-#          dump.frames(to.file = TRUE, dumpto = file.name.t)
-#        }
-
-        ##save iter.chosen information
-        if (sum(!is.na(gapfill.results.step$iters.chosen)) == 2) {
+        # get iteration chosen information
+        if (sum(is.na(gapfill.results.step$iters.chosen)) == 0) {
           iter.chosen[1:2, h] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
           iter.chosen[3, h]   <- sum(is.na(gapfill.results.step$iters.chosen))
         } else {
-          iter.chosen[, h] <- 9999
+          iter.chosen[, h]    <- 9999
+        }
+
+        ##save process convergence information
+        if (sum(!is.na(gapfill.results.step$process_converged)) > 0) {
+          process_converged[1, h] <- sum(gapfill.results.step$process_converged) /
+            length(gapfill.results.step$process_converged)
+          process_converged_detail = c(process_converged_detail,
+            list(array(gapfill.results.step$process_converged, dim = gapfill.results.step$dims.cycle.length)))
+          name <- paste(process, '/', h, sep = '')
+          names(process_converged_detail)[[length(process_converged_detail)]] <- name
+          if (process_converged[1, h] < tresh.converged) {
+            stop('More cells have not converged than allowed by tresh.converged!')
+          }
+        } else {
+          process_converged[1, h] <- 9999
         }
       }
     }
@@ -600,10 +612,14 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     if (process.type == 'variances') {
       out  <-list(pred.measures = pred.measures, step.chosen = step.chosen,
                   finished = finished, iterpath = iterpath, included.otherdim = included.otherdim,
-                  SSAcallargs = args2SSA, iter.chosen = iter.chosen)
+                  SSAcallargs = args2SSA, iter.chosen = iter.chosen,
+                  process_converged = process_converged, process_converged_detail =
+                  process_converged_detail)
     } else {
       out  <- list(finished = finished, args2SSA = args2SSA, iterpath = iterpath,
-                   iter.chosen = iter.chosen)
+                   iter.chosen = iter.chosen,
+                   process_converged = process_converged, process_converged_detail =
+                   process_converged_detail)
     }
     return(out)
   }, ex = function(){
@@ -803,14 +819,18 @@ GapfillNcdfSaveResults<- function(args.call.global, datacube, dims.cycle.id,
 
 
 ##################################   gapfill data cube #########################
-GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),  
-    max.cores = 8, args.call.SSA = list(), iters.n, print.status,  datapts.n, 
-    dims.info, calc.parallel = TRUE, debugging, h, l,  MSSA, MSSA.blocksize, 
-    first.guess = 'mean', dims.cycle, datacube, dims.cycle.id, dims.process.id, 
-    dims.process, process.cells = c('gappy','all')[1], ratio.test.t, g, slices.process = c(),
-    slices.constant = c(), values.constant = c(), slices.excluded = c(), 
-    slices.without.gaps= c(), MSSA.blck.trsh = MSSA.blck.trsh, file.name,
-    ratio.const = ratio.const, tresh.const = tresh.const)
+GapfillNcdfDatacube <- function(args.call.SSA = list(), calc.parallel = TRUE,
+                                datacube, datapts.n,  debugging, dims.info, dims.cycle,
+                                dims.cycle.id,dims.process,  dims.process.id,
+                                file.name, first.guess = 'mean', g, h, iters.n,
+                                l, max.cores = 8,  MSSA, MSSA.blocksize,
+                                MSSA.blck.trsh = MSSA.blck.trsh, ocean.mask = c(),
+                                print.status, process.cells = c('gappy','all')[1], 
+                                ratio.const = ratio.const, ratio.test.t, reproducible,
+                                slices.constant = c(), slices.excluded = c(),
+                                slices.process = c(), slices.without.gaps= c(),
+                                tresh.const = tresh.const, tresh.fill.dc =  .1,
+                                values.constant = c())
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf that handles the main datacube transformations. 
 ##seealso<<
@@ -869,7 +889,7 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                                   iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
                                   print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
                                   dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-                                  file.name = file.name)
+                                  file.name = file.name, reproducible = reproducible)
     } else {
        results.parallel = foreach(i = 1:1
          , .combine =  rbindMod
@@ -878,11 +898,12 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
                                    iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
                                    print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
                                    dims.cycle.id = dims.cycle.id,  dims.process.length =  dims.process.length, MSSA = MSSA, 
-                                   file.name = file.name)            
+                                   file.name = file.name, reproducible = reproducible)            
      }
     data.results.valid.cells <- results.parallel$reconstruction
     data.variances           <- results.parallel$variances
     iters.chosen             <- results.parallel$iters.chosen
+    process_converged        <- results.parallel$process_converged
 
     #fill all values to results array
     if (print.status)
@@ -905,9 +926,10 @@ GapfillNcdfDatacube <- function(tresh.fill.dc =  .1, ocean.mask = c(),
 
   return(list(reconstruction = data.results.finished, data.variances = data.variances,
               slices.without.gaps = slices.without.gaps, slices.process = slices.process, 
-              max.cores = max.cores, slices.process = slices.process, slices.too.gappy = slices.too.gappy,
-              slices.constant = slices.constant, values.constant = values.constant, 
-              slices.excluded = slices.excluded, iters.chosen = iters.chosen))
+              max.cores = max.cores, slices.process = slices.process,
+              slices.too.gappy = slices.too.gappy, sices.constant = slices.constant,
+              values.constant = values.constant, slices.excluded = slices.excluded,
+              iters.chosen = iters.chosen, process_converged = process_converged))
 }
 
 
@@ -1008,13 +1030,13 @@ rbindMod <- function(...)
                                nrow = cube.cols, byrow = TRUE)
       variances      <- matrix(unlist(lapply(dummy, function(x)as.vector(t(x[[2]])))),
                                ncol = vars.amnt, byrow = TRUE)
-      iloops.converged<- unlist(lapply(dummy, function(x)as.vector(t(x[[3]]))))
-      iters.chosen   <- matrix(unlist(lapply(dummy, function(x)as.vector(t(x[[4]])))),
+      process_converged <- unlist(lapply(dummy, function(x)as.vector(t(x[['process_converged']]))))
+      iters.chosen   <- matrix(unlist(lapply(dummy, function(x)as.vector(t(x[['iters.chosen']])))),
                                ncol = 2, byrow = TRUE)
       'finished'
     })
     return(list(reconstruction = reconstruction, variances = variances, 
-                iloops.converged = iloops.converged, iters.chosen = iters.chosen))    
+                process_converged = process_converged, iters.chosen = iters.chosen))    
 }
 
 
@@ -1023,13 +1045,14 @@ GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, dims.cycle.length,
                                    dims.cycle.id, dims.process.id,
                                    dims.process.length, file.name, first.guess,
                                    datapts.n, ind.process.cube, iter.gridind,
-                                   iter.nr, iters.n, MSSA, print.status)
+                                   iter.nr, iters.n, MSSA, print.status, reproducible)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf performs each individual series/grid 
 ##          extracion and handing it over to GapfillSSA
 ##seealso<<
 ##\code{\link{GapfillNcdf}}, \code{\link{foreach}}                                     
 {
+  #determine iteration parameters
   iter.ind          <- iter.gridind[iter.nr, ]
   datapts.n         <- prod(dim(datacube)[dims.process.id + 1])
   n.series.steps    <- numeric()
@@ -1040,20 +1063,23 @@ GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, dims.cycle.length,
                                                          logical.ind = ind.t, dims = 1)])
   } else {
     n.series.core   <- (diff(iter.ind) + 1)
-  }  
+  }
+
+  # define results and diagnostics arrays
   data.results.iter <- array(NA, dim = c(n.series.core , datapts.n))
   variances         <- array(NA, dim = c(diff(iter.ind) + 1, args.call.SSA[['n.comp']]))
-  iloops.converged  <- array(NA, dim = c(diff(iter.ind) + 1))
+  process_converged <- array(NA, dim = c(diff(iter.ind) + 1))
   iters.chosen      <- array(NA, dim = c(diff(iter.ind) + 1, 2))
-
   
   for (n in 1:(diff(iter.ind) + 1)) {
     ind.total       <- rep(FALSE, iters.n)
     ind.total[(iter.ind[1] : iter.ind[2])[n]] <- TRUE 
     data.results.iter.t = try({
 
+      ## determine arguments transferred to SSA process
       args.call.t             <- args.call.SSA
-      args.call.t[['seed']]   <- iter.nr * n      
+      if (reproducible)
+        args.call.t[['seed']] <- iter.nr * n      
       dims.extr.data          <- dims.process.length
       aperm.extr.data         <- 1:(length(dims.process.id) + 1) 
       if (MSSA) {
@@ -1078,16 +1104,18 @@ GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, dims.cycle.length,
                                               logical.ind = ind.matrix, 
                                               dims = dims.cycle.id + 1)
         n.series.steps[n]     <- 1
-      }
-      
+      }     
       series.noperm                  <- array(datacube[ind.extr], dim =  dims.extr.data)
       args.call.t[['series']]        <- aperm(series.noperm, perm = perm.before)
       if (!(class(first.guess) == 'character' && first.guess == 'mean')) {
         fg.noperm                    <- array(first.guess[ind.extr], dim =  dims.extr.data)
         args.call.t[['first.guess']] <- aperm(fg.noperm, perm = perm.before)         
       }
-   
+
+      ## run SSA
       series.filled       <- do.call(GapfillSSA, args.call.t)
+
+      ## transpose and extract SSA results
       rcstr.local         <- aperm(array(series.filled$reconstr,
                                          dim = c(dims.process.length, n.series.steps[n])),
                                    aperm.extr.data)
@@ -1095,10 +1123,12 @@ GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, dims.cycle.length,
                                                  (sum( n.series.steps[1 : max(c(n - 1, 1))]))))  
       data.results.iter[ind.results, ]  <- array(rcstr.local, dim = c(n.series.steps[n], datapts.n))
       variances[n, ]                    <- as.vector(series.filled$variances)
-      iloops.converged[n]               <- sum(!(series.filled$iloop_converged))
+      process_converged[n]              <-  series.filled$process_converged
       iters.chosen[n, ]                 <- series.filled$iter.chosen
       'completed'      
-    })  
+    })
+    
+    ## save workspace in case of error for debugging
     if (class(data.results.iter.t) == 'try-error') {
       print(paste('Error occoured at iteration ', iter.nr, ' and loop ', n, '!', sep = ''))
       error.from.calc                 <- data.results.iter.t
@@ -1110,17 +1140,20 @@ GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, dims.cycle.length,
         system(paste('mkdir -p ', path.file, sep = ''))     
       file.name.t                     <- file.path(path.file, paste('workspace_error_', file.name, '_',
               iter.nr, '_', n, sep = '')) 
-
       print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
       dump.frames(to.file = TRUE, dumpto = file.name.t)
       stop()
     }
+
+    ## print loop progress information
     if (iter.nr == 1 &&( diff(iter.ind) < 20  || 
           (n %% (ceiling((diff(iter.ind)) / 20)) == 0)))
       if (print.status)
         cat(paste(Sys.time(), ' : Finished ~',
                   round(n / (diff(iter.ind) + 1) * 100), '%. \n', sep=''))
   }
+
+  ## return results
   return(list(reconstruction = data.results.iter, variances = variances, 
-              lioops.converged = iloops.converged, iters.chosen = iters.chosen))
+              process_converged = process_converged, iters.chosen = iters.chosen))
 }
