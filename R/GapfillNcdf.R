@@ -863,6 +863,7 @@ GapfillNcdfDatacube <- function(args.call.SSA = list(), calc.parallel = TRUE,
     data.results.finished <- array(NA, dim(datacube))
     data.variances        <- NULL
     iters.chosen          <- c(NA, NA)
+    process_converged     <- rep(NA, prod(dims.cycle.length))
   } else {
     results.crtitercube  <- do.call(GapfillNcdfCreateItercube, 
                                     list(datacube = datacube, 
