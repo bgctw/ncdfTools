@@ -78,7 +78,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                       ##<< list of single integers: length of the big artificial gaps (in time steps) (see ?GapfillSSA for details)
 , tresh.const = 1e-12 ##<< numeric: value below which abs(values) are assumed to be constant and excluded
                       ##             from the decomposition.
-, tresh.converged = 0.9 ##<< numeric: ratio (0-1): determines the amount of SSA iterations that have to converge so that no error
+, tresh.converged = 0 ##<< numeric: ratio (0-1): determines the amount of SSA iterations that have to converge so that no error
                       ##             is produced.
 , tresh.fill = c(list(list(0.1)), rep(list(list(0,0)), length(dimensions) - 1))
                       ##<< list of numeric fractions (0-1): This value determines the fraction of valid values below which
@@ -190,7 +190,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                                    c(letters, LETTERS, 0:9)) , collapse = '' )   )
        if (print.status)
          cat(paste(Sys.time(), ' : Using seed ', seed, ' for calculations.\n', sep=''))
-       
+       set.seed(seed)
     } else {
       seed <- c()
     }
@@ -404,7 +404,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                 amnt.iters.start = amnt.iters.start.loop,
                 print.stat   = FALSE,
                 plot.results = FALSE,
-                debugging = debugging)
+                debugging = debugging, seed = seed)
             data.step <- list(iterinf = list(process = process, h = h, g = g, l = l),
                               args = args.call.SSA)
             args2SSA[[length(args2SSA) + 1]] <- data.step
@@ -614,12 +614,12 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                   finished = finished, iterpath = iterpath, included.otherdim = included.otherdim,
                   SSAcallargs = args2SSA, iter.chosen = iter.chosen,
                   process_converged = process_converged, process_converged_detail =
-                  process_converged_detail)
+                  process_converged_detail, seed = seed)
     } else {
       out  <- list(finished = finished, args2SSA = args2SSA, iterpath = iterpath,
                    iter.chosen = iter.chosen,
                    process_converged = process_converged, process_converged_detail =
-                   process_converged_detail)
+                   process_converged_detail, seed = seed)
     }
     return(out)
   }, ex = function(){
@@ -1042,11 +1042,11 @@ rbindMod <- function(...)
 
 
 ########################## gapfill function for single core ####################
-GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, dims.cycle.length,
-                                   dims.cycle.id, dims.process.id,
+GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, datapts.n, dims.cycle.id,
+                                   dims.cycle.length, dims.process.id,
                                    dims.process.length, file.name, first.guess,
-                                   datapts.n, ind.process.cube, iter.gridind,
-                                   iter.nr, iters.n, MSSA, print.status, reproducible)
+                                   ind.process.cube, iter.gridind, iter.nr, iters.n,
+                                   MSSA, print.status, reproducible)
 ##title<< helper function for GapfillNcdf
 ##details<< helper function for GapfillNcdf performs each individual series/grid 
 ##          extracion and handing it over to GapfillSSA
@@ -1078,9 +1078,7 @@ GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, dims.cycle.length,
     data.results.iter.t = try({
 
       ## determine arguments transferred to SSA process
-      args.call.t             <- args.call.SSA
-      if (reproducible)
-        args.call.t[['seed']] <- iter.nr * n      
+      args.call.t             <- args.call.SSA 
       dims.extr.data          <- dims.process.length
       aperm.extr.data         <- 1:(length(dims.process.id) + 1) 
       if (MSSA) {
