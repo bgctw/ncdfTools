@@ -249,25 +249,23 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                              c(SSAprocess = 'Gapfill', args.call.filecheck))
     ocean.mask    <- res.check$ocean.mask
 
-    #open ncdf files and create step files
+    #determine some filenames etc
     if (var.names[1] == 'auto')
       var.names = ncdf.get.varname(file.name)
-    res.open      <- GapfillNcdfOpenFiles(file.name = file.name, var.names = var.names,
-                                          n.steps = n.steps, print.status = print.status)
-    dims.info     <- res.open$dims.info
-    file.name.copy<- res.open$file.name.copy
     file.con.orig <- open.nc(file.name)
+    dims.info     <- ncdf.get.diminfo(file.con)
     
     # start parallel processing workers
     if (calc.parallel)
         RegisterParallel(package.parallel, max.cores)
+
+    # start loops
     if (gaps.cv != 0) {
       processes <- c('cv', 'final')
     } else if (gaps.cv == 0) {
       processes <- c('final') 
       art.gaps.values            <- NULL            
     }
-
     for (var.name in var.names) {
       datacube         <- var.get.nc(file.con.orig, var.name)
       if (sum(is.na(datacube)) == 0) {
@@ -275,9 +273,9 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         next
       } 
       ind.artgaps.out  <- array(FALSE, dim = dim(datacube))
-
       status.report(paste('Filling variable ', var.name, sep = ''))
       for (process in processes) {
+        
       # insert gaps for cross validation      
       if (process == 'cv') {
         if (print.status)
@@ -294,10 +292,10 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         if (length(processes) == 2)
            n.steps  <- max(step.chosen['step',])
       }
-
       for (h in 1:n.steps) {
         if (print.status)
           cat(paste(Sys.time(), ' : Starting step ', h, '\n',sep = ''))
+        
         ## determine different iteration control parameters
         if (process.type == 'stepwise') {
           ind                   <- h     
@@ -444,7 +442,6 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                 n.steps == 1) {
               print(paste('No series available for filling and only one step process',
                           'chosen. Stopping gapfilling.',  sep = ''))
-              file.remove(file.name.copy)
               return(list(finished = FALSE))
             }  
             if (process.type == 'variances')
@@ -550,15 +547,15 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
           ##save first guess data
           if (drop.dim)
             results.reconstruction <- drop(results.reconstruction)
-          file.name.guess.curr   <- paste(sub('.nc$', '', file.name),
+          file.name.guess.next   <- paste(sub('.nc$', '', file.name),
                                           '_first_guess_step_', formatC(h + 1, 2, flag = '0'),
-                                          '.nc', sep = '')
-          file.con.guess.next    <- open.nc(file.name.guess.curr, write = TRUE)         
+                                          '_', process, '.nc', sep = '')
+          file.copy(from = file.name.copy, to = file.name.guess.next)          
+          file.con.guess.next    <- open.nc(file.name.guess.curr, write = TRUE)
           var.put.nc(file.con.guess.next, var.name, results.reconstruction)
           close.nc(file.con.guess.next)
           step.use.frst.guess  <- min(c(h, step.chosen['step', max(which(!is.na(step.chosen['step',])))]))
-          file.name.guess.next <- paste(sub('.nc$', '', file.name), '_first_guess_step_',
-                                        formatC(step.use.frst.guess + 1, 2, flag = '0'), '.nc', sep = '')
+          
         }
         ##TODO: add break criterium to get out of h loop
         ##      check what happens if GapfillSSA stops further iterations due to limiting groups of eigentriples
@@ -596,7 +593,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                              datacube = datacube,
                              dims.cycle.id = gapfill.results.step$dims.cycle.id,
                              drop.dim = drop.dim,
-                             file.name.copy = file.name.copy,                             
+                             file.name = file.name,                             
                              keep.steps = keep.steps,
                              n.steps = n.steps,
                              ocean.mask = ocean.mask,
@@ -692,65 +689,9 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
   })
 
 
-##################################      create files    ########################
-
-GapfillNcdfOpenFiles <- function(file.name, var.names, n.steps, print.status)
-##title<< helper function for GapfillNcdf
-##details<< helper function for GapfillNcdf that prepares the output files 
-##seealso<<
-##\code{\link{GapfillNcdf}}
-  
-#open ncdf files
-{
-  if (print.status)
-    cat(paste(Sys.time(), ' : Creating ncdf file for results. \n', sep = ''))
-
-  #create new files
-  file.name.copy     <- paste(sub('[.]nc$','', file.name), '_gapfill.nc', sep = '')
-  copied             <- file.copy(from = file.name, to = file.name.copy, overwrite = TRUE)
-  Sys.chmod(file.name.copy, mode = "0777")
-  if (!copied)
-    stop('Creating file for results failed!')
-  
-  #prepare first guess files
-  for (b in 2:(n.steps + 1)) {
-    file.name.guess.t  <- paste(sub('.nc$', '', file.name), '_first_guess_step_',
-                                formatC(b, 2, flag = 0), '.nc', sep='')
-    copied             <- file.copy(from = file.name, to = file.name.guess.t, 
-                                    overwrite = TRUE)
-    con.tmp            <- open.nc(file.name.guess.t, write = TRUE)
-    for (var.name in var.names) {
-      data.tmp           <- var.get.nc(con.tmp, var.name)
-      data.tmp[]         <- NA
-      var.put.nc(con.tmp, var.name, data.tmp)
-    }
-    close.nc(con.tmp)
-    Sys.chmod(file.name.guess.t, mode = "0777")
-  }
-  
-  #Prepare Results Ncdf File
-  file.con.copy      <- open.nc(con = file.name.copy, write = TRUE)
-  for (var.name in var.names) {
-    var.def.nc(file.con.copy, paste(var.name, '_flag_orig', sep =''), 'NC_BYTE', 
-               var.inq.nc(file.con.copy, var.name)$dimids)
-    att.put.nc(file.con.copy,  paste(var.name, '_flag_orig', sep =''),'long_name','NC_CHAR',
-               paste('flag indicating original values (1) and filled values (0) in ',
-                     var.name, sep = ''))
-    datacube                    <- var.get.nc(file.con.copy, var.name)
-    data.flag                   <- array(NA, dim = dim(datacube))
-    data.flag[is.na(datacube)]  <- 0
-    data.flag[!is.na(datacube)] <- 1
-    var.put.nc(file.con.copy, paste(var.name, '_flag_orig', sep =''), data.flag)
-  }  
-  dims.info                  <- ncdf.get.diminfo(file.con.copy)
-  close.nc(file.con.copy)
-  return(list(dims.info = dims.info, file.name.copy = file.name.copy))
-}
-
-
 ##################################### save results #############################
 GapfillNcdfSaveResults<- function(args.call.global, datacube, dims.cycle.id,
-                                  drop.dim, file.name.copy, keep.steps, n.steps,
+                                  drop.dim, file.name, keep.steps, n.steps,
                                   ocean.mask, print.status, process.cells,
                                   reconstruction, slices.without.gaps, var.name,
                                   var.names)
@@ -759,9 +700,33 @@ GapfillNcdfSaveResults<- function(args.call.global, datacube, dims.cycle.id,
 ##seealso<<
 ##\code{\link{GapfillNcdf}}  
 {
-  dims.cycle.length   <- dim(datacube)[dims.cycle.id + 1]
-
-  #prepare results
+  ##Prepare Results Ncdf File
+  file.name.copy     <- paste(sub('[.]nc$','', file.name), '_gapfill.nc', sep = '')
+  if (var.name == var.names[1]) {
+    copied             <- file.copy(from = file.name, to = file.name.copy, overwrite = TRUE)
+    Sys.chmod(file.name.copy, mode = "0777")
+    if (!copied)
+      stop('Creating file for results failed!')
+    file.name.copy     <- paste(sub('[.]nc$','', file.name), '_gapfill.nc', sep = '') 
+    file.con.copy      <- open.nc(con = file.name.copy, write = TRUE)
+    for (var.name in var.names) {
+      var.def.nc(file.con.copy, paste(var.name, '_flag_orig', sep =''), 'NC_BYTE', 
+                 var.inq.nc(file.con.copy, var.name)$dimids)
+      att.put.nc(file.con.copy,  paste(var.name, '_flag_orig', sep =''),'long_name','NC_CHAR',
+                 paste('flag indicating original values (1) and filled values (0) in ',
+                       var.name, sep = ''))
+      datacube                    <- var.get.nc(file.con.copy, var.name)
+      data.flag                   <- array(NA, dim = dim(datacube))
+      data.flag[is.na(datacube)]  <- 0
+      data.flag[!is.na(datacube)] <- 1
+      var.put.nc(file.con.copy, paste(var.name, '_flag_orig', sep =''), data.flag)
+    }  
+  } else {
+     file.con.copy      <- open.nc(con = file.name.copy, write = TRUE)     
+  }
+  
+  ##prepare results
+  dims.cycle.length               <- dim(datacube)[dims.cycle.id + 1]
   data.results.final              <- datacube
   data.results.final[is.na(data.results.final)] <- 
       reconstruction[is.na(data.results.final)]
@@ -782,7 +747,6 @@ GapfillNcdfSaveResults<- function(args.call.global, datacube, dims.cycle.id,
   #save results
   if (print.status)
     cat(paste(Sys.time(), ' : Writing results to file. \n', sep = ''))
-  file.con.copy                   <- open.nc(file.name.copy, write = TRUE)
   if (drop.dim)
     data.results.final <- drop(data.results.final)
   var.put.nc(file.con.copy, var.name, data.results.final)
