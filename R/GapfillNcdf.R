@@ -882,7 +882,7 @@ GapfillNcdfDatacube <- function(args.call.SSA = list(), calc.parallel = TRUE,
               ' time series/grids of size ', datapts.n, '. \n', sep = ''))
     
     if (calc.parallel) {
-      results.parallel = foreach(i = 1:max.cores
+      results.parallel = foreach(i = 1:max.cores                       
         , .combine = rbindMod
         , .multicombine = TRUE, .packages = 'spectral.methods') %dopar% GapfillNcdfCoreprocess(
                                   iter.nr = i, datacube = datacube,
