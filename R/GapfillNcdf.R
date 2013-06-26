@@ -186,8 +186,9 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     if (reproducible) {
        file.name.cl <-  gsub('[[:punct:]]', '', file.name)
        ind.rev      <-  round(seq(1, nchar(file.name.cl), length.out = 5), digits = 0)
-       seed         <-  as.numeric(paste(match(unlist(strsplit(file.name.cl, ''))[ind.rev], 
+       seed.big     <-  as.numeric(paste(match(unlist(strsplit(file.name.cl, ''))[ind.rev], 
                                    c(letters, LETTERS, 0:9)) , collapse = '' )   )
+       seed         <-  (seed.big)%%(2^32)
        if (print.status)
          cat(paste(Sys.time(), ' : Using seed ', seed, ' for calculations.\n', sep=''))
        set.seed(seed)
@@ -253,7 +254,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     if (var.names[1] == 'auto')
       var.names = ncdf.get.varname(file.name)
     file.con.orig <- open.nc(file.name)
-    dims.info     <- ncdf.get.diminfo(file.con)
+    dims.info     <- ncdf.get.diminfo(file.con.orig)
     
     # start parallel processing workers
     if (calc.parallel)
@@ -550,8 +551,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
           file.name.guess.next   <- paste(sub('.nc$', '', file.name),
                                           '_first_guess_step_', formatC(h + 1, 2, flag = '0'),
                                           '_', process, '.nc', sep = '')
-          file.copy(from = file.name.copy, to = file.name.guess.next)          
-          file.con.guess.next    <- open.nc(file.name.guess.curr, write = TRUE)
+          file.copy(from = file.name, to = file.name.guess.next)          
+          file.con.guess.next    <- open.nc(file.name.guess.next, write = TRUE)
           var.put.nc(file.con.guess.next, var.name, results.reconstruction)
           close.nc(file.con.guess.next)
           step.use.frst.guess  <- min(c(h, step.chosen['step', max(which(!is.na(step.chosen['step',])))]))
