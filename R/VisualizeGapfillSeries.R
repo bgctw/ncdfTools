@@ -49,7 +49,6 @@ VisualizeGapfillSeries <- function(
         plot.new()
       text(trnsf.coords(0.1,0.9), labels =  var.t, cex = 2)
       next
-
     }
     
     breaks = seq(min(c(orig.t, filled.t), na.rm = TRUE),
@@ -78,7 +77,7 @@ VisualizeGapfillSeries <- function(
     plot(filled.t, pch = 16, cex = 0.5, col = 'red')
     points(orig.t, pch = 16, cex = 0.5, col = 'black')
     
-    n.points <- 400
+    n.points <- ceiling(length(filled.t)/50)
     index    <- rep(1:ceiling(length(filled.t)/n.points), each = n.points)[1:length(rep(1:length(filled.t), times = ))]
     na.pp    <- aggregate(orig.t, list(index), function(x)sum(is.na(x)))
     na.pp    <- na.pp[na.pp$x != n.points,]
