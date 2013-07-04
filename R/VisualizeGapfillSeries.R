@@ -83,9 +83,11 @@ VisualizeGapfillSeries <- function(
     na.pp    <- na.pp[na.pp$x != n.points,]
     na.pp    <- na.pp[-dim(na.pp)[1],]
     na.pp    <- na.pp[na.pp$x < n.points/1.5,]
-    inds.plot<- na.pp$Group.1[sort(sample(order(na.pp$x, decreasing = TRUE)[1:30], 6))]
+    n.plots  <- min(c(6,dim(na.pp)[1]))
+
+    inds.plot<- na.pp$Group.1[sort(sample(order(na.pp$x, decreasing = TRUE)[1:min(c(n.plots, 30))], n.plots))]
     abline(v = (inds.plot - 1) * n.points, lty = 2, col ='green', lwd = 2)
-    for (i in 1:6) {
+    for (i in 1:n.plots) {
       index.t = 1:n.points + ((inds.plot[i]-1) * n.points)
       plot(filled.t[index.t], pch = 16, cex = 0.5, col = 'red')
       points(orig.t[index.t], pch = 16, cex = 0.5, col = 'black')

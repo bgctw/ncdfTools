@@ -606,6 +606,8 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                              var.names = var.names)
     }
     finished <- TRUE
+    if (print.status)
+      cat(paste(Sys.time(), ' : Gapfilling successfully finished. \n', sep = ''))
     close.nc(file.con.orig)
     if (process.type == 'variances') {
       out  <-list(pred.measures = pred.measures, step.chosen = step.chosen,
@@ -703,7 +705,7 @@ GapfillNcdfSaveResults<- function(args.call.global, datacube, dims.cycle.id,
 {
   ##Prepare Results Ncdf File
   file.name.copy     <- paste(sub('[.]nc$','', file.name), '_gapfill.nc', sep = '')
-  if (var.name == var.names[1]) {
+  if (!file.exists(file.name.copy)) {
     copied             <- file.copy(from = file.name, to = file.name.copy, overwrite = TRUE)
     Sys.chmod(file.name.copy, mode = "0777")
     if (!copied)
@@ -721,6 +723,7 @@ GapfillNcdfSaveResults<- function(args.call.global, datacube, dims.cycle.id,
       data.flag[is.na(datacube)]  <- 0
       data.flag[!is.na(datacube)] <- 1
       var.put.nc(file.con.copy, paste(var.name, '_flag_orig', sep =''), data.flag)
+      var.put.nc(file.con.copy, var.name, datacube)
     }  
   } else {
      file.con.copy      <- open.nc(con = file.name.copy, write = TRUE)     
@@ -778,8 +781,6 @@ GapfillNcdfSaveResults<- function(args.call.global, datacube, dims.cycle.id,
     }
   }
   close.nc(file.con.copy)
-  if (print.status)
-    cat(paste(Sys.time(), ' : Gapfilling successfully finished. \n', sep = ''))
 }
 
 
