@@ -224,7 +224,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     process_converged_detail = list()
     if (process.type == 'variances') {
       step.chosen         <- matrix(NA, 2, max.steps)
-      iter.chosen         <- matrix(NA, 3, max.steps)
+      iter.chosen         <- array(NA, dim=c(3, max.steps, length(processes)))
       process_converged   <- matrix(NA, length(processes), max.steps)      
       n.steps             <- max.steps
       var.steps           <- array(NA, dim = c(max.steps, max(unlist(n.comp)), 
@@ -232,13 +232,14 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     } else {
       n.steps             <- length(dimensions)
       step.chosen         <- matrix(NA, 2, n.steps)
-      iter.chosen         <- matrix(NA, 3, n.steps)
+      iter.chosen         <- array(NA, dim=c(3, n.steps, length(processes)))
       process_converged   <- matrix(NA, length(processes), n.steps)      
       step.chosen[1, ]    <- 1
       step.chosen[2, ]    <- 1:n.steps
     }
     dimnames(step.chosen) <- list(c('dim','step'), paste('step', 1:dim(step.chosen)[2]))
-    dimnames(iter.chosen) <- list(c('outer','inner', 'amnt.na'), paste('step', 1:dim(iter.chosen)[2]))
+    dimnames(iter.chosen) <- list(c('outer','inner', 'amnt.na'),
+                                  paste('step', 1:dim(iter.chosen)[2]), processes)
     dimnames(process_converged) <- list(processes)
 
 
@@ -563,13 +564,13 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         ##      check what happens if GapfillSSA stops further iterations due to limiting groups of eigentriples
 
         # get iteration chosen information
-        iter.chosen[1:2, h] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
-        iter.chosen[3, h]   <- sum(is.na(gapfill.results.step$iters.chosen))
+        iter.chosen[1:2, h, process] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
+        iter.chosen[3, h, process]   <- sum(is.na(gapfill.results.step$iters.chosen))
 
         ##save process convergence information
         if (sum(!is.na(gapfill.results.step$process_converged)) > 0) {
           process_converged[process, h] <- sum(gapfill.results.step$process_converged) /
-            length(gapfill.results.step$process_converged)
+            sum(!is.na(gapfill.results.step$process_converged))
           process_converged_detail = c(process_converged_detail,
             list(array(gapfill.results.step$process_converged, dim = gapfill.results.step$dims.cycle.length)))
           name <- paste(process, '/', h, sep = '')
@@ -867,7 +868,8 @@ GapfillNcdfDatacube <- function(args.call.SSA = list(), calc.parallel = TRUE,
     data.results.valid.cells <- results.parallel$reconstruction
     data.variances           <- results.parallel$variances
     iters.chosen             <- results.parallel$iters.chosen
-    process_converged        <- results.parallel$process_converged
+    process_converged        <- array(NA, dim = dims.cycle.length)
+    process_converged[slices.process]  <- results.parallel$process_converged
 
     #fill all values to results array
     if (print.status)
