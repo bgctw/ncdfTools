@@ -579,7 +579,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
             stop('More cells have not converged than allowed by tresh.converged!')
           }
         } else {
-          process_converged[process, h] <- 9999
+          stop('Process converged information seems to be all missing!')
         }
       }
     }
