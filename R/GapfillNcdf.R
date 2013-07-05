@@ -215,11 +215,17 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       library(raster, warn.conflicts = FALSE, quietly = TRUE)
 
     # necessary variables
+    if (gaps.cv != 0) {
+      processes <- c('cv', 'final')
+    } else if (gaps.cv == 0) {
+      processes <- c('final') 
+      art.gaps.values            <- NULL            
+    }
     process_converged_detail = list()
     if (process.type == 'variances') {
       step.chosen         <- matrix(NA, 2, max.steps)
       iter.chosen         <- matrix(NA, 3, max.steps)
-      process_converged   <- matrix(NA, 1, max.steps)      
+      process_converged   <- matrix(NA, length(processes), max.steps)      
       n.steps             <- max.steps
       var.steps           <- array(NA, dim = c(max.steps, max(unlist(n.comp)), 
                                          length(dimensions[[1]])))
@@ -227,12 +233,13 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       n.steps             <- length(dimensions)
       step.chosen         <- matrix(NA, 2, n.steps)
       iter.chosen         <- matrix(NA, 3, n.steps)
-      process_converged   <- matrix(NA, 1, n.steps)      
+      process_converged   <- matrix(NA, length(processes), n.steps)      
       step.chosen[1, ]    <- 1
       step.chosen[2, ]    <- 1:n.steps
     }
     dimnames(step.chosen) <- list(c('dim','step'), paste('step', 1:dim(step.chosen)[2]))
     dimnames(iter.chosen) <- list(c('outer','inner', 'amnt.na'), paste('step', 1:dim(iter.chosen)[2]))
+    dimnames(process_converged) <- list(processes)
 
 
     # debugging and information variables
@@ -261,12 +268,6 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         RegisterParallel(package.parallel, max.cores)
 
     # start loops
-    if (gaps.cv != 0) {
-      processes <- c('cv', 'final')
-    } else if (gaps.cv == 0) {
-      processes <- c('final') 
-      art.gaps.values            <- NULL            
-    }
     for (var.name in var.names) {
       datacube         <- var.get.nc(file.con.orig, var.name)
       if (sum(is.na(datacube)) == 0) {
@@ -562,26 +563,22 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         ##      check what happens if GapfillSSA stops further iterations due to limiting groups of eigentriples
 
         # get iteration chosen information
-        if (sum(is.na(gapfill.results.step$iters.chosen)) == 0) {
-          iter.chosen[1:2, h] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
-          iter.chosen[3, h]   <- sum(is.na(gapfill.results.step$iters.chosen))
-        } else {
-          iter.chosen[, h]    <- 9999
-        }
+        iter.chosen[1:2, h] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
+        iter.chosen[3, h]   <- sum(is.na(gapfill.results.step$iters.chosen))
 
         ##save process convergence information
         if (sum(!is.na(gapfill.results.step$process_converged)) > 0) {
-          process_converged[1, h] <- sum(gapfill.results.step$process_converged) /
+          process_converged[process, h] <- sum(gapfill.results.step$process_converged) /
             length(gapfill.results.step$process_converged)
           process_converged_detail = c(process_converged_detail,
             list(array(gapfill.results.step$process_converged, dim = gapfill.results.step$dims.cycle.length)))
           name <- paste(process, '/', h, sep = '')
           names(process_converged_detail)[[length(process_converged_detail)]] <- name
-          if (process_converged[1, h] < tresh.converged) {
+          if (process_converged[process, h] < tresh.converged) {
             stop('More cells have not converged than allowed by tresh.converged!')
           }
         } else {
-          process_converged[1, h] <- 9999
+          process_converged[process, h] <- 9999
         }
       }
     }
@@ -1081,6 +1078,7 @@ GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, datapts.n, dims.cycl
       series.filled       <- do.call(GapfillSSA, args.call.t)
 
       ## transpose and extract SSA results
+
       rcstr.local         <- aperm(array(series.filled$reconstr,
                                          dim = c(dims.process.length, n.series.steps[n])),
                                    aperm.extr.data)
@@ -1104,9 +1102,9 @@ GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, datapts.n, dims.cycl
       if (!file.exists(path.file))  
         system(paste('mkdir -p ', path.file, sep = ''))     
       file.name.t                     <- file.path(path.file, paste('workspace_error_', file.name, '_',
-              iter.nr, '_', n, sep = '')) 
-      print(paste('Saving workspace to file ', file.name.t, '.rda', sep = ''))
+              iter.nr, '_', n, sep = ''))
       dump.frames(to.file = TRUE, dumpto = file.name.t)
+      print(paste('Saved workspace to file ', file.name.t, '.rda', sep = ''))
       stop()
     }
 
