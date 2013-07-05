@@ -563,13 +563,17 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         ##TODO: add break criterium to get out of h loop
         ##      check what happens if GapfillSSA stops further iterations due to limiting groups of eigentriples
 
+
+        ##FIXME remove after testing
+        SaveDebugFrame()
+        
         # get iteration chosen information
         iter.chosen[1:2, h, process] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
         iter.chosen[3, h, process]   <- sum(is.na(gapfill.results.step$iters.chosen))
 
         ##save process convergence information
         if (sum(!is.na(gapfill.results.step$process_converged)) > 0) {
-          process_converged[process, h] <- sum(gapfill.results.step$process_converged) /
+          process_converged[process, h] <- sum(gapfill.results.step$process_converged, na.rm = TRUE) /
             sum(!is.na(gapfill.results.step$process_converged))
           process_converged_detail = c(process_converged_detail,
             list(array(gapfill.results.step$process_converged, dim = gapfill.results.step$dims.cycle.length)))
