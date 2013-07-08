@@ -562,14 +562,12 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         }
         ##TODO: add break criterium to get out of h loop
         ##      check what happens if GapfillSSA stops further iterations due to limiting groups of eigentriples
-
-
-        ##FIXME remove after testing
-        SaveDebugFrame()
         
         # get iteration chosen information
-        iter.chosen[1:2, h, process] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
-        iter.chosen[3, h, process]   <- sum(is.na(gapfill.results.step$iters.chosen))
+        if (sum(!is.na(gapfill.results.step$iters.chosen)) > 0) {
+          iter.chosen[1:2, h, process] <- apply(gapfill.results.step$iters.chosen, 2, mean, na.rm = TRUE)
+          iter.chosen[3, h, process]   <- sum(is.na(gapfill.results.step$iters.chosen))
+        }
 
         ##save process convergence information
         if (sum(!is.na(gapfill.results.step$process_converged)) > 0) {
@@ -582,9 +580,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
           if (process_converged[process, h] < tresh.converged) {
             stop('More cells have not converged than allowed by tresh.converged!')
           }
-        } else {
-          stop('Process converged information seems to be all missing!')
-        }
+        } 
       }
     }
       ## stop parallel workers
@@ -681,7 +677,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     ##example setting for process with alternating dimensions but variance criterium
     dimensions       = list(list('time', c('longitude','latitude')))
     n.comp           = list(list(5,      5))
-    M                = list(list(10,     c(10,10)))
+    M                = list(list(10,     c(10, 10)))
     amnt.artgaps     = list(list(c(0,0), c(0,0)))
     size.biggap      = list(list(0,      0))
     process.type     = 'variances'
