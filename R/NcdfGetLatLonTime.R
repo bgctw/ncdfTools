@@ -3,7 +3,7 @@ NcdfGetLatLonTime <- function(file.con) {
   out <- list(latitude=c(), longitude=c(), time = c())
   for (i in 1:3) {
     if (!is.na(dimind.latlontime[i]))
-      out[[i]] <- var.get.nc(file.con,  dimind.latlontime[1])
+      out[[i]] <- var.get.nc(file.con,  dimind.latlontime[i])
   }
   return(out)
 }
