@@ -148,7 +148,7 @@ VisualizeGapfill <- function(
     x11()
   layout(matrix(c(1:2),byrow=TRUE,ncol=1),
          height=c(1,1))
-  par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(2, 0, 0, 2), oma = c(0, 2, 4, 0))
+  par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(2, 0, 0, 2), oma = c(0, 2, 4, 0), xpd = FALSE)
   breaks = seq(min(cube.info.filled['min', , ], na.rm = TRUE),
                max(cube.info.filled['max', , ], na.rm = TRUE), length.out = 200)
   hst.orig    <- hist(data.orig, breaks = breaks, plot = FALSE)
@@ -164,17 +164,20 @@ VisualizeGapfill <- function(
   box()
   text(trnsf.coords(c(0.8,0.9),c(0.9, 0.9)), labels =  c('filled', 'orig'),
        col = c('red', 'black'), cex = 2)
+  logDensities <- log(c(hist(cube.info.filled['ratio na',,], breaks =seq(0,1,length.out=100), plot = FALSE)$density,
+           hist(cube.info.orig['ratio na',,], breaks =seq(0,1,length.out=100), plot = FALSE)$density))
+  yRange <- range(logDensities[is.finite(logDensities)])
   hst.filled  <- logHist(cube.info.filled['ratio na',,], breaks =100, col = 'red',
-                         pch = 16, xlab = '', main = '')
+                         pch = 16, xlab = '', main = '', xlim = c(0,1), ylim = yRange)
   par(new = TRUE)
-  logHist(cube.info.orig['ratio na',,], breaks =100, ylim = hst.filled$ylim,
-          cex = 1.1, xlab = 'ratio of missing values per grid point', main = '')
+  browser()
+  hst.orig  <- logHist(cube.info.orig['ratio na',,], breaks =100, ylim = yRange,
+          cex = 1.1, xlab = 'ratio of missing values per grid point', main = '', xlim = c(0,1))
   text(trnsf.coords(c(0.7,0.9),c(0.9, 0.9)), labels =  c('filled', 'orig'),
        col = c('red', 'black'), cex = 2)
+  mtext(side = 2 , text = 'log(density)', las = 3, line = 1)
    
   ## plot example series
-  if (interactive())
-    browser()
   chars.plot <- c('ratio na', 'range', 'sdev', 'mean')
   if ( (length(data.prefill) != 0)) {
     chars.plot <- c(chars.plot, 'prefilling')
