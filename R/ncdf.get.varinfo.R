@@ -38,14 +38,12 @@ ncdf.get.varinfo  <- function(
     range.var     <- character(length = n.vars)
 
     #loop through all variables
-    for (i in 1:n.vars)
-    {
+    for (i in 1:n.vars) {
         varname.var[i]       <- var.inq.nc(file.con, i - 1)$name
         n.dims.var[i]        <- var.inq.nc(file.con, i - 1)$ndims
         type.var[i]          <- var.inq.nc(file.con, i - 1)$type
         dimids.var[i, 1:var.inq.nc(file.con, i - 1)$ndims] <- var.inq.nc(file.con, i - 1)$dimids
-        if (info.ext)
-        {
+        if (info.ext) {
             data.dummy       <- var.get.nc(file.con, i - 1)
             range.var[i]     <- paste(round(range(data.dummy, na.rm = TRUE),
                                                 digits = 2), collapse = '-')
@@ -69,8 +67,10 @@ ncdf.get.varinfo  <- function(
                               n.values = n.values.var,
                               range = range.var,
                               stringsAsFactors = FALSE)
-    varinfo.out <- cbind(varinfo.out, dim.names.var, dimids.var)
-    col.order   <- match(order.var, colnames(varinfo.out))
-    varinfo.out <- varinfo.out[order(varinfo.out[, col.order]), ]
+    varinfo.out   <- cbind(varinfo.out, dim.names.var, dimids.var)
+    col.order     <- match(order.var, colnames(varinfo.out))
+    varinfo.out   <- varinfo.out[order(varinfo.out[, col.order]), ]
+    rowsCoordVars <- na.omit(match(dim.names, varinfo.out$name))
+    varinfo.out   <- varinfo.out[-rowsCoordVars,]
     return(varinfo.out)
 }
