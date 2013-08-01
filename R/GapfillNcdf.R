@@ -174,6 +174,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     ##TODO switch off "force.all.dims" in case of non neccessity
      
     #save argument values of call
+    status.report(paste('Filling file', file.name))
     args.call.filecheck <- as.list(environment())
     args.call.global    <- call.args2string()
     if (print.status & !interactive()) {
@@ -1077,7 +1078,6 @@ GapfillNcdfCoreprocess <- function(args.call.SSA, datacube, datapts.n, dims.cycl
       series.filled       <- do.call(GapfillSSA, args.call.t)
 
       ## transpose and extract SSA results
-
       rcstr.local         <- aperm(array(series.filled$reconstr,
                                          dim = c(dims.process.length, n.series.steps[n])),
                                    aperm.extr.data)
