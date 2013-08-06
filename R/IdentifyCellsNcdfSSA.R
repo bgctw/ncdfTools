@@ -19,6 +19,8 @@ IdentifyCellsNcdfSSA = function(
   ## -include possibility to infer slices.continuous max border
   
   require(jannis.misc, warn.conflicts = FALSE, quietly = TRUE)
+  require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
+
 
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
@@ -70,7 +72,7 @@ IdentifyCellsNcdfSSA = function(
         gaps     <- args.call.SSA$amnt.artgaps
         size.bg  <- args.call.SSA$size.biggap^(length(dims.process.length))
         dtpts    <- prod(dims.process.length)
-        if (sum(gaps != 0) > 0) {
+        if (sum(gaps != 0) > 0 & tresh.fill.dc > 0) {
           n_biggaps   <- max(c(floor(dtpts * gaps[1] /size.bg), 1))  
           if (gaps[1] > 0) {
             n_smallgaps <- n_biggaps * size.bg * gaps[1] / gaps[2]
@@ -118,7 +120,7 @@ IdentifyCellsNcdfSSA = function(
   
   # identify constant slices
   slices.constant    <- as.vector(apply(datacube, MAR = dims.cycle.id + add.id,
-                                        IsSeriesConstant, ratio.const = ratio.const,
+                                        isSeriesConstant, ratio.const = ratio.const,
                                         tresh.const = tresh.const))
   slices.constant[slices.too.gappy | slices.empty | slices.ocean | slices.without.gaps] <- FALSE
   values.constant    <-  as.vector(apply(datacube, MAR = dims.cycle.id + add.id,

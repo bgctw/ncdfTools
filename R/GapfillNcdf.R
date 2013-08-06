@@ -716,18 +716,18 @@ GapfillNcdfSaveResults<- function(args.call.global, datacube, dims.cycle.id,
       stop('Creating file for results failed!')
     file.name.copy     <- paste(sub('[.]nc$','', file.name), '_gapfill.nc', sep = '') 
     file.con.copy      <- open.nc(con = file.name.copy, write = TRUE)
-    for (var.name in var.names) {
-      var.def.nc(file.con.copy, paste(var.name, '_flag_orig', sep =''), 'NC_BYTE', 
-                 var.inq.nc(file.con.copy, var.name)$dimids)
-      att.put.nc(file.con.copy,  paste(var.name, '_flag_orig', sep =''),'long_name','NC_CHAR',
+    for (var.create in var.names) {
+      var.def.nc(file.con.copy, paste(var.create, '_flag_orig', sep =''), 'NC_BYTE', 
+                 var.inq.nc(file.con.copy, var.create)$dimids)
+      att.put.nc(file.con.copy,  paste(var.create, '_flag_orig', sep =''),'long_name','NC_CHAR',
                  paste('flag indicating original values (1) and filled values (0) in ',
-                       var.name, sep = ''))
-      datacube                    <- var.get.nc(file.con.copy, var.name)
-      data.flag                   <- array(NA, dim = dim(datacube))
-      data.flag[is.na(datacube)]  <- 0
-      data.flag[!is.na(datacube)] <- 1
+                       var.create, sep = ''))
+      datacubeT                    <- var.get.nc(file.con.copy, var.name)
+      data.flag                   <- array(NA, dim = dim(datacubeT))
+      data.flag[is.na(datacubeT)]  <- 0
+      data.flag[!is.na(datacubeT)] <- 1
       var.put.nc(file.con.copy, paste(var.name, '_flag_orig', sep =''), data.flag)
-      var.put.nc(file.con.copy, var.name, datacube)
+      var.put.nc(file.con.copy, var.name, datacubeT)
     }  
   } else {
      file.con.copy      <- open.nc(con = file.name.copy, write = TRUE)     

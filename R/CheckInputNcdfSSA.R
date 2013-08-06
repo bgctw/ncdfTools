@@ -88,11 +88,15 @@ CheckInputNcdfSSA <- function(SSAprocess, ...)
         if(!identical(var.get.nc(file.con.orig, par.check), 
                       var.get.nc(con.ocean, par.check)))
           stop(paste(par.check,' values need to be identical in ocean.mask and',
-                     ' input ncdf file!'))
+                     'input ncdf file!'))
       }
       ocean.cells <- var.get.nc(con.ocean, var.name.om)
       args$ocean.mask  <- array(FALSE, dim = dim(ocean.cells))
       args$ocean.mask[ocean.cells == 1 ] <- TRUE
+      data.orig      <- var.get.nc(file.con.orig, ncdf.get.varname(file.con.orig))
+      oceancells.data<- sum(!is.na(data.orig[ind.datacube(data.orig, args$ocean.mask, c(1,2))]))
+      if (oceancells.data > 0)
+        stop('Some ocean cells seem to contain data. Is the ocean.mask file correctly set up?')
       close.nc(con.ocean)
     }
     if (length(args$ocean.mask) > 0 && !(dim(args$ocean.mask) == lengths.dim.nontime))

@@ -1,7 +1,7 @@
 TransposeNcdfCube  = function(
 ##title<< transpose Ncdf datacube
 ##description<< convenience function to transpose an arbitrary datacube in a ncdf 
-##              file into a datacube with [latitude (decreasing), longitude (increasing),
+##              file into a datacube with dimensions [latitude (decreasing), longitude (increasing),
 ##              time (increasing)].
     data.object ##<< RNetCDF file connection or R array: data object to be transposed.
     , file.name.out = 'none' ##<< character string: name of the

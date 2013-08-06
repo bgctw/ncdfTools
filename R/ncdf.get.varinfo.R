@@ -70,7 +70,8 @@ ncdf.get.varinfo  <- function(
     varinfo.out   <- cbind(varinfo.out, dim.names.var, dimids.var)
     col.order     <- match(order.var, colnames(varinfo.out))
     varinfo.out   <- varinfo.out[order(varinfo.out[, col.order]), ]
-    rowsCoordVars <- na.omit(match(dim.names, varinfo.out$name))
-    varinfo.out   <- varinfo.out[-rowsCoordVars,]
+    rowsCoordVars <-na.omit(match(dim.names, varinfo.out$name))
+    if (length(rowsCoordVars) > 0)
+      varinfo.out   <- varinfo.out[-rowsCoordVars,]
     return(varinfo.out)
 }

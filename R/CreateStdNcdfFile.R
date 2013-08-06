@@ -25,6 +25,7 @@ CreateStdNcdfFile <- function
     , missing_value = -9999  ##<< numeric: missing data value
     , con.atts = c()         ##<< RNetCDF file connection: Possible file to use as source
                              ##   for copying attributes to the new file.
+    , data = c()     
 )
 {
   require(RNetCDF)
@@ -65,6 +66,11 @@ CreateStdNcdfFile <- function
                     scale_factor = scale_factor, add_offset = add_offset,
                     type.var = type.var, missing_value = missing_value)
   
+  if (length(data) > 0 & length(var.names) == 1) {
+    con.t           <- open.nc(file.name, write = TRUE)
+    var.put.nc(con.t, var.names, data)
+    close.nc(con.t)
+  }
   invisible(file.name)
 }
 

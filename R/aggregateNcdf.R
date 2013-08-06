@@ -1,5 +1,6 @@
 aggregateNcdf <- function(
   fileName ##<< character vector: names of the files to aggregate.
+  , path.out = getwd() ##<< character: path to save the results files to. 
   , period ##<< integer or one of hour, day, month or year: period to agggregate to. In case
            ##   of an integer value, the unit is timesteps.
   ) {
@@ -11,7 +12,7 @@ aggregateNcdf <- function(
   if (inherits(period, 'character')) {
     cdoOperator <- paste(switch(period, hourly='hour', daily='day', monthly='mon',
                         yearly='year', 'not_available'), 'mean', sep = '')
-    if(cdoPrefix == 'not_vailable')
+    if(cdoOperator == 'not_vailable')
       stop(paste('Period \'', period, '\' not implemented!', sep = ''))
   } else if (inherits(period, 'numeric')) {
     cdoOperator      <- paste('timselmean,', period, sep = '') 
@@ -20,7 +21,8 @@ aggregateNcdf <- function(
   }
   
   ## determine cdo command values
-  fileNameOut <- sub('[.]nc', paste('_', period, '.nc', sep = ''), fileName)
+  fileNameOut <- file.path(path.out, sub('[.]nc', paste('_', period, '.nc', sep = ''), sub('.*/', '', fileName)))
+  
   cdoCmd      <- paste('cdo ', cdoOperator, ' ', fileName, ' ', fileNameOut, sep = '')
 
   ##run aggregation
