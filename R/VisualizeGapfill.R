@@ -22,6 +22,7 @@ VisualizeGapfill <- function(
   require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
   require(plotrix, warn.conflicts = FALSE, quietly = TRUE)
   require(jannis.misc, warn.conflicts = FALSE, quietly = TRUE)
+  require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
   library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
   require(DistributionUtils, warn.conflicts = FALSE, quietly = TRUE)
   require(snow, warn.conflicts = FALSE, quietly = TRUE)
@@ -37,15 +38,15 @@ VisualizeGapfill <- function(
 
   ## load data
   if (length(data.orig) == 0) {
-    status.report('Loading original data ...')
+    printStatus('Loading original data ...')
     data.orig   <- TransposeNcdfCube(data.object = con.orig, var.name = var.orig)
   }
   if (length(data.filled) == 0) {
-    status.report('Loading gapfilled data ...')    
+    printStatus('Loading gapfilled data ...')    
     data.filled <-  TransposeNcdfCube(data.object = con.filled, var.name = var.filled)  
   }
   if (length(data.prefill) == 0 & nchar(file.prefill)!=0) {
-    status.report('Loading pregapfilled data ...')
+    printStatus('Loading pregapfilled data ...')
     con.prefill  <- open.nc(file.prefill)
     var.prefill  <- ncdf.get.varname(file.prefill)
     data.prefill <-  TransposeNcdfCube(data.object = con.prefill, var.name = var.prefill)  
@@ -55,7 +56,7 @@ VisualizeGapfill <- function(
   
   
   ## calculate datacube info
-  status.report('Doing calculations ...')
+  printStatus('Doing calculations ...')
   cube.info.orig     <- parApply(cl = sfGetCluster(), data.orig, 1:2, GetVecInfo)       
   cube.info.filled   <- parApply(cl = sfGetCluster(), data.filled, 1:2, GetVecInfo)
   sfStop()
@@ -90,7 +91,7 @@ VisualizeGapfill <- function(
  
   
   ## do plots
-  status.report('Doing plots ...')
+  printStatus('Doing plots ...')
   grids.valid   <- which(cube.info.orig['ratio na', , ] < 1, arr.ind = TRUE)
   ind.rand      <- round(runif(16, 1, dim(grids.valid)[1]), digits = 0)
   ind.lat.orig  <- grids.valid[ind.rand, 1]

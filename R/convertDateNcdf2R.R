@@ -1,4 +1,4 @@
-date.ncdf2R  =  function(
+convertDateNcdf2R  =  function(
 ##title<< convert ncdf time vector to POSIXct
 ##description<< This function converts a time vector from a ncdf file or a vector of Julian days (or seconds, minutes, hours)
 ##              since a specified origin into a POOSIXct R vector.
@@ -35,3 +35,4 @@ date.ncdf2R  =  function(
   time.out                ##value<< POSIXct vector: time vector in native R format
 }
 
+date.ncdf2R = convertDateNcdf2R

@@ -1,4 +1,4 @@
-close.nc.all = function()
+closeAllNcfiles = function()
 ##title<< close all open ncdf connections
 ##description<< convenience function to close all ncdf connections that are 
 ##              currently open. 

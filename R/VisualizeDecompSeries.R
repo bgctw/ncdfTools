@@ -16,6 +16,7 @@ VisualizeDecompSeries <- function(
   require(ncdf.tools, warn.conflicts = FALSE, quietly = TRUE)
   require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
   require(jannis.misc, warn.conflicts = FALSE, quietly = TRUE)
+  require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
   require(DistributionUtils, warn.conflicts = FALSE, quietly = TRUE)
   
   ## preparation
@@ -33,13 +34,13 @@ VisualizeDecompSeries <- function(
   }
   
   if (is.element('time', ncdf.get.varinfo(con.orig)[,'name'])) {
-    x.vals <- date.ncdf2R(con.orig)
+    x.vals <- convertDateNcdf2R(con.orig)
   } else {
     x.vals <- 1:length(var.get.nc(con.orig, vars.decomp[1]))
   }  
 
   for (var.t in vars.decomp) {
-    status.report(paste('Plotting variable ', var.t, sep = ''))
+    printStatus(paste('Plotting variable ', var.t, sep = ''))
     n.plots = 5
     if (interactive() && is.element(names(dev.cur()), c('X11', 'null device')) && nchar(file.plot) == 0) {
       x11()

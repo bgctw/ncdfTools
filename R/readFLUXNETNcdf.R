@@ -1,4 +1,4 @@
-extract.FN.ncdf <- function(
+readFLUXNETNcdf <- function(
     path = getwd()
     , sites
     , pars
@@ -26,7 +26,7 @@ extract.FN.ncdf <- function(
     file.t       <- list.files()[file.ind]
     con.data     <- open.nc(file.t)
     timevec.t    <- var.get.nc(con.data, 'time')
-    timevec.ends <- as.chron(date.ncdf2R(timevec.t[c(1,length(timevec.t))], units = 'days'))
+    timevec.ends <- as.chron(convertDateNcdf2R(timevec.t[c(1,length(timevec.t))], units = 'days'))
     ind.start    <- which(abs(times - timevec.ends[1]) == min(abs(times - timevec.ends[1])))
     ind.end      <- which(abs(timevec.ends[2]- times) == min(abs(timevec.ends[2] - times)))
     

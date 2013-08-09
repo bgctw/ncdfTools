@@ -40,7 +40,7 @@ ncdf.add.dim <- function(
     #define new dimension
     dim.def.nc(file.con.copy, dim.name, dim.length, unlim=FALSE)
     if (length(dim.values) > 0) {
-        type.dim<- class.ncdf(dim.values)
+        type.dim<- classR2Ncdf(dim.values)
         var.def.nc(file.con.copy, dim.name, type.dim, dim.name)
         var.put.nc(file.con.copy, dim.name, dim.values)
     }

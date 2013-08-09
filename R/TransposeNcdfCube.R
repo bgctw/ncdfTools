@@ -33,14 +33,16 @@ TransposeNcdfCube  = function(
     datacube   <- aperm(datacube, new.dimorder)
 
   # sort values according to coordinate values order
-  lat.values     <- var.get.nc(file.con, pmatch('lat', ncdf.get.varinfo(file.con, order.var = 'id')$name) - 1)
+  lat.name       <- ncdf.get.diminfo(file.con)$name[pmatch('lat', ncdf.get.diminfo(file.con)$name)]
+  lat.values     <- var.get.nc(file.con, lat.name)
   if (sum(unique(diff(order(lat.values, decreasing = TRUE))) != 1) > 0)
     datacube   <- datacube[order(lat.values, decreasing = TRUE), , ]
-  lon.values     <- var.get.nc(file.con, pmatch('lon', ncdf.get.varinfo(file.con, order.var = 'id')$name) - 1)
+  lon.name       <- ncdf.get.diminfo(file.con)$name[pmatch('lon', ncdf.get.diminfo(file.con)$name)]
+  lon.values     <- var.get.nc(file.con, lon.name)
   if (sum(unique(diff(order(lon.values))) != 1) > 0)
     datacube   <- datacube[, order(lon.values), ]
   if (is.element('time', dims.file)) {
-    time.values    <- var.get.nc(file.con, pmatch('time', ncdf.get.varinfo(file.con, order.var = 'id')$name) - 1)
+    time.values    <- var.get.nc(file.con, 'time')
     if (sum(unique(diff(order(time.values))) != 1) > 0)
       datacube   <- datacube[, , order(time.values)]
   } else {
@@ -49,7 +51,7 @@ TransposeNcdfCube  = function(
   
   # create new file
   if (file.name.out != 'none') {
-    CreateLatLongTime(file.name = file.name.out, var.names = var.name,
+    createLatLongTime(file.name = file.name.out, var.names = var.name,
                       lat.values = lat.values, long.values = lon.values,
                       time.values = time.values)
     con.fill        <- open.nc(file.name.out, write = TRUE)

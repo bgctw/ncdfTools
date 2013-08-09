@@ -1,4 +1,4 @@
-ind.datacube = function(
+indexDatacube = function(
 ##title<< create logical index matrices for multidimensional datacubes
 ##description<< This function facilitates suppliying logical index array for some 
 ##              of the dimensions of a data array. This mimics Matlabs indexing scheme.
@@ -68,3 +68,5 @@ ind.datacube = function(
   ##value<< integer index matrix which can be used to index datacube
   ind.matrix.ord
 }
+
+ind.datacube <- indexDatacube

@@ -1,4 +1,4 @@
-call.args2string = function()
+convertArgs2String = function()
 ##title<< save function argument settings to a character string
 {
     args.all  <- ls(parent.frame())

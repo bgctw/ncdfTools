@@ -1,4 +1,4 @@
-CreateStdNcdfFile <- function
+createStdNcdfFile <- function
     ##title<< create an empty ncdf file with standardized attributes and dimensions
     ##description<< This function writes an empty ncdf file with variable names, dimensions and
     ##              attributes formated in a standardized way.
@@ -59,7 +59,7 @@ CreateStdNcdfFile <- function
     file.name <- paste(file.name, '.nc', sep='')
   } 
   
-  CreateLatLongTime(file.name = file.name, lat.values = lat.values,
+  createLatLongTime(file.name = file.name, lat.values = lat.values,
                     lat.length = lat.length, long.values = long.values,
                     long.length = long.length, time.values = time.values,
                     time.length = time.length, var.names = var.names,
@@ -74,4 +74,5 @@ CreateStdNcdfFile <- function
   invisible(file.name)
 }
 
-create.std.nc <- CreateStdNcdfFile
+create.std.nc <- createStdNcdfFile
+CreateStdNcdfFile <- createStdNcdfFile

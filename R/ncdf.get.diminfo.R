@@ -12,6 +12,11 @@ ncdf.get.diminfo  <- function(
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   require(RNetCDF)
+  if (inherits(file.con, 'character')) {
+    if (!file.exists(file.con))
+      stop('Specified file not existent!')
+    file.con <- open.nc(file.con)
+  }
   n.dims            <- file.inq.nc(file.con)$ndims
   dim.info          <- as.data.frame(matrix(NA, n.dims, 6))
   colnames(dim.info)<- c('id', 'name', 'length', 'min', 'max', 'step')
@@ -23,7 +28,7 @@ ncdf.get.diminfo  <- function(
     if (extended) {
       if (is.element(dim.name, ncdf.get.varinfo(file.con)$name)) {
         if (dim.name == 'time') {
-          dims.vals      <- date.ncdf2R(file.con)
+          dims.vals      <- convertDateNcdf2R(file.con)
           if (class(dims.vals)[1] == 'POSIXct') {
             dims.info      <- c(as.integer(format(range(dims.vals), '%Y%m%d')), mean(diff(dims.vals)))
           } else {
@@ -37,6 +42,8 @@ ncdf.get.diminfo  <- function(
       }
     }
   }
+  if (closeNcdf)
+    close.nc(file.con)
   ##value<<
   ## A matrix containing the id, name, length, range and step (columns) of all dimensions (rows)
   return(dim.info)

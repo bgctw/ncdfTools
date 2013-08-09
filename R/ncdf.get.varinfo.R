@@ -1,12 +1,15 @@
 ncdf.get.varinfo  <- function(
-##title<<  display information about all ncdf variables
-##description<< returns different summary information about all variables in a NCDF file.
-    file.con            ##<< a NetCDF object pointing to the respective ncdf file
-    , order.var = c('id', 'name')[2]
-                        ##<< character vector: whether to sort the variables according
-                        ##   to their name (default) or id
-    , info.ext = FALSE  ##<< logical: whether to compute ranges/means etc. for the variables.
-                        ##  Setting this to TRUE may take a while to compute with large files.
+##title<<  display information about all variables in ncdf file
+##description<< This function eturns different summary information about all variables
+##              in a NCDF file.
+  file.con            ##<< a NetCDF object pointing to the respective ncdf file.
+  , order.var = c('id', 'name')[2]
+                      ##<< character vector: Whether to sort the variables according
+                      ##   to their name (default) or id.
+  , info.ext = FALSE  ##<< logical: whether to compute ranges/means etc. for the variables.
+                      ##  Setting this to TRUE may take a while to compute with large files.
+  , dimvars = FALSE   ##<< logical: whether to include the cooridinate variables in the output. 
+  
 )
 ##seealso<<
 ##\code{\link{ncdf.get.diminfo}}, \code{\link{ncdf.get.varinfo}}
@@ -70,8 +73,8 @@ ncdf.get.varinfo  <- function(
     varinfo.out   <- cbind(varinfo.out, dim.names.var, dimids.var)
     col.order     <- match(order.var, colnames(varinfo.out))
     varinfo.out   <- varinfo.out[order(varinfo.out[, col.order]), ]
-    rowsCoordVars <-na.omit(match(dim.names, varinfo.out$name))
-    if (length(rowsCoordVars) > 0)
+    rowsCoordVars <- na.omit(match(dim.names, varinfo.out$name))
+    if (length(rowsCoordVars) > 0 & !dimvars)
       varinfo.out   <- varinfo.out[-rowsCoordVars,]
     return(varinfo.out)
 }

@@ -1,4 +1,4 @@
-CreateLatLongTime <- function(
+createLatLongTime <- function(
   file.name
   , var.names = sub('[.]nc', '', file.name)
   , lat.values = c()                  ##<< numeric values: coordinate values for the latitude
@@ -63,3 +63,5 @@ CreateLatLongTime <- function(
   close.nc(file.con)
   cat(paste('Created file', file.name), '\n')
 }
+
+CreateLatLongTime <- createLatLongTime

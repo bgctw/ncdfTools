@@ -5,38 +5,38 @@ DecomposeNcdf = structure(function(
   file.name             ##<< character: name of the ncdf file to decompose. The file has to be in the current working directory!
   , borders.wl          ##<< list: borders of the different periodicity bands to extract. Units are
                         ##   sampling frequency of the series. In case of monthly data border.wl<- list(c(11, 13))
-                        ##   would extract the annual cycle (period = 12). For details, see the documentation of FilterTSeriesSSA.
+                        ##   would extract the annual cycle (period = 12). For details, see the documentation of filterTSeriesSSA.
   , calc.parallel = TRUE##<< logical: whether to use parallel computing. Needs package doMC or doSMP to process.
-  , center.series = TRUE##<< SSA calculation parameter: see the documentation of FilterTSeriesSSA!
+  , center.series = TRUE##<< SSA calculation parameter: see the documentation of filterTSeriesSSA!
   , check.files = TRUE  ##<< logical: whether to use CheckNcdfFile to check ncdf files for consistency.
   , debugging = FALSE   ##<< logical: if set to TRUE, debugging workspaces or dumpframes are saved at several stages
                         ##   in case of an error.     
   , harmonics = c()     ##<< SSA calculation parameter: Number of harmonics to be associated with each band. See the
-                        ##   documentation of FilterTSeriesSSA!
+                        ##   documentation of filterTSeriesSSA!
   , M = c()             ##<< SSA calculation parameter. Window length for time series embedding (can be different
-                        ##   for each element in borders.wl): see the documentation of FilterTSeriesSSA.
+                        ##   for each element in borders.wl): see the documentation of filterTSeriesSSA.
   , max.cores = 16      ##<< integer: maximum number of cores to use.
-  , n.comp = c()        ##<< SSA calculation parameter: see the documentation of FilterTSeriesSSA!
+  , n.comp = c()        ##<< SSA calculation parameter: see the documentation of filterTSeriesSSA!
   , package.parallel = 'doMC' ##<< character: package to use for linking foreach to
                         ##   the parallel computing backend. Only doMC as the algorithm has been
                         ##   extensively tested with this package.!
-  , pad.series = c(0,0) ##<< SSA calculation parameter: see the documentation of FilterTSeriesSSA!
+  , pad.series = c(0,0) ##<< SSA calculation parameter: see the documentation of filterTSeriesSSA!
   , print.status = TRUE ##<< logical: whether to print status information during the process
   , ratio.const = 0.05  ##<< numeric: max ratio of the time series that is allowed to be above tresh.const for the time series
                         ##   still to be not cosidered constant. 
-  , repeat.extr = rep(1,times=length(borders.wl))##<< SSA calculation parameter: see the documentation of FilterTSeriesSSA!
+  , repeat.extr = rep(1,times=length(borders.wl))##<< SSA calculation parameter: see the documentation of filterTSeriesSSA!
   , tresh.const = 1e-12 ##<< numeric: value below which abs(values) are assumed to be constant and excluded
                         ##   from the decomposition
   , var.names = 'auto'  ##<< character string: name of the variable to fill. If set to 'auto' (default), the name
                         ##   is taken from the file as the variable with a different name than the dimensions. An
                         ##   error is produced here in cases where more than one such variables exist.
-  , ...                 ##<< additional arguments transferred to FilterTSeriesSSA.
+  , ...                 ##<< additional arguments transferred to filterTSeriesSSA.
   )
   ##details<<
 
   ## This is a wrapper function to automatically load, decompose and save a ncdf file using Singular Spectrum Analysis
-  ## (SSA). It facilitates parallel computing and uses the FilterTSeriesSSA() function. Refer to
-  ## the documentation of FilterTSeriesSSA() for details of the calculations and the necessary parameters, especially
+  ## (SSA). It facilitates parallel computing and uses the filterTSeriesSSA() function. Refer to
+  ## the documentation of filterTSeriesSSA() for details of the calculations and the necessary parameters, especially
   ## for how to perform stepwise filtering.
   ##
   ##
@@ -72,7 +72,7 @@ DecomposeNcdf = structure(function(
   ## calculated sequential without these dependencies. The package foreach is needed in all cases.
 
   ##seealso<<
-  ##\code{\link{ssa}}, \code{\link{FilterTSeriesSSA}}, \code{\link{GapfillNcdf}}
+  ##\code{\link{ssa}}, \code{\link{filterTSeriesSSA}}, \code{\link{GapfillNcdf}}
 
   ##value<<
   ##Nothing is returned but a ncdf file with the results is written in the working directory.
@@ -84,18 +84,6 @@ DecomposeNcdf = structure(function(
   ##TODO Try zero line crossings for frequency determination
   ##TODO Make method reproducible (seed etc)
   ##TODO Add way to handle non convergence
-  ##save argument values of call
-
-  ## prepare parallel backend
-  if (calc.parallel)
-    RegisterParallel(package.parallel, max.cores)
-  
-  args.call.filecheck <- as.list(environment())
-  args.call.global    <- call.args2string()
-  if (print.status & !interactive()) {
-    print('Arguments supplied to function call:')
-    print(paste(paste(names(args.call.filecheck), args.call.filecheck, sep = ':'), collapse = '; '))
-  }
   
   ## load libraries
   if (print.status)
@@ -110,8 +98,20 @@ DecomposeNcdf = structure(function(
     require(multicore, warn.conflicts = FALSE, quietly = TRUE)
   }
   
+  ## prepare parallel backend
+  if (calc.parallel)
+    RegisterParallel(package.parallel, max.cores)
+
+  ##save argument values of call
+  args.call.filecheck <- as.list(environment())
+  args.call.global    <- convertArgs2String()
+  if (print.status & !interactive()) {
+    print('Arguments supplied to function call:')
+    print(paste(paste(names(args.call.filecheck), args.call.filecheck, sep = ':'), collapse = '; '))
+  }
+  
   ## check input
-  res.check     <- do.call(CheckInputNcdfSSA,
+  res.check     <- do.call(checkInputNcdfSSA,
                            c(SSAprocess = 'Decompose', args.call.filecheck))
   file.con.orig <- res.check$file.con.orig    
   if (length(var.names) == 1 && var.names == 'auto') 
@@ -181,7 +181,7 @@ DecomposeNcdf = structure(function(
   for (var.name in var.names) {
     data.all          <- var.get.nc(file.con.orig, var.name)
     if (print.status)
-      status.report(paste('Processing variable ', var.name, sep = ''))
+      printStatus(paste('Processing variable ', var.name, sep = ''))
     ##prepare parallel iteration parameters
     dims.ids.data       <- var.inq.nc(file.con.orig, var.names[1])$dimids + 1   
     dims.info           <- ncdf.get.diminfo(file.con.orig)[dims.ids.data, ]
@@ -210,7 +210,7 @@ DecomposeNcdf = structure(function(
     results.identify        <- do.call(IdentifyCellsNcdfSSA, args.identify)
     AttachList(results.identify)
     if (sum(results.identify$slices.process) == 0) {
-      status.report(paste('Specdecomp for ', var.name,' not possible. Next step ...', sep = ''))
+      printStatus(paste('Specdecomp for ', var.name,' not possible. Next step ...', sep = ''))
       next
     }
 
@@ -289,13 +289,13 @@ DecomposeNcdf = structure(function(
   }
   
   ## add attributes with process information to ncdf files
-  all.args     <- formals(FilterTSeriesSSA)
+  all.args     <- formals(filterTSeriesSSA)
   all.args[na.omit(match(names(args.call), names(all.args)))] <- args.call[is.element(names(args.call), names(all.args))]
   red.args     <- all.args[c('borders.wl', 'M', 'n.comp', 'harmonics', 'tolerance.harmonics',
                              'var.thresh.ratio', 'grouping', 'pad.series', 'SSA.methods', 'repeat.extr')]
   string.args  <- paste(paste(names(red.args), sapply(red.args, function(x)paste(x, collapse=', '))
                               , sep=': '), collapse='; ')
-  att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposed_by', 'NC_CHAR', compile.sysinfo())
+  att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposed_by', 'NC_CHAR', getSysinfo())
   att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposed_on', 'NC_CHAR', as.character(Sys.time()))
   att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposition_settings', 'NC_CHAR', string.args)
   hist.string.append <- paste('Spectrally decomposed on ', as.character(Sys.time()),
@@ -353,7 +353,7 @@ DecomposeNcdfCoreprocess = function(iter.nr, n.timesteps, n.bands, dims.cycle.n,
         ind.extract[[dims.process.id + 1]] <- TRUE
         args.call.t             <- args.call
         args.call.t[['series']] <- as.numeric(do.call('[', ind.extract))
-        series.decomp           <- do.call(FilterTSeriesSSA, args.call.t)
+        series.decomp           <- do.call(filterTSeriesSSA, args.call.t)
         t(series.decomp$dec.series)
       })
     if (class(data.results.iter.t) == 'try-error') {

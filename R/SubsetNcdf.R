@@ -26,7 +26,7 @@ SubsetNcdf <- function(file.name, dim.values = list(latitudes =c(), longitudes=c
   lon.values.target  <- dimvals.src$longitude[dim.indices$longitudes]
   time.values.target <- dimvals.src$time[dim.indices$timesteps]
   var.name.new <- sub('.*/', '', sub('[.]nc', '', filename.new))
-  CreateLatLongTime(var.names = var.name.new, file.name = filename.new,
+  createLatLongTime(var.names = var.name.new, file.name = filename.new,
                     lat.values = lat.values.target, long.values = lon.values.target,
                     time.values = time.values.target)
 

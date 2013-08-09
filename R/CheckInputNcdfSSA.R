@@ -1,4 +1,4 @@
-CheckInputNcdfSSA <- function(SSAprocess, ...)
+checkInputNcdfSSA <- function(SSAprocess, ...)
 {
   ##title<< helper function for Ncdf SSA routines
   ##details<< helper function for Ncdf SSA routines that checks the consistency of the 
@@ -94,7 +94,7 @@ CheckInputNcdfSSA <- function(SSAprocess, ...)
       args$ocean.mask  <- array(FALSE, dim = dim(ocean.cells))
       args$ocean.mask[ocean.cells == 1 ] <- TRUE
       data.orig      <- var.get.nc(file.con.orig, ncdf.get.varname(file.con.orig))
-      oceancells.data<- sum(!is.na(data.orig[ind.datacube(data.orig, args$ocean.mask, c(1,2))]))
+      oceancells.data<- sum(!is.na(data.orig[indexDatacube(data.orig, args$ocean.mask, c(1,2))]))
       if (oceancells.data > 0)
         stop('Some ocean cells seem to contain data. Is the ocean.mask file correctly set up?')
       close.nc(con.ocean)

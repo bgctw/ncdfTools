@@ -1,4 +1,4 @@
-class.ncdf = function(
+classR2Ncdf = function(
  object ##<< object which class should be determined
 )
 ##title<<

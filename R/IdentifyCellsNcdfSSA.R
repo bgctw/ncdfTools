@@ -153,7 +153,7 @@ IdentifyCellsNcdfSSA = function(
   
   #return stuff
   if (sum(slices.process) == 0) {
-    status.report(paste('No series/slices available for filling. Most probably only',
+    printStatus(paste('No series/slices available for filling. Most probably only',
             ' totally gappy and totally gap-free slices/series exist.', sep=''))
   }
   iters.n <- sum(slices.process)

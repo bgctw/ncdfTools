@@ -1,7 +1,7 @@
-convertBinary2Ncdf = function
+convertBinary2Ncdf = function(
 ##title<< tranform binary file to ncdf file
-##description<< This function transforms a binary data file to a ncdf file formated in a standardized way.
-   (
+##description<< This function transforms a binary data file to a ncdf file formated
+##              in a standardized way.
     file.input                             ##<< character string: name of the input file.
     , length = 1                           ##<< integer: Length in bytes of each entry in the input file.
     , type = numeric()                     ##<< R data type of the data in the input file.
@@ -22,7 +22,8 @@ convertBinary2Ncdf = function
     , na.value.out = na.value.in           ##<< numeric: missing value for output data.
     , offset.in = 0                        ##<< numeric: offset for input data.
     , offset.out = offset.in)              ##<< numeric: offset for output data.
-##value<< Nothing is returned but a ncdf file with a standardized name is written in the working directory.
+##value<< Nothing is returned but a ncdf file with a standardized name is written
+##        in the working directory.
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {

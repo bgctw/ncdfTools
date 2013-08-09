@@ -1,4 +1,4 @@
-date.R2ncdf = function(
+convertDateR2Ncdf = function(
 ##title<< convert time vectors in ncdf files to julian days since the start of gregorian calendar   
 ##description<< This function automatically converts time vectors in ncdf files to a standardized gregorian calendar
        ncdf.obj              ##<< character string or ncdf connection: ncdf file for which to convert the dates    
@@ -57,3 +57,4 @@ date.R2ncdf = function(
   
 }    
 
+date.R2ncdf = convertDateR2Ncdf

@@ -1,0 +1,33 @@
+readCoordinatesNcdf = function(
+  ##title<< read coordinate or dimesnion values from ncdf file
+  fileCon ##<< ncdf file connection or character string: Connection to the
+          ##   ncdf file or its file name. In the latter case, the connection is
+          ##   created and closed automatically.
+  )
+  ##description<<
+  ##This function reads the coordinate values from a ncdf file.
+  ##author<<
+  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  ##seealso<<
+  ##\code{\link{ncdf.get.diminfo}}
+  {
+    closeNcdf  <- FALSE
+    if (inherits(fileCon, 'character')) {
+      if (!file.exists(fileCon))
+        stop('Specified file not existent!')
+      fileCon <- open.nc(fileCon)
+    }
+    dimNames <- ncdf.get.diminfo(fileCon)$name
+    results <- list()
+    for (dimNameT in dimNames) {
+      if (is.element(dimNameT, ncdf.get.varinfo(fileCon, dimvars = TRUE)$name)) {
+        results[[dimNameT]] <- var.get.nc(fileCon, dimNameT)
+      } else {
+        results[[dimNameT]] <- NULL
+      }
+    }
+    if (closeNcdf)
+      close.nc(fileCon)
+    ##value<< A list with the coordinate values (if available) for all dimensions.
+    return(results)
+  }

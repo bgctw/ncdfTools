@@ -1,4 +1,4 @@
-compile.sysinfo=function()
+getSysinfo=function()
 ##title<< extract system information
 ##description<< convenience function to compile some information about the system used.
 {
