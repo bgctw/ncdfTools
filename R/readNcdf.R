@@ -1,4 +1,4 @@
-ReadNcdfData <- function(
+readNcdf <- function(
     ##title<< fast reading of ncdf data
     ##description<< Convenience funtcion to automatically read in data from a ncdf file
     ##              without specifying variable names and opening file connections
@@ -16,4 +16,4 @@ ReadNcdfData <- function(
 }  
 
 
-ncdf.read.data <- ReadNcdfData
+ncdf.read.data <- readNcdf

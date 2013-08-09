@@ -207,7 +207,7 @@ DecomposeNcdf = structure(function(
                           datacube = data.all, ratio.const = ratio.const, 
                           tresh.const = tresh.const , print.status = print.status, 
                           slices.n = slices.n, algorithm = 'Decompose')
-    results.identify        <- do.call(IdentifyCellsNcdfSSA, args.identify)
+    results.identify        <- do.call(identifyValidCellsSSA, args.identify)
     AttachList(results.identify)
     if (sum(results.identify$slices.process) == 0) {
       printStatus(paste('Specdecomp for ', var.name,' not possible. Next step ...', sep = ''))

@@ -1,4 +1,4 @@
-SubsetNcdf <- function(file.name, dim.values = list(latitudes =c(), longitudes=c(), timesteps=c()),
+readNcdfSubset <- function(file.name, dim.values = list(latitudes =c(), longitudes=c(), timesteps=c()),
                        values.type =c('range', 'indices', 'values')[2],
                        filename.new = sub('[.]nc', '_subs.nc', file.name)) {
   ##ToDo facilitated other scenarios than lat/lon/time
@@ -31,7 +31,7 @@ SubsetNcdf <- function(file.name, dim.values = list(latitudes =c(), longitudes=c
                     time.values = time.values.target)
 
   # load, transpose and subset source data
-  data.orig   <- TransposeNcdfCube(con.source)
+  data.orig   <- transNcdfRotate(con.source)
   close.nc(con.source)
   data.target <- array(data.orig[IndVectors2IndMatrix(dim.indices$latitudes,
                                                       dim.indices$longitudes,

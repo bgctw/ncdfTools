@@ -817,7 +817,7 @@ GapfillNcdfDatacube <- function(args.call.SSA = list(), calc.parallel = TRUE,
                                            values.constant = values.constant,
                                            slices.constant = slices.constant,
                                            slices.process = slices.process))
-  results.identify      <- do.call('IdentifyCellsNcdfSSA', args.identify)
+  results.identify      <- do.call('identifyValidCellsSSA', args.identify)
   AttachList(results.identify)
   
   #create iterator

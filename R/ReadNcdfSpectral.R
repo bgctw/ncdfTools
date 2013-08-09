@@ -1,4 +1,4 @@
-ReadNcdfDataSpectral <- function(fileName, varName, rangeBandsGet) {
+readNcdfSpectral <- function(fileName, varName, rangeBandsGet) {
   .funSum    <- function(x) {
     xUse <- x[bandsTake]
     if (sum(!is.na(xUse)) == 0) {

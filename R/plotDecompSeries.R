@@ -1,4 +1,4 @@
-VisualizeDecompSeries <- function(
+plotDecompSeries <- function(
   ##title<< visualize/plot an overview of a SSA gapfilled ncdf file.
   file.orig                ##<< object to plot: file name or file.con object linking to a ncdf file
   , file.decomp = sub('[.]nc', '_specdecomp.nc', file.orig)

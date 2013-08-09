@@ -1,4 +1,4 @@
-VisualizeGapfillSeries <- function(
+plotGapfillSeries <- function(
   ##title<< visualize/plot an overview of a SSA gapfilled ncdf file.
   file.orig                ##<< object to plot: file name or file.con object linking to a ncdf file
   , file.filled = sub('[.]nc', '_gapfill.nc', file.orig)

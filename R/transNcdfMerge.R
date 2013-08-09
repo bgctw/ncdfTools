@@ -1,4 +1,4 @@
-ncdf.merge.files <- function(
+transNcdfMerge <- function(
     ##title<< merge several ncdf files
     ##descrition<< Convenience wrapper around cdo to merge several ncdf files
     ##             containing subsequent time steps into one continous file.
@@ -19,8 +19,8 @@ ncdf.merge.files <- function(
   ##TODO useful defaults
   ##TODO detect overlapping time spans
   require(chron)
-  date.start.in <- ncdf.name2date(file.names, fun.start, convert)
-  date.end.in   <- ncdf.name2date(file.names, fun.end, convert)
+  date.start.in <- convertFilename2Date(file.names, fun.start, convert)
+  date.end.in   <- convertFilename2Date(file.names, fun.end, convert)
   
   file.names    <- file.names[order(date.start.in)]
   date.end.in   <- date.end.in[order(date.start.in)]

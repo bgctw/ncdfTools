@@ -1,4 +1,4 @@
-ncdf.name2date <- function(
+convertFilename2Date <- function(
     file.names
     , fun.extr.string
     , fun.conv.string) 

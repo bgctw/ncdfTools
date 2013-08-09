@@ -1,4 +1,4 @@
-TransposeNcdfCube  = function(
+transNcdfRotate  = function(
 ##title<< transpose Ncdf datacube
 ##description<< convenience function to transpose an arbitrary datacube in a ncdf 
 ##              file into a datacube with dimensions [latitude (decreasing), longitude (increasing),

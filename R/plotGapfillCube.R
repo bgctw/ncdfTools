@@ -1,4 +1,4 @@
-VisualizeGapfill <- function(
+plotGapfillCube <- function(
   ##title<< visualize/plot an overview of a SSA gapfilled ncdf file.
   file.orig                ##<< object to plot: file name or file.con object linking to a ncdf file
   , file.filled
@@ -39,17 +39,17 @@ VisualizeGapfill <- function(
   ## load data
   if (length(data.orig) == 0) {
     printStatus('Loading original data ...')
-    data.orig   <- TransposeNcdfCube(data.object = con.orig, var.name = var.orig)
+    data.orig   <- transNcdfRotate(data.object = con.orig, var.name = var.orig)
   }
   if (length(data.filled) == 0) {
     printStatus('Loading gapfilled data ...')    
-    data.filled <-  TransposeNcdfCube(data.object = con.filled, var.name = var.filled)  
+    data.filled <-  transNcdfRotate(data.object = con.filled, var.name = var.filled)  
   }
   if (length(data.prefill) == 0 & nchar(file.prefill)!=0) {
     printStatus('Loading pregapfilled data ...')
     con.prefill  <- open.nc(file.prefill)
     var.prefill  <- ncdf.get.varname(file.prefill)
-    data.prefill <-  TransposeNcdfCube(data.object = con.prefill, var.name = var.prefill)  
+    data.prefill <-  transNcdfRotate(data.object = con.prefill, var.name = var.prefill)  
   }
 
 

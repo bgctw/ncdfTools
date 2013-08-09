@@ -119,8 +119,8 @@ IdentifyCellsNcdfSSA = function(
   }
   
   # identify constant slices
-  slices.constant    <- as.vector(apply(datacube, MAR = dims.cycle.id + add.id,
-                                        isSeriesConstant, ratio.const = ratio.const,
+  slices.constant    <- as.vector(apply(X = datacube, MARGIN= dims.cycle.id + add.id,
+                                        FUN = isSeriesConstant, ratio.const = ratio.const,
                                         tresh.const = tresh.const))
   slices.constant[slices.too.gappy | slices.empty | slices.ocean | slices.without.gaps] <- FALSE
   values.constant    <-  as.vector(apply(datacube, MAR = dims.cycle.id + add.id,
