@@ -12,10 +12,14 @@ ncdf.get.diminfo  <- function(
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   require(RNetCDF)
+
   if (inherits(file.con, 'character')) {
     if (!file.exists(file.con))
       stop('Specified file not existent!')
     file.con <- open.nc(file.con)
+    closeNcdf = TRUE
+  } else {
+      closeNcdf = FALSE
   }
   n.dims            <- file.inq.nc(file.con)$ndims
   dim.info          <- as.data.frame(matrix(NA, n.dims, 6))
