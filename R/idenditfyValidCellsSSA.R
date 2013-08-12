@@ -1,4 +1,4 @@
-IdentifyCellsNcdfSSA = function(
+identifyValidCellsSSA = function(
 ##title<< helper function for Ncdf SSA algorithms 
     dims.cycle.id, dims.process.id, datacube, ratio.const, tresh.const , print.status,
     slices.n, algorithm,  g = c() ,process.cells = c('gappy','all')[1], dims.cycle = c(), 
@@ -34,7 +34,7 @@ IdentifyCellsNcdfSSA = function(
   getMissingRatio = function(x) {
     sum(is.na(x)) / prod(dim(datacube)[dims.process.id + add.id])
   } 
-  amnt.na      <- apply(datacube, MAR = dims.cycle.id + add.id , getMissingRatio)
+  amnt.na      <- apply(datacube, MARGIN = dims.cycle.id + add.id , getMissingRatio)
   slices.empty <- as.vector(amnt.na == 1)
 
   ## slices checks specific to decomposition
@@ -42,7 +42,7 @@ IdentifyCellsNcdfSSA = function(
     slices.process              <- as.vector(amnt.na == 0)
     slices.too.gappy            <- !slices.empty & !slices.process
     if (sum(slices.too.gappy) > 0) {
-       slices.continuous         <- apply(datacube, MAR = dims.cycle.id + add.id , isSeriesContinuous)
+       slices.continuous         <- apply(datacube, MARGIN = dims.cycle.id + add.id , isSeriesContinuous)
        slices.continuous[(1-amnt.na[slices.continuous]) * dim(datacube)[dims.process.id] < 20] <- FALSE
        slices.too.gappy[slices.continuous] <- FALSE
     }
@@ -57,7 +57,7 @@ IdentifyCellsNcdfSSA = function(
         ## modifications in case of given ocean mask
         if ((length(ocean.mask) > 0 ) & (sum(!is.na(match(c('longitude','latitude'), 
                           dims.process))) == 2)) {
-          amnt.na <- 1- apply(datacube, MAR = dims.cycle.id + 1 ,
+          amnt.na <- 1- apply(datacube, MARGIN = dims.cycle.id + 1 ,
               function(x) sum(!is.na(x[as.vector(!ocean.mask)])) / sum(!ocean.mask)   )
         }
         if (length(ocean.mask) > 0 & sum(!is.na(match(c('longitude','latitude'), 
@@ -87,10 +87,10 @@ IdentifyCellsNcdfSSA = function(
         
         ## modify this in case first guess is supplied
         if ((length(first.guess) > 1) & tresh.fill.dc == 0) {
-          amnt.na.first.guess    <- apply(first.guess, MAR = dims.cycle.id + 1,
+          amnt.na.first.guess    <- apply(first.guess, MARGIN = dims.cycle.id + 1,
               function(x)sum(is.na(x)) / dtpts  )
           if ((length(ocean.mask) > 0 ) & (sum(!is.na(match(c('longitude','latitude'), dims.process))) == 2))
-            amnt.na.first.guess  <- 1- apply(first.guess, MAR = dims.cycle.id + 1 ,
+            amnt.na.first.guess  <- 1- apply(first.guess, MARGIN = dims.cycle.id + 1 ,
                 function(x) sum(!is.na(x[as.vector(!ocean.mask)])) / sum(!ocean.mask)   )
           slices.too.gappy[amnt.na.first.guess < 0.9 & amnt.na < 0.75] <- FALSE
         }      
@@ -123,7 +123,7 @@ IdentifyCellsNcdfSSA = function(
                                         FUN = isSeriesConstant, ratio.const = ratio.const,
                                         tresh.const = tresh.const))
   slices.constant[slices.too.gappy | slices.empty | slices.ocean | slices.without.gaps] <- FALSE
-  values.constant    <-  as.vector(apply(datacube, MAR = dims.cycle.id + add.id,
+  values.constant    <-  as.vector(apply(datacube, MARGIN = dims.cycle.id + add.id,
                                          median, na.rm = TRUE))
   if (sum(slices.constant) > 0)
     cat(paste(Sys.time(), ' : ', sum(slices.constant),' constant slices were found.',
