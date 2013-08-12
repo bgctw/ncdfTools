@@ -1,5 +1,10 @@
 convertArgs2String = function()
-##title<< save function argument settings to a character string
+##title<< save function argument settings to a character string.
+##description<< This function save function argument settings to a character string.
+##              This is used in the ncdf routines that save these argument values as
+##              attributes of the target ncdf files.
+##author<<
+## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     args.all  <- ls(parent.frame())
     args.call <- list()

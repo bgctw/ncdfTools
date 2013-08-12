@@ -3,6 +3,7 @@ convertBinary2Ncdf = function(
 ##description<< This function transforms a binary data file to a ncdf file formated
 ##              in a standardized way.
     file.input                             ##<< character string: name of the input file.
+    , date.vec                             ##<< R date object: time vector for the time coordinate
     , length = 1                           ##<< integer: Length in bytes of each entry in the input file.
     , type = numeric()                     ##<< R data type of the data in the input file.
     , type.ncdf = 'NC_DOUBLE'              ##<< cjaracter string: Desired data type in the ncdf file.
@@ -14,7 +15,7 @@ convertBinary2Ncdf = function(
                                            ##   (used for the meta data in the Ncdf file).
     , long_name = var.name                 ##<< character string: long name of the variable in binary file
                                            ##   (used for the meta data in the Ncdf file).
-    , var.units = '[]'                      ##<< character string: units of the variable
+    , var.units = '[]'                     ##<< character string: units of the variable
                                            ##   (used for the meta data in the Ncdf file).
     , scale.factor.in = 1                  ##<< numeric: factor to multiply the binary input data with.
     , scale.factor.out = scale.factor.in   ##<< numeric: desired scale factor of the data in the ncdf file.
@@ -49,7 +50,7 @@ convertBinary2Ncdf = function(
                     long.length = dims.lengths[dimensions=='longitude'],
                     time.length = dims.lengths[dimensions=='time'],
                     add_offset = offset.out, scale_factor = scale.factor.out,
-                    missing_value = na.value, type.var = 'NC_SHORT', var.units=  var.units)
+                    missing_value = na.value.out, type.var = 'NC_SHORT', units =  var.units)
   cat('Writing data ...\n')
   file.con      <- open.nc(file.name,write=TRUE)
   data.array.perm <- aperm(data.array,perm=match(ncdf.get.diminfo(file.con)[,'name'],dimensions))

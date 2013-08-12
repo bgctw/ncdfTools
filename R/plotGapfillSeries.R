@@ -6,10 +6,11 @@ plotGapfillSeries <- function(
   , data.filled = c()
   , ...
 )
-##details<<
-##\if{html}{\out{<img src="../doc/visualize_ncdf_demo.png" alt="image ..visualize_ncdf_demo should be here"/>}}\ifelse{latex}{}{}
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  ##description<<
+  ## This function plots some overview statistics of a ncdf file.
+  ##\if{html}{\out{<img src="../doc/visualize_ncdf_demo.png" alt="image ..visualize_ncdf_demo should be here"/>}}\ifelse{latex}{}{}
+  ##author<<
+  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   ##TODO facilitate datacube input
   ##TODO include plot.nlines capabilites
@@ -38,7 +39,7 @@ plotGapfillSeries <- function(
     if(interactive() && names(dev.cur()) == 'X11')
       x11()
     layout(matrix(c(1,2,3,3,4,5,6,7,8,9), byrow=TRUE, ncol=2),
-           height = c(1, 1))
+           heights = c(1, 1))
     
     par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(2, 0, 0, 2), oma = c(0, 2, 0, 0))
 
@@ -47,7 +48,7 @@ plotGapfillSeries <- function(
     if (sum(!is.na(orig.t)) == 0) {
       for (i in 1:9) 
         plot.new()
-      text(trnsf.coords(0.1,0.9), labels =  var.t, cex = 2)
+      text(userCoords(0.1,0.9), labels =  var.t, cex = 2)
       next
     }
     
@@ -64,9 +65,9 @@ plotGapfillSeries <- function(
          ylim = c(0, max( range(c(hst.orig$counts, hst.filled$counts)))), xlab = '',
          main = '', col = 'black', yaxt ='n')
     box()
-    text(trnsf.coords(c(0.8,0.9),c(0.9, 0.9)), labels =  c('filled', 'orig'),
+    text(userCoords(c(0.8,0.9),c(0.9, 0.9)), labels =  c('filled', 'orig'),
          col = c('red', 'black'), cex = 2)
-    text(trnsf.coords(0.1,0.9), labels =  var.t, cex = 2)
+    text(userCoords(0.1,0.9), labels =  var.t, cex = 2)
     
     hst.filled  <- logHist(filled.t, breaks = breaks, col = 'red',
                            pch = 16, xlab = '', main = '')

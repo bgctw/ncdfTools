@@ -6,7 +6,7 @@ ncdf.get.diminfo  <- function(
                        ##   may take time to compute for large files is computed.
 )
 ##seealso<<
-##\code{\link{ncdf.get.varinfo}}, \code{\link{dim.inq.nc}}
+##\code{\link{ncdf.get.varinfo}}, \code{\link[RNetCDF]{dim.inq.nc}}
 
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de

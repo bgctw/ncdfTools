@@ -1,7 +1,5 @@
 transNcdfMerge <- function(
     ##title<< merge several ncdf files
-    ##descrition<< Convenience wrapper around cdo to merge several ncdf files
-    ##             containing subsequent time steps into one continous file.
       file.names ##<< character vector: names of the files to merge.
       , name.change = function(x) return(x) 
       , time.diff = NULL ##<< maximum time difference to be allowd between two subsequent 
@@ -13,8 +11,11 @@ transNcdfMerge <- function(
       , convert = function(x) chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y')
       , path.target = getwd() ##<< file path: path where to copy to the results files.
 )
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  ##description<<
+  ## Convenience wrapper around cdo to merge several ncdf files containing
+  ## subsequent time steps into one continous file.
+  ##author<<
+  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   ##TODO useful defaults
   ##TODO detect overlapping time spans
@@ -48,7 +49,7 @@ transNcdfMerge <- function(
   if (length(time.range.out) == 2) {
     files.delete <- c() 
     if (date.start.in[1] < time.range.out[1]) {
-      file.start.new <- ncdf.cut.files(file.names[1], time.range.out =  c(time.range.out[1], date.end.in[1]),
+      file.start.new <- transNcdfCutFiles(file.names[1], time.range.out =  c(time.range.out[1], date.end.in[1]),
           fun.start= fun.start, fun.end = fun.end, format = format, convert = convert)
       file.names[1]  <- file.start.new
       files.delete   <- c(files.delete, file.start.new)
@@ -56,7 +57,7 @@ transNcdfMerge <- function(
       date.start.in[1] <- time.range.out[1]
     } 
     if (date.end.in[length(date.end.in)] > time.range.out[2]) {
-      file.end.new <- ncdf.cut.files(file.names[length(file.names)],
+      file.end.new <- transNcdfCutFiles(file.names[length(file.names)],
           time.range.out =  c(date.start.in[length(date.start.in)], time.range.out[2]),
           fun.start= fun.start, fun.end = fun.end, format = format, convert = convert)
       file.names[length(file.names)]  <- file.end.new
@@ -73,5 +74,7 @@ transNcdfMerge <- function(
   if (exists('files.delete') && length(files.delete) > 0 )
     for (file.t in files.delete)
       file.remove(file.t)
+  ##value<<
+  ##list: name of the file created and its time range.
   invisible(list(file.out = ofile, date.range = c(date.start.out, date.end.out)))
 }

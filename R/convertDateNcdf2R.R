@@ -12,6 +12,7 @@ convertDateNcdf2R  =  function(
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
+  require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
   if (class(time.source) == 'NetCDF') {
     attget.result <- try({
       time.units      <- ncdf.get.attinfo(time.source, 'time')[, 'value'][ncdf.get.attinfo(time.source, 'time')[, 'name'] == 'units']
@@ -35,4 +36,3 @@ convertDateNcdf2R  =  function(
   time.out                ##value<< POSIXct vector: time vector in native R format
 }
 
-date.ncdf2R = convertDateNcdf2R

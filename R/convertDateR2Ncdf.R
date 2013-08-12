@@ -1,23 +1,23 @@
 convertDateR2Ncdf = function(
-##title<< convert time vectors in ncdf files to julian days since the start of gregorian calendar   
-##description<< This function automatically converts time vectors in ncdf files to a standardized gregorian calendar
+##title<< convert time vectors in ncdf files to julian days since the start of Gregorian calendar   
+##description<< This function automatically converts time vectors in ncdf files to a standardized Gregorian calendar
        ncdf.obj              ##<< character string or ncdf connection: ncdf file for which to convert the dates    
       , date.vec='auto'      ##<< POSIXct vector: date vectors for the time dimension. If set to 'auto', this
                              ##   is tried to be extracted from the ncdf file
       , origin="1582-10-14"  ##<< character string: origin to be used for the time vector. This start of the 
-                             ##   gregorian calendar should be kept to avoid possible mistakes due to erronous
+                             ##   Gregorian calendar should be kept to avoid possible mistakes due to erronous
                              ##   conversions.
       , write.to.ncdf = TRUE                       
 )
 ##details<< This function sets a time vector in a ncdf file to a standardized format which is readable by
-##           most software. It transfers the time vector to days since the start of the gregorian calendar.
+##           most software. It transfers the time vector to days since the start of the Gregorian calendar.
 ##value<< (invisibly): the time vector. Additionally the time vector is written to the respective file.
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   close.connection = TRUE
   if (class(ncdf.obj)=='character')
-    if(!file.exitsts(ncdf.obj))
+    if(!file.exists(ncdf.obj))
       stop('Specified file does not exist!')
   if (class(ncdf.obj)=='NetCDF') {
     file.con=ncdf.obj
@@ -40,7 +40,7 @@ convertDateR2Ncdf = function(
   
   if (write.to.ncdf) {
     if (!is.element('time',ncdf.get.varinfo(file.con)$name))
-      var.def.nc(file.con,'time', NC_float, 'time')
+      var.def.nc(file.con,'time', 'NC_float', 'time')
     
     var.put.nc(file.con, 'time', date.vec.conv)
     atts.def <- list(long_name = 'time', calendar = 'gregorian', units = paste('days since ', origin, sep = ''))
@@ -57,4 +57,3 @@ convertDateR2Ncdf = function(
   
 }    
 
-date.R2ncdf = convertDateR2Ncdf

@@ -1,11 +1,15 @@
 readFLUXNETNcdf <- function(
+  ##title<< read data from FLUXNET Ncdf file.
     path = getwd()
     , sites
     , pars
     , time.ends 
     , dim.borders)
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de 
+  ##description
+  ## This function reads data from standard FLUXNET ncdf files and returns it in
+  ## an R object.
+  ##author<<
+  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de 
 {
   require(RNetCDF)
   require(chron)
@@ -43,5 +47,7 @@ readFLUXNETNcdf <- function(
     print(paste('finished file ', counter, ' of ', length(sites), sep = ''))    
   }
   setwd(owd)
+  ##value<<
+  ## array: FLUXNET data
   return(data.extr)
 }

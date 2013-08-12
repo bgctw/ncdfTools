@@ -1,4 +1,4 @@
-DecomposeNcdf = structure(function(
+decomposeNcdf = structure(function(
     ##title<< spectral decomposition o ftimeseries inside a ncdf file.
     ##description<< Wrapper function to automatically decompose gridded time series inside a ncdf file and save the results
     ##              to another ncdf file using SSA.
@@ -6,9 +6,9 @@ DecomposeNcdf = structure(function(
   , borders.wl          ##<< list: borders of the different periodicity bands to extract. Units are
                         ##   sampling frequency of the series. In case of monthly data border.wl<- list(c(11, 13))
                         ##   would extract the annual cycle (period = 12). For details, see the documentation of filterTSeriesSSA.
-  , calc.parallel = TRUE##<< logical: whether to use parallel computing. Needs package doMC or doSMP to process.
+  , calc.parallel = TRUE##<< logical: whether to use parallel computing. Needs package doMC process.
   , center.series = TRUE##<< SSA calculation parameter: see the documentation of filterTSeriesSSA!
-  , check.files = TRUE  ##<< logical: whether to use CheckNcdfFile to check ncdf files for consistency.
+  , check.files = TRUE  ##<< logical: whether to use checkNcdfFile to check ncdf files for consistency.
   , debugging = FALSE   ##<< logical: if set to TRUE, debugging workspaces or dumpframes are saved at several stages
                         ##   in case of an error.     
   , harmonics = c()     ##<< SSA calculation parameter: Number of harmonics to be associated with each band. See the
@@ -66,13 +66,13 @@ DecomposeNcdf = structure(function(
   ## Parallel computing
   ##
   ## If calc.parallel == TRUE, single time series are decomposed with parallel computing. This requires
-  ## the package doSMP or doMP, respectively,  (and their dependencies) to be installed on the computer.
+  ## the package doMC  (and its dependencies) to be installed on the computer.
   ## Parallelization with other packages is theoretically possible but not yet implemented. If
   ## multiple cores are not available, setting calc.parallel to FALSE will cause the process to be
   ## calculated sequential without these dependencies. The package foreach is needed in all cases.
 
   ##seealso<<
-  ##\code{\link{ssa}}, \code{\link{filterTSeriesSSA}}, \code{\link{GapfillNcdf}}
+  ##\code{\link[Rssa]{ssa}}, \code{\link[spectral.methods]{filterTSeriesSSA}}, \code{\link{gapfillNCdf}}
 
   ##value<<
   ##Nothing is returned but a ncdf file with the results is written in the working directory.
@@ -100,7 +100,7 @@ DecomposeNcdf = structure(function(
   
   ## prepare parallel backend
   if (calc.parallel)
-    RegisterParallel(package.parallel, max.cores)
+    registerParallel(package.parallel, max.cores)
 
   ##save argument values of call
   args.call.filecheck <- as.list(environment())
@@ -111,7 +111,7 @@ DecomposeNcdf = structure(function(
   }
   
   ## check input
-  res.check     <- do.call(checkInputNcdfSSA,
+  res.check     <- do.call(.checkInputNcdfSSA,
                            c(SSAprocess = 'Decompose', args.call.filecheck))
   file.con.orig <- res.check$file.con.orig    
   if (length(var.names) == 1 && var.names == 'auto') 
@@ -203,12 +203,18 @@ DecomposeNcdf = structure(function(
     n.timesteps         <- dims.info[match('time', dims.info$name), 3]
 
     ## determine slices to process
-    args.identify <- list(dims.cycle.id = dims.cycle.id, dims.process.id = dims.process.id,
-                          datacube = data.all, ratio.const = ratio.const, 
-                          tresh.const = tresh.const , print.status = print.status, 
-                          slices.n = slices.n, algorithm = 'Decompose')
-    results.identify        <- do.call(identifyValidCellsSSA, args.identify)
-    AttachList(results.identify)
+    results.identify <- .identifyValidCellsSSA(dims.cycle.id = dims.cycle.id, dims.process.id = dims.process.id,
+                                              datacube = data.all, ratio.const = ratio.const, 
+                                              tresh.const = tresh.const , print.status = print.status, 
+                                              slices.n = slices.n, algorithm = 'Decompose')
+    iters.n = results.identify$iters.n
+    slices.process = results.identify$slices.process
+    values.constant = results.identify$values.constant
+    slices.constant = results.identify$slices.constant 
+    slices.without.gaps = results.identify$slices.without.gaps
+    slices.excluded = results.identify$slices.excluded
+    slices.too.gappy = results.identify$slices.too.gappy
+ 
     if (sum(results.identify$slices.process) == 0) {
       printStatus(paste('Specdecomp for ', var.name,' not possible. Next step ...', sep = ''))
       next
@@ -247,7 +253,7 @@ DecomposeNcdf = structure(function(
       cat(paste(Sys.time(), ' : Starting calculation: Decomposing ', sum(slices.process),
                 ' timeseries of length ', n.timesteps, '. \n', sep=''))
     if (calc.parallel) {
-      data.results.valid.cells <- foreach(i = 1:max.cores, .combine = abind.mod, .multicombine = TRUE) %dopar% DecomposeNcdfCoreprocess(
+      data.results.valid.cells <- foreach(i = 1:max.cores, .combine = abind.mod, .multicombine = TRUE) %dopar% .decomposeNcdfCoreprocess(
                                                                                    iter.nr = i, print.status = print.status, data.all = data.all, 
                                                                                    n.timesteps = n.timesteps, file.name = file.name,
                                                                                    n.bands = n.bands, dims.cycle.n = dims.cycle.n,
@@ -256,7 +262,7 @@ DecomposeNcdf = structure(function(
                                                                                    dims.process.id = dims.process.id, dims.cycle.id = dims.cycle.id)
     } else {
       data.results.valid.cells <- foreach(i = 1:max.cores
-                                          ,  .combine = abind.mod,  .multicombine = TRUE) %do% DecomposeNcdfCoreprocess(iter.nr = i,
+                                          ,  .combine = abind.mod,  .multicombine = TRUE) %do% .decomposeNcdfCoreprocess(iter.nr = i,
                                                                       n.timesteps = n.timesteps,  print.status = print.status,
                                                                       n.bands = n.bands, dims.cycle.n = dims.cycle.n, data.all = data.all, 
                                                                       iter.grid = iter.grid, args.call = args.call, file.name = file.name,
@@ -310,9 +316,6 @@ DecomposeNcdf = structure(function(
   close.nc(file.con.orig)
   if (print.status)
     cat(paste(Sys.time(), ' : Calculation successfully finished. \n', sep=''))
-  
-  if (package.parallel=='doSMP')
-    stopWorkers(w)
   return(NULL)
 }
 , ex = function(){
@@ -325,20 +328,25 @@ DecomposeNcdf = structure(function(
   M         <- c(2*12, 4*12, 12)
   #extract first for harmonics for yearly cycle
   harmonics <- c(4, 0, 0)
-  decompose.ncdf(file.name = filename, borders.wl = borders.wl, M = M, harmonics = harmonics)
+
+  # uncomment and run 
+  # decomposeNcdf(file.name = filename, borders.wl = borders.wl, M = M, harmonics = harmonics)
 
   # Extract yearly cycle, intra annual part and high frequency residual in one step
   borders.wl <- list(c(0,10,14,Inf))
   # use the same M for all bands
   M          <- c(2*12)
-  decompose.ncdf(file.name = filename, borders.wl = borders.wl, M = M)
+  # uncomment and run
+  #decomposeNcdf(file.name = filename, borders.wl = borders.wl, M = M)
 })
 
 #####################################      core process       #############################
 
-DecomposeNcdfCoreprocess = function(iter.nr, n.timesteps, n.bands, dims.cycle.n, data.all, 
+.decomposeNcdfCoreprocess = function(iter.nr, n.timesteps, n.bands, dims.cycle.n, data.all, 
                                     iter.grid, args.call, var.name, dims.process.id,
                                     dims.cycle.id, iter.gridind, print.status, file.name)
+  ##description<<
+  ## Helper function for decomposeNcdf. Is run parallellised on each core.
 {
   require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
   iter.ind                   <- iter.gridind[iter.nr, ]

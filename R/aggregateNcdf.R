@@ -1,9 +1,16 @@
 aggregateNcdf <- function(
+  ##title<< aggregate data in ncdf files
   fileName ##<< character vector: names of the files to aggregate.
   , path.out = getwd() ##<< character: path to save the results files to. 
   , period ##<< integer or one of hour, day, month or year: period to agggregate to. In case
-           ##   of an integer value, the unit is timesteps.
-  ) {
+           ##   of an integer value, the unit is time steps.
+  )
+  ##description<<
+  ## This function aggregates time periods in ncdf files. Basically it is just a
+  ## wrapper around the respective cdo function.
+  ##author<<
+  ##Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+{
 
   ##test input
   if (!checkInstalled('cdo'))

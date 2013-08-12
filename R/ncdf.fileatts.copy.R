@@ -7,7 +7,7 @@ ncdf.fileatts.copy <- function(
     , dimensions = TRUE  ##<< logical: whether to copy all dimensions
     )
 ##seealso<<
-##\code{\link{ncdf.fileatts.copy}}, \code{\link{ncdf.var.copy}}, \code{\link[RNetCDF:att.copy.nc]{att.copy.nc}}
+##\code{\link{ncdf.fileatts.copy}}, \code{\link{ncdf.var.copy}}, \code{\link[RNetCDF]{att.copy.nc}}
 
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de

@@ -5,7 +5,8 @@ plotDecompSeries <- function(
   , file.plot = ''
   , ...
 )
-##details<<
+##description<<
+## This function plots an Visualisation of a SSA gapfilled ncdf file.  
 ##\if{html}{\out{<img src="../doc/visualize_ncdf_demo.png" alt="image ..visualize_ncdf_demo should be here"/>}}\ifelse{latex}{}{}
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
@@ -45,7 +46,7 @@ plotDecompSeries <- function(
     if (interactive() && is.element(names(dev.cur()), c('X11', 'null device')) && nchar(file.plot) == 0) {
       x11()
     } else if ( nchar(file.plot) > 0) {
-      png(file = paste(file.plot, '_', var.t, '.png', sep = ''), width = 3200, height = 1600, type = 'cairo',
+      png(filename = paste(file.plot, '_', var.t, '.png', sep = ''), width = 3200, height = 1600, type = 'cairo',
           pointsize = 48)
     }
     
@@ -58,7 +59,7 @@ plotDecompSeries <- function(
     plots.full <- mean.window > length(orig.t)/20
     layout.mat = matrix(c(rep(1:(sum(plots.full)+1),n.plots)), ncol = n.plots)
     layout.final <- rbind(layout.mat, matrix(1:(n.plots * sum(!plots.full)) + max(layout.mat), ncol = n.plots, byrow = TRUE))
-    layout(layout.final, height = c(2, rep(1, n.bands)))
+    layout(layout.final, heights = c(2, rep(1, n.bands)))
     par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(1, 0, 0, 2), oma = c(0, 2, 2, 0))
 
     
@@ -81,7 +82,7 @@ plotDecompSeries <- function(
     
     for (band.t in which(plots.full)) {
       plot(x.vals, orig.t, ylim = range(c(orig.t, decomp.t[, band.t]), na.rm = TRUE), xlab = '')
-      text(UserCoords(0.1, 0.8), borders.string[band.t], col = 'red', cex = 1.5)
+      text(userCoords(0.1, 0.8), borders.string[band.t], col = 'red', cex = 1.5)
       points(x.vals, decomp.t[, band.t], pch = 16, cex = 0.5, col = band.t + 1)
     }
     
@@ -92,7 +93,7 @@ plotDecompSeries <- function(
         index = plots.start[j] + (0:series.length)
         plot(x.vals[index], orig.t[index], ylim = range(c(orig.t[index], decomp.t[index, band.t] ), na.rm = TRUE), xlab = '')
         if (j == 1)
-          text(UserCoords(0.1*n.plots, 0.8), borders.string[band.t], col = 'red', cex = 1.5)
+          text(userCoords(0.1*n.plots, 0.8), borders.string[band.t], col = 'red', cex = 1.5)
 
         points(x.vals[index], decomp.t[index, band.t], pch = 16, cex = 0.5, col = band.t + 1)
       }
@@ -103,6 +104,7 @@ plotDecompSeries <- function(
 
   }
   
-  
+  ##value<<
+  ##nothing is returned.
 }
 

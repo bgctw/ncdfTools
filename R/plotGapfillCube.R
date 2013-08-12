@@ -10,11 +10,12 @@ plotGapfillCube <- function(
   , lwd = 2
   , max.cores = 36                           
   , ...
-)
-##details<<
-##\if{html}{\out{<img src="../doc/visualize_ncdf_demo.png" alt="image ..visualize_ncdf_demo should be here"/>}}\ifelse{latex}{}{}
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  )
+  ##description<<
+  ## This function plots some overview statistics of a ncdf file.
+  ##\if{html}{\out{<img src="../doc/visualize_ncdf_demo.png" alt="image ..visualize_ncdf_demo should be here"/>}}\ifelse{latex}{}{}
+  ##author<<
+  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   ##TODO facilitate datacube input
   ##TODO include plot.nlines capabilites
@@ -30,7 +31,7 @@ plotGapfillCube <- function(
   
   ## preparation
   setDefaultClusterOptions(port = sample(49152:65535, 1))
-  sfInit(cpus = min(c(GetCoreLimit(), max.cores)), type = 'SOCK', parallel = TRUE)    
+  sfInit(cpus = min(c(getCoreLimit(), max.cores)), type = 'SOCK', parallel = TRUE)    
   con.orig   <- open.nc(file.orig)
   con.filled <- open.nc(file.filled)
   var.filled <- ncdf.get.varname(file.filled)
@@ -117,7 +118,7 @@ plotGapfillCube <- function(
   if(names(dev.cur()) == 'X11')
     x11()
   layout(matrix(c(1:9),byrow=TRUE,ncol=3),
-         height=c(1,1,1,1))
+         heights=c(1,1,1,1))
   par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(2, 0, 0, 2), oma = c(0, 2, 4, 0))
   pars.plot =  c('ratio na', 'min', 'max')
   for (i in 1:length(pars.plot)) {
@@ -148,7 +149,7 @@ plotGapfillCube <- function(
   if(names(dev.cur()) == 'X11')
     x11()
   layout(matrix(c(1:2),byrow=TRUE,ncol=1),
-         height=c(1,1))
+         heights=c(1,1))
   par(tcl = 0.2, mgp = c(1, 0, 0), mar = c(2, 0, 0, 2), oma = c(0, 2, 4, 0), xpd = FALSE)
   breaks = seq(min(cube.info.filled['min', , ], na.rm = TRUE),
                max(cube.info.filled['max', , ], na.rm = TRUE), length.out = 200)
@@ -163,7 +164,7 @@ plotGapfillCube <- function(
        ylim = c(0, max( range(c(hst.orig$counts, hst.filled$counts)))), xlab = '',
        main = '', col = 'black')
   box()
-  text(trnsf.coords(c(0.8,0.9),c(0.9, 0.9)), labels =  c('filled', 'orig'),
+  text(userCoords(c(0.8,0.9),c(0.9, 0.9)), labels =  c('filled', 'orig'),
        col = c('red', 'black'), cex = 2)
   logDensities <- log(c(hist(cube.info.filled['ratio na',,], breaks =seq(0,1,length.out=100), plot = FALSE)$density,
            hist(cube.info.orig['ratio na',,], breaks =seq(0,1,length.out=100), plot = FALSE)$density))
@@ -174,7 +175,7 @@ plotGapfillCube <- function(
   browser()
   hst.orig  <- logHist(cube.info.orig['ratio na',,], breaks =100, ylim = yRange,
           cex = 1.1, xlab = 'ratio of missing values per grid point', main = '', xlim = c(0,1))
-  text(trnsf.coords(c(0.7,0.9),c(0.9, 0.9)), labels =  c('filled', 'orig'),
+  text(userCoords(c(0.7,0.9),c(0.9, 0.9)), labels =  c('filled', 'orig'),
        col = c('red', 'black'), cex = 2)
   mtext(side = 2 , text = 'log(density)', las = 3, line = 1)
    
@@ -220,7 +221,7 @@ plotGapfillCube <- function(
       }
       if (sum(!is.na(y.data)) > 0 ) {
         plot(y.data, col = 'red', pch = 16, type = 'b', lty = 2)
-        text(UserCoords(0.01,0.5), pos = 4, paste(unlist(args.extract[c(2,3)]), collapse = ','), cex = 2 )
+        text(userCoords(0.01,0.5), pos = 4, paste(unlist(args.extract[c(2,3)]), collapse = ','), cex = 2 )
         points(y.data.orig, col = 'black', pch = 16)
         if (sum(ind.prefill) > 0)
            points(which(ind.prefill), y.data.orig[ind.prefill], col = 'green', pch = 16)
@@ -229,11 +230,11 @@ plotGapfillCube <- function(
         plot.new()      
       }
     }
-    text(UserCoords(c(0.7,0.8, 0.9),c(0.4, 0.4, 0.4)), labels =  c('filled', 'orig', 'prefilled'),
+    text(userCoords(c(0.7,0.8, 0.9),c(0.4, 0.4, 0.4)), labels =  c('filled', 'orig', 'prefilled'),
         col = c('red', 'black', 'green'), cex = 2)
     mtext(characteristic, outer = TRUE, side = 3, cex = 2)
   }
  ## return stuff
   invisible(cube.info.agg)
 }
-##\code{\figure(visualize_ncdf_demo.png)}
+

@@ -1,6 +1,8 @@
 createLatLongTime <- function(
-  file.name
-  , var.names = sub('[.]nc', '', file.name)
+  ##title<< create empty lat/lon/time ncdf file
+  file.name                           ##<< character string: name of the target file.
+  , var.names = sub('[.]nc', '', file.name) ##<< character vector: names of the variables
+                                      ##         in the target file.
   , lat.values = c()                  ##<< numeric values: coordinate values for the latitude
                                       ##   positions.
   , long.values = c()                 ##<< numeric values: coordinate values for the latitude
@@ -13,8 +15,16 @@ createLatLongTime <- function(
   , add_offset = 0         ##<< numeric: offset
   , type.var = 'NC_DOUBLE' ##<< character string: type of the data
   , missing_value = -9999  ##<< numeric: missing data value
-  , units = '[]'
-) {
+  , units = '[]'           ##<< character string: units of the variables in target file.  
+)
+  ##description<<
+  ## this function creates an empty standardized latitude/longitude/time ncdf file.
+  ##value <<
+  ## nothing is returned.
+  ##author<<
+  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+{
+  ##TODO: units has to work with more than one variable
   require(RNetCDF)
   file.con  <- create.nc(file.name)
   
@@ -63,5 +73,3 @@ createLatLongTime <- function(
   close.nc(file.con)
   cat(paste('Created file', file.name), '\n')
 }
-
-CreateLatLongTime <- createLatLongTime

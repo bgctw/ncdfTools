@@ -1,7 +1,5 @@
 transNcdfCutFiles <- function(
     ##title<< cut margins of ncdf files
-    ##description<< Convenience wrapper around cdo to cut outer (time) margins 
-    ##              of Ncdf files.
        file.names ##<< vector of character stings: file names to process.
        , time.range.out = c()
        , time.range.file =  c() ##<< POSIXct vector of length two or 'auto': time range of the 
@@ -12,6 +10,10 @@ transNcdfCutFiles <- function(
        , fun.end = c()          ##<< see time.range.file
        , format = ''
        , convert = function(x) chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y'))
+  ##description<< Convenience wrapper around cdo to cut outer (time) margins 
+  ##              of Ncdf files.
+  ##author<<
+  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   ##TODO implement possibility to supply dates
   ##TODO implement possibility to extract dates from file
@@ -53,4 +55,4 @@ transNcdfCutFiles <- function(
   ##value<< character string: names of the file names after cutting.
   invisible(file.names.out)
 }  
-ncdf.cut.files <- NcdfCutFiles
+

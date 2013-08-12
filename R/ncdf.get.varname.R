@@ -10,7 +10,7 @@ ncdf.get.varname <- function(
 ## having the most dimensions is used.
 
 ##seealso<<
-## \code{\link[RNetCDF:RNetCDF]{RNetCDF:RNetCDF}}, \code{\link{ncdf.get.varinfo}}
+## \code{\link[RNetCDF]{RNetCDF}}, \code{\link{ncdf.get.varinfo}}
 
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de

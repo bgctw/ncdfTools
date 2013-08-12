@@ -69,4 +69,3 @@ indexDatacube = function(
   ind.matrix.ord
 }
 
-ind.datacube <- indexDatacube

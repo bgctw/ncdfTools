@@ -10,7 +10,7 @@ ncdf.get.attinfo <- function(
 ## Global attributes are returned if 'NC_GLOBAL' is given.
 
 ##seealso<<
-##\code{\link{ncdf.get.diminfo}}, \code{\link{ncdf.get.varinfo}}, \code{\link[RNetCDF:att.inq.nc]{att.inq.nc}}
+##\code{\link{ncdf.get.diminfo}}, \code{\link{ncdf.get.varinfo}}, \code{\link[RNetCDF]{att.inq.nc}}
 
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de

@@ -74,5 +74,3 @@ createStdNcdfFile <- function
   invisible(file.name)
 }
 
-create.std.nc <- createStdNcdfFile
-CreateStdNcdfFile <- createStdNcdfFile

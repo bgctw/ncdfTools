@@ -17,7 +17,7 @@ ncdf.add.dim <- function(
                                ##   the new dimension and the remaining values left empty (NaN).
 )
 ##seealso<<
-##\code{\link{ncdf.fileatts.copy}}, \code{\link[RNetCDF:att.copy.nc]{att.copy.nc}},
+##\code{\link{ncdf.fileatts.copy}}, \code{\link[RNetCDF]{att.copy.nc}},
 ## \code{\link{ncdf.var.copy}}
 
 ##author<<

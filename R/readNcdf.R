@@ -15,5 +15,3 @@ readNcdf <- function(
   return(data)
 }  
 
-
-ncdf.read.data <- readNcdf

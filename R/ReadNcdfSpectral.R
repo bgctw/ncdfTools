@@ -1,4 +1,14 @@
-readNcdfSpectral <- function(fileName, varName, rangeBandsGet) {
+readNcdfSpectral <- function(
+  fileName       ##<< character string: name of the ncdf file
+  , varName      ##<< character string: name of the variable to extract.
+  , rangeBandsGet##<< vector: Vector defining the bands to extract. Can be either
+                 ##   logical with one TRUE/FALSE per band in the file or a numeric
+                 ##   vector of length two with the lower and the upper spectral
+                 ##   border.
+  )
+  ##description<<
+  ## Read spectrally saved ncdf data (i.e. the output of a call to decomposeNcdf).
+{
   .funSum    <- function(x) {
     xUse <- x[bandsTake]
     if (sum(!is.na(xUse)) == 0) {
@@ -27,5 +37,7 @@ readNcdfSpectral <- function(fileName, varName, rangeBandsGet) {
     dimsSum    <- 1:(length(dim(dataIn))-1)
     dataSummed <- apply(dataIn, dimsSum, .funSum)
   }
+  ##value<<
+  ## matrix: the spectral bands defined. 
   return(dataSummed)
 }

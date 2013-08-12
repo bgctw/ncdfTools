@@ -8,7 +8,7 @@ ncdf.att.copy <- function(
                                    ##   attributes (same as file.con.orig by default)
    )
 ##seealso<<
-##\code{\link{ncdf.fileatts.copy}}, \code{\link{ncdf.var.copy}}, \code{\link{att.copy.nc}}
+##\code{\link{ncdf.fileatts.copy}}, \code{\link{ncdf.var.copy}}
 
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de

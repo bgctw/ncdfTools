@@ -1,10 +1,11 @@
 ncdf.hist.add = function(
     ##title<< automatically append string to ncdf history
-    ##description << Convenience function to append a string together with the date
-    ##               and the user to the history attribute of an Ncdf file. 
     file ##<< character sting or RNetCCDF file connection: file to write to.
 , string ##<< character string: string to append to teh history
-) 
+)
+  ##description<<
+  ## Convenience function to append a string together with the date and the user
+  ## to the history attribute of an Ncdf file. 
   ##author<<
   ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
   {

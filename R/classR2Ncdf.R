@@ -26,5 +26,5 @@ classR2Ncdf = function(
         ncdf.class     <- 'NC_CHAR'
     }
     ##value<< character string: ncdf class used in the RNetCDF package.
-    ncdf.class
+    return(ncdf.class)
 }
