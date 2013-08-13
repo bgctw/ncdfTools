@@ -1,11 +1,11 @@
-gapfillNCdf <- structure(function(
+gapfillNcdf <- structure(function(
 ##title<< fill gaps in time series or spatial fields inside a ncdf file using SSA.
 ##description<< Wrapper function to automatically fill gaps in series or spatial fields inside a ncdf file and save the results
 ##              to another ncdf file.
 amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of numeric vectors: the relative ratio (length gaps/series length) of
                       ##             artificial gaps to include in the "innermost" SSA loop (e.g. the value used by the
-                      ##             SSA run for each indivuidual series/slice). These ratio is used to determine 
+                      ##             SSA run for each individual series/slice). These ratio is used to determine 
                       ##             the iteration with the best prediction (c(ratio big gaps, ratio small gaps)) (see ?gapfillSSA for details )                                  
 , amnt.iters = rep(list(   rep(list(c(10, 10)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of integer vectors: amount of iterations performed for the outer and inner
@@ -31,20 +31,20 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                       ##             first guess (for the first step of the process!). This name needs to be exactly
                       ##             "<filename>_first_guess_step_1.nc".                                  
 , force.all.dims = FALSE ##<< logical: if this is set to true, results from dimensions not chosen as the best guess are used
-                      ##             to fill gaps that could not be filled by the buest guess dimensions due to too gappy slices etc. .                                  
+                      ##             to fill gaps that could not be filled by the best guess dimensions due to too gappy slices etc. .                                  
 , gaps.cv = 0         ##<< numeric: ratio (between 0 and 1) of artificial gaps to be included prior to the first
                       ##             cross validation loop that are used for cross validation.
 , keep.steps = TRUE   ##<< logical: whether to keep the files with the results from the single steps                                                        
 , M                   ##<< list of single integers: window length  or embedding dimension in time steps. If not
                       ##             given,  a default value of 0.5*length(time series) is computed.                                                               
 , max.cores = 8       ##<< integer: maximum number of cores to use (if calc.parallel = TRUE).                                  
-, max.steps = 10      ##<< integer: maximum aount of steps in the variances scheme                                 
+, max.steps = 10      ##<< integer: maximum amount of steps in the variances scheme                                 
 , MSSA =  rep(list(   rep(list(FALSE), times = length(dimensions[[1]]))) , times = length(dimensions))
-                      ##<< list of logicals: Whether to perform MSSA for this dimension (see description 
-                      ##             for details). Has to have the sam ind.extr e structure as dimensions.
+                      ##<< list of logical values: Whether to perform MSSA for this dimension (see description 
+                      ##             for details). Has to have the same ind.extr e structure as dimensions.
 , MSSA.blck.trsh = tresh.fill[[1]][[1]]
                       ##<< numeric: ratio (0-1) of gaps that a MSSA block may contain to be filled.                                   
-, MSSA.blocksize = 1  ##<< integer: size of the quadratical block used for MSSA.  
+, MSSA.blocksize = 1  ##<< integer: size of the quadratic block used for MSSA.  
 , n.comp = lapply(amnt.iters, FUN = function(x)x[[1]][[1]][1] * 2)
                       ##<< list of single integers: amount of eigentriples to extract (default (if no values are
                       ##             supplied) is 2*amnt.iters[1] (see ?gapfillSSA for details)
