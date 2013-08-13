@@ -31,7 +31,7 @@ createLatLongTime <- function(
   if (0 != lat.length) {
     dim.def.nc(file.con, 'latitude', dimlength = lat.length)
     var.def.nc(file.con, 'latitude','NC_DOUBLE', 'latitude')
-    ncdf.def.all.atts(file.con, 'latitude', atts = list(long_name = "latitude",
+    modifyNcdfDefAtts(file.con, 'latitude', atts = list(long_name = "latitude",
                                               units = "degrees_north" ,
             standard_name = "latitude"))       
     if (length(lat.values) > 0)
@@ -40,7 +40,7 @@ createLatLongTime <- function(
   if (0 != long.length) {    
     dim.def.nc(file.con, 'longitude', dimlength = long.length)
     var.def.nc(file.con, 'longitude','NC_DOUBLE', 'longitude')
-    ncdf.def.all.atts(file.con,'longitude',atts = list(long_name = "longitude",
+    modifyNcdfDefAtts(file.con,'longitude',atts = list(long_name = "longitude",
                                              units = "degrees_east" ,
             standard_name = "longitude"))
     if (length(long.values) > 0)
@@ -51,7 +51,7 @@ createLatLongTime <- function(
     var.def.nc(file.con, 'time','NC_DOUBLE', 'time')
     if (length(time.values) > 0) {
       if (inherits(time.values, c('POSIXlt', 'POSIXct'))) {
-        ncdf.def.all.atts(file.con,'time',atts = list(long_name = "time",units = "days since 1582-10-14 00:00" ,
+        modifyNcdfDefAtts(file.con,'time',atts = list(long_name = "time",units = "days since 1582-10-14 00:00" ,
                                             calendar = "gregorian"))     
         time.values <- as.numeric(julian(time.values, origin = as.POSIXct("1582-10-14", tz="UTC")))
       }
@@ -63,7 +63,7 @@ createLatLongTime <- function(
   dims.used  <- c('latitude', 'longitude', 'time')[c(0 != lat.length, 0 != long.length, 0 != time.length)]
   for (var.name.t in var.names) {
     var.def.nc <- var.def.nc(file.con, var.name.t, type.var, dims.used)
-    ncdf.def.all.atts(file.con, var.name.t, atts = list(scale_factor = scale_factor,
+    modifyNcdfDefAtts(file.con, var.name.t, atts = list(scale_factor = scale_factor,
                                               add_offset = add_offset,
                                               missing_value = missing_value,
                                               `_FillValue` = missing_value, units = units))

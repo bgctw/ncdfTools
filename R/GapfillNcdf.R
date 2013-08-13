@@ -1294,7 +1294,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 
 ########################       identify valid cells         ####################
 
-.identifyValidCellsSSA = function(
+.identifyValidCellsSSA <- function(
 ##title<< helper function for Ncdf SSA algorithms 
     dims.cycle.id, dims.process.id, datacube, ratio.const, tresh.const , print.status,
     slices.n, algorithm,  g = c() ,process.cells = c('gappy','all')[1], dims.cycle = c(), 

@@ -1,4 +1,4 @@
-ncdf.att.copy <- function(
+modifyNcdfCopyAtts <- function(
 ##title<< copy all attributes between different variables
 ##description<< copies all attributes from one variable in a ncdf file to another variable (possibly in another file).
    file.con.orig                   ##<< a NetCDF object pointing to the original ncdf file from which to copy the attributes
@@ -8,7 +8,7 @@ ncdf.att.copy <- function(
                                    ##   attributes (same as file.con.orig by default)
    )
 ##seealso<<
-##\code{\link{ncdf.fileatts.copy}}, \code{\link{ncdf.var.copy}}
+##\code{\link{modifyNcdfCopyMetadata}}, \code{\link{ncdf.var.copy}}
 
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de

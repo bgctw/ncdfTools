@@ -1,4 +1,4 @@
-ncdf.fileatts.copy <- function(
+modifyNcdfCopyMetadata <- function(
 ##title<< copy attributes and dimensions between ncdf files
 ##description<< Copies all global attributes and/or all dimensions from one ncdf file to another
     file.con.orig        ##<< a NetCDF object pointing to the respective ncdf file from which to copy
@@ -7,7 +7,7 @@ ncdf.fileatts.copy <- function(
     , dimensions = TRUE  ##<< logical: whether to copy all dimensions
     )
 ##seealso<<
-##\code{\link{ncdf.fileatts.copy}}, \code{\link{ncdf.var.copy}}, \code{\link[RNetCDF]{att.copy.nc}}
+##\code{\link{ncdf.var.copy}}, \code{\link[RNetCDF]{att.copy.nc}}
 
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
@@ -31,7 +31,7 @@ ncdf.fileatts.copy <- function(
       if (is.element(dim.name, ncdf.get.varinfo(file.con.orig)$name)) {
         var.def.nc(file.con.copy, dim.name, 'NC_DOUBLE', i - 1)
         var.put.nc(file.con.copy, dim.name, var.get.nc(file.con.orig, dim.name))  
-        ncdf.att.copy(file.con.orig, dim.name, dim.name, file.con.copy)
+        modifyNcdfCopyAtts(file.con.orig, dim.name, dim.name, file.con.copy)
       }
     }
   }

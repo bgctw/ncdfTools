@@ -5,7 +5,7 @@ readFLUXNETNcdf <- function(
     , pars
     , time.ends 
     , dim.borders)
-  ##description
+  ##description<<
   ## This function reads data from standard FLUXNET ncdf files and returns it in
   ## an R object.
   ##author<<

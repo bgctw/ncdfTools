@@ -1,4 +1,4 @@
-ncdf.add.dim <- function(
+modifyNcdfAddDim <- function(
 ##title<<
 ## Add a new dimension to some or more variables in a ncdf file
 ##description<<
@@ -17,7 +17,7 @@ ncdf.add.dim <- function(
                                ##   the new dimension and the remaining values left empty (NaN).
 )
 ##seealso<<
-##\code{\link{ncdf.fileatts.copy}}, \code{\link[RNetCDF]{att.copy.nc}},
+##\code{\link{modifyNcdfCopyMetadata}}, \code{\link[RNetCDF]{att.copy.nc}},
 ## \code{\link{ncdf.var.copy}}
 
 ##author<<
@@ -35,7 +35,7 @@ ncdf.add.dim <- function(
         stop('Wrong dim.length specified!')
 
     #copy attributes
-    ncdf.fileatts.copy(file.con.orig, file.con.copy)
+    modifyNcdfCopyMetadata(file.con.orig, file.con.copy)
 
     #define new dimension
     dim.def.nc(file.con.copy, dim.name, dim.length, unlim=FALSE)
@@ -54,7 +54,7 @@ ncdf.add.dim <- function(
         vars.orig.dims.t <- var.inq.nc(file.con.orig, var.name[i])$dimids
         vars.copy.dims.t <- c(vars.orig.dims.t, id.new.dim)
         var.def.nc(file.con.copy, vars.orig[i, 'name'], vars.orig[i,'type'], vars.copy.dims.t)
-        ncdf.att.copy(file.con.orig, var.copy = var.name[i], var.name[i], file.con.copy)
+        modifyNcdfCopyAtts(file.con.orig, var.copy = var.name[i], var.name[i], file.con.copy)
         #copy values
         if (!(dim.pos.copy == 0)) {
             data.transfer    <- var.get.nc(file.con.orig, var.name[1])

@@ -44,7 +44,7 @@ convertDateR2Ncdf = function(
     
     var.put.nc(file.con, 'time', date.vec.conv)
     atts.def <- list(long_name = 'time', calendar = 'gregorian', units = paste('days since ', origin, sep = ''))
-    ncdf.def.all.atts(file.con, 'time', atts.def)
+    modifyNcdfDefAtts(file.con, 'time', atts.def)
     history.string <- paste('time vector converted by ',Sys.info()['user'],' on ',Sys.time(),sep='')
     if (is.element('history', ncdf.get.attinfo(file.con, 'NC_GLOBAL')[, 'name'])) 
       history.string <- paste(att.get.nc(file.con, 'NC_GLOBAL', 'history'), '; ', history.string, sep = '')

@@ -155,7 +155,7 @@ decomposeNcdf = structure(function(
   dim.name                      <- 'spectral_bands'
   
   ##prepare results file
-  ncdf.fileatts.copy(file.con.orig, file.con.copy)    
+  modifyNcdfCopyMetadata(file.con.orig, file.con.copy)    
   dim.def.nc(file.con.copy, 'spectral_bands', length(dim.values) )
   var.def.nc(file.con.copy, 'borders.low', 'NC_DOUBLE',  'spectral_bands')
   var.def.nc(file.con.copy, 'borders.up', 'NC_DOUBLE', 'spectral_bands')
@@ -173,7 +173,7 @@ decomposeNcdf = structure(function(
     var.def.nc(file.con.copy, var.name.create, var.inq.nc(file.con.orig, var.name.create)$type,
                c(var.inq.nc(file.con.orig, var.name.create)$dimids,
                  dim.inq.nc(file.con.copy, 'spectral_bands')$id))
-    ncdf.att.copy(file.con.orig, var.name.create, var.name.create, file.con.copy)
+    modifyNcdfCopyAtts(file.con.orig, var.name.create, var.name.create, file.con.copy)
   }
   sync.nc(file.con.copy)
 

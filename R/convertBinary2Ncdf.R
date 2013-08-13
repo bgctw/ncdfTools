@@ -60,10 +60,10 @@ convertBinary2Ncdf = function(
   time.lilian <- as.numeric(julian(dimension.values[dimensions=='time'][[1]],
                                    origin = as.POSIXct("1582-10-14", tz="UTC")))
   var.put.nc(file.con,'time',time.lilian)
-  ncdf.def.all.atts(file.con,var.name,atts=list(long_name=long_name))
+  modifyNcdfDefAtts(file.con,var.name,atts=list(long_name=long_name))
   history.string <- paste(Sys.time(),' ncdf file created from file ', file.input,
                           ' using function data.bin2ncdf() by ', Sys.info()['login'], sep = '')
-  ncdf.def.all.atts(file.con, 'NC_GLOBAL', atts = list(history = history.string,
+  modifyNcdfDefAtts(file.con, 'NC_GLOBAL', atts = list(history = history.string,
                                              creation_settings = call.args))
   close.nc(file.con)
   cat('File sucessfully transformed!\n')

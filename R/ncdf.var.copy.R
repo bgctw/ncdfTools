@@ -17,7 +17,7 @@ ncdf.var.copy <- function(
 ##
 ##Case 2: copy of one variable to another one (of different name) in the same file.
 ##seealso<<
-##\code{\link{ncdf.fileatts.copy}}, \code{\link{ncdf.var.copy}}, \code{\link[RNetCDF]{att.copy.nc}}
+##\code{\link{modifyNcdfCopyMetadata}}, \code{\link{ncdf.var.copy}}, \code{\link[RNetCDF]{att.copy.nc}}
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
@@ -42,7 +42,7 @@ ncdf.var.copy <- function(
     
     ##write to file
     var.def.nc(file.con.copy, var.name.copy, var.type.orig, dim.ids.var.copy)
-    ncdf.att.copy(file.con.orig, var.name.orig, var.name.copy, file.con.copy)
+    modifyNcdfCopyAtts(file.con.orig, var.name.orig, var.name.copy, file.con.copy)
     ##value<< 
     ##Nothing is returned
 }
