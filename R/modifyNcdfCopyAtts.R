@@ -8,7 +8,7 @@ modifyNcdfCopyAtts <- function(
                                    ##   attributes (same as file.con.orig by default)
    )
 ##seealso<<
-##\code{\link{modifyNcdfCopyMetadata}}, \code{\link{ncdf.var.copy}}
+##\code{\link{modifyNcdfCopyMetadata}}, \code{\link{modifyNcdfCopyVar}}
 
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de

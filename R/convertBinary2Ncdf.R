@@ -53,7 +53,7 @@ convertBinary2Ncdf = function(
                     missing_value = na.value.out, type.var = 'NC_SHORT', units =  var.units)
   cat('Writing data ...\n')
   file.con      <- open.nc(file.name,write=TRUE)
-  data.array.perm <- aperm(data.array,perm=match(ncdf.get.diminfo(file.con)[,'name'],dimensions))
+  data.array.perm <- aperm(data.array,perm=match(infoNcdfDims(file.con)[,'name'],dimensions))
   var.put.nc(file.con,var.name,data.array)
   var.put.nc(file.con,'latitude',dimension.values[dimensions=='latitude'][[1]])
   var.put.nc(file.con,'longitude',dimension.values[dimensions=='longitude'][[1]])

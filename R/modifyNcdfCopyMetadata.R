@@ -7,7 +7,7 @@ modifyNcdfCopyMetadata <- function(
     , dimensions = TRUE  ##<< logical: whether to copy all dimensions
     )
 ##seealso<<
-##\code{\link{ncdf.var.copy}}, \code{\link[RNetCDF]{att.copy.nc}}
+##\code{\link{modifyNcdfCopyVar}}, \code{\link[RNetCDF]{att.copy.nc}}
 
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
@@ -28,7 +28,7 @@ modifyNcdfCopyMetadata <- function(
       dim.name   <- dim.inq.nc(file.con.orig, i - 1)$name
       dim.length <- dim.inq.nc(file.con.orig, i - 1)$length
       dim.def.nc(file.con.copy, dim.name, dim.length)
-      if (is.element(dim.name, ncdf.get.varinfo(file.con.orig)$name)) {
+      if (is.element(dim.name, infoNcdfVars(file.con.orig)$name)) {
         var.def.nc(file.con.copy, dim.name, 'NC_DOUBLE', i - 1)
         var.put.nc(file.con.copy, dim.name, var.get.nc(file.con.orig, dim.name))  
         modifyNcdfCopyAtts(file.con.orig, dim.name, dim.name, file.con.copy)

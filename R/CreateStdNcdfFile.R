@@ -1,8 +1,5 @@
-createStdNcdfFile <- function
-    ##title<< create an empty ncdf file with standardized attributes and dimensions
-    ##description<< This function writes an empty ncdf file with variable names, dimensions and
-    ##              attributes formated in a standardized way.
-       (
+createStdNcdfFile <- function(
+  ##title<< create an empty ncdf file with standardized attributes and dimensions
     var.names            ##<< character string: name of the target variable in the file
     , file.name = c()    ##<< character string: name of the file. If not given, this
                          ##   is determined automatically in a standardized way from 
@@ -27,11 +24,13 @@ createStdNcdfFile <- function
                              ##   for copying attributes to the new file.
     , data = c()     
 )
+##description<< This function writes an empty ncdf file with variable names, dimensions and
+##              attributes formatted in a standardized way.
 {
   require(RNetCDF)
   #copy attributes etc from other ncdf file (if chosen)
   if (class(con.atts) == 'NetCDF') {
-    atts.file <- ncdf.get.attinfo(con.atts, ncdf.get.varname(con.atts))
+    atts.file <- infoNcdfAtts(con.atts, readNcdfVarName(con.atts))
     pars = c('units', 'scale_factor', 'add_offset', 'missing_value')
     for (par.t in pars) {
       val.var = atts.file[atts.file[,1] == par.t][2]
@@ -40,7 +39,7 @@ createStdNcdfFile <- function
       if (!is.na(val.var))
         assign(par.t, val.var)
     }
-    type.var = var.inq.nc(con.atts, ncdf.get.varname(con.atts))$type
+    type.var = var.inq.nc(con.atts, readNcdfVarName(con.atts))$type
   }  
   
   if (length(year.start.end) == 0 & length(time.values) != 0)
@@ -71,6 +70,7 @@ createStdNcdfFile <- function
     var.put.nc(con.t, var.names, data)
     close.nc(con.t)
   }
+  ##value<< character string: name off the file created.
   invisible(file.name)
 }
 

@@ -1,4 +1,4 @@
-ncdf.var.copy <- function(
+modifyNcdfCopyVar <- function(
 ##title<< copy variable values between ncdf files
 ##description<< Copies all values of one variable from one ncdf file to another ncdf file and
 ## takes care of dimensions etc.
@@ -17,21 +17,21 @@ ncdf.var.copy <- function(
 ##
 ##Case 2: copy of one variable to another one (of different name) in the same file.
 ##seealso<<
-##\code{\link{modifyNcdfCopyMetadata}}, \code{\link{ncdf.var.copy}}, \code{\link[RNetCDF]{att.copy.nc}}
+##\code{\link{modifyNcdfCopyMetadata}}, \code{\link[RNetCDF]{att.copy.nc}}
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     ##get values to copy from
     var.name.orig      <- var.inq.nc(file.con.orig, var.id.orig)$name
     var.type.orig      <- var.inq.nc(file.con.orig, var.id.orig)$type
-    dim.names.file.orig<- ncdf.get.diminfo(file.con.orig)$name
+    dim.names.file.orig<- infoNcdfDims(file.con.orig)$name
     dim.ids.var.orig   <- var.inq.nc(file.con.orig, var.id.orig)$dimids
-    dim.lengths.orig   <- ncdf.get.diminfo(file.con.orig)$length[dim.ids.var.orig + 1]
+    dim.lengths.orig   <- infoNcdfDims(file.con.orig)$length[dim.ids.var.orig + 1]
     
     ##get values to copy to
     if ((var.id.orig == var.id.copy) && (file.con.copy != file.con.orig)) {
       var.name.copy       <- var.name.orig
-      dim.names.file.copy <- ncdf.get.diminfo(file.con.copy)$name
+      dim.names.file.copy <- infoNcdfDims(file.con.copy)$name
       dim.ids.var.copy    <- match(dim.names.file.orig, dim.names.file.copy)-1
     } else if ((var.id.orig != var.id.copy) && (file.con.copy == file.con.orig)) {
       var.name.copy    <- var.id.copy

@@ -34,8 +34,8 @@ plotGapfillCube <- function(
   sfInit(cpus = min(c(getCoreLimit(), max.cores)), type = 'SOCK', parallel = TRUE)    
   con.orig   <- open.nc(file.orig)
   con.filled <- open.nc(file.filled)
-  var.filled <- ncdf.get.varname(file.filled)
-  var.orig   <- ncdf.get.varname(file.orig)
+  var.filled <- readNcdfVarName(file.filled)
+  var.orig   <- readNcdfVarName(file.orig)
 
   ## load data
   if (length(data.orig) == 0) {
@@ -49,7 +49,7 @@ plotGapfillCube <- function(
   if (length(data.prefill) == 0 & nchar(file.prefill)!=0) {
     printStatus('Loading pregapfilled data ...')
     con.prefill  <- open.nc(file.prefill)
-    var.prefill  <- ncdf.get.varname(file.prefill)
+    var.prefill  <- readNcdfVarName(file.prefill)
     data.prefill <-  transNcdfRotate(data.object = con.prefill, var.name = var.prefill)  
   }
 

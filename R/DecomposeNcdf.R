@@ -72,7 +72,7 @@ decomposeNcdf = structure(function(
   ## calculated sequential without these dependencies. The package foreach is needed in all cases.
 
   ##seealso<<
-  ##\code{\link[Rssa]{ssa}}, \code{\link[spectral.methods]{filterTSeriesSSA}}, \code{\link{gapfillNCdf}}
+  ##\code{\link[Rssa]{ssa}}, \code{\link[spectral.methods]{filterTSeriesSSA}}, \code{\link{gapfillNcdf}}
 
   ##value<<
   ##Nothing is returned but a ncdf file with the results is written in the working directory.
@@ -115,7 +115,7 @@ decomposeNcdf = structure(function(
                            c(SSAprocess = 'Decompose', args.call.filecheck))
   file.con.orig <- res.check$file.con.orig    
   if (length(var.names) == 1 && var.names == 'auto') 
-    var.names   <- ncdf.get.varname(file.con.orig)
+    var.names   <- readNcdfVarName(file.con.orig)
   
   ## open ncdf files
   if (print.status)
@@ -184,7 +184,7 @@ decomposeNcdf = structure(function(
       printStatus(paste('Processing variable ', var.name, sep = ''))
     ##prepare parallel iteration parameters
     dims.ids.data       <- var.inq.nc(file.con.orig, var.names[1])$dimids + 1   
-    dims.info           <- ncdf.get.diminfo(file.con.orig)[dims.ids.data, ]
+    dims.info           <- infoNcdfDims(file.con.orig)[dims.ids.data, ]
     drop.dim            <- FALSE
     if (length(dim(data.all)) > 1 ) {
       dims.cycle.id     <- sort(setdiff(1:length(dims.ids.data), match('time', dims.info$name) ))
@@ -285,7 +285,7 @@ decomposeNcdf = structure(function(
       save.image(paste('workspace_before_writing_', file.name, '.RData', sep = ''))
     if (print.status)
       cat(paste(Sys.time(), ' : Writing results to file. \n', sep=''))
-    if (!is.element('missing_value', ncdf.get.attinfo(file.con.copy, var.name)[,'name']) &&
+    if (!is.element('missing_value', infoNcdfAtts(file.con.copy, var.name)[,'name']) &&
         sum(is.na(data.results.final)) > 0)
       att.put.nc(file.con.copy, var.name, 'missing_value', var.inq.nc(file.con.copy, var.name)$type, -9999.0)
     if (drop.dim)
@@ -306,7 +306,7 @@ decomposeNcdf = structure(function(
   att.put.nc(file.con.copy, 'NC_GLOBAL', 'Decomposition_settings', 'NC_CHAR', string.args)
   hist.string.append <- paste('Spectrally decomposed on ', as.character(Sys.time()),
                               ' by ', Sys.info()['user'], sep='')
-  if (is.element('history', ncdf.get.attinfo(file.con.copy, 'NC_GLOBAL')[, 'name'])) {
+  if (is.element('history', infoNcdfAtts(file.con.copy, 'NC_GLOBAL')[, 'name'])) {
     hist.string <- paste(att.get.nc(file.con.copy, 'NC_GLOBAL', 'history'), '; ', hist.string.append)
     att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string)
   } else {

@@ -37,18 +37,18 @@ plotDatacube <- function(
   }
   
   if (var.name == 'auto')
-    var.name <- ncdf.get.varname(file.con)
+    var.name <- readNcdfVarName(file.con)
   
-  lat.name   <- ncdf.get.diminfo(file.con)$name[pmatch('lat', ncdf.get.diminfo(file.con)$name)]
-  long.name  <- ncdf.get.diminfo(file.con)$name[pmatch('lon', ncdf.get.diminfo(file.con)$name)]
+  lat.name   <- infoNcdfDims(file.con)$name[pmatch('lat', infoNcdfDims(file.con)$name)]
+  long.name  <- infoNcdfDims(file.con)$name[pmatch('lon', infoNcdfDims(file.con)$name)]
   
-  dim.long   <- match(long.name, ncdf.get.diminfo(file.con)$name)
-  dim.lat    <- match(lat.name, ncdf.get.diminfo(file.con)$name)
-  dim.time   <- match('time', ncdf.get.diminfo(file.con)$name)
+  dim.long   <- match(long.name, infoNcdfDims(file.con)$name)
+  dim.lat    <- match(lat.name, infoNcdfDims(file.con)$name)
+  dim.time   <- match('time', infoNcdfDims(file.con)$name)
   longitudes <- round(var.get.nc(file.con, long.name), digits = 0)
   latitudes  <- round(var.get.nc(file.con, lat.name), digits = 0)
   time       <- convertDateNcdf2R(file.con, 'time')
-  dims.par   <- ncdf.get.diminfo(file.con)$name[var.inq.nc(file.con, var.name)$dimids + 1]
+  dims.par   <- infoNcdfDims(file.con)$name[var.inq.nc(file.con, var.name)$dimids + 1]
   
   ## sort dataframe
   aperm.data <- pmatch(c('lat', 'lon', 'time'), dims.par)

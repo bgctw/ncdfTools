@@ -1,4 +1,4 @@
-ncdf.hist.add = function(
+modifyNcdfAppendHistory = function(
     ##title<< automatically append string to ncdf history
     file ##<< character sting or RNetCCDF file connection: file to write to.
 , string ##<< character string: string to append to teh history
@@ -15,7 +15,7 @@ ncdf.hist.add = function(
      con = file
    }
    history = ''
-   if (is.element('history', ncdf.get.attinfo(con, 'NC_GLOBAL')[, 'name'])) {
+   if (is.element('history', infoNcdfAtts(con, 'NC_GLOBAL')[, 'name'])) {
      history <- att.get.nc(con, 'NC_GLOBAL', 'history')
    } 
    history.new <- paste(history,  Sys.time(), ':', string, 'by', Sys.info()['user'])

@@ -24,7 +24,7 @@ checkNcdfFile = function(
     stop(paste('Function is not designed to check dimensions ', dims[dims.nonvalid], '!', sep=''))
 
   #check dimensions
-  dims.exists <- match(dims, ncdf.get.diminfo(con.check, extended = FALSE)[, 'name'])
+  dims.exists <- match(dims, infoNcdfDims(con.check, extended = FALSE)[, 'name'])
   if (sum(is.na(dims.exists))>0) {
     close.nc(con.check)
     cat(paste('Dimension ', dims[is.na(dims.exists)], ' not existent!\n', sep=''))
@@ -32,7 +32,7 @@ checkNcdfFile = function(
   }
   if (type == 'strict') {
     #check coordinate variables
-    dims.exists <- match(dims, ncdf.get.varinfo(con.check)[, 'name'])
+    dims.exists <- match(dims, infoNcdfVars(con.check)[, 'name'])
     if (sum(is.na(dims.exists)) > 0)  {
       close.nc(con.check)
       cat(paste('Coordinate variable for dim ', dims[is.na(dims.exists)], ' not existent!\n', sep = ''))
@@ -50,21 +50,21 @@ checkNcdfFile = function(
   #check file name
   if (type == 'strict') {
     var.name <- sub('[.].*', '', file.name)
-    if (!is.element(var.name, ncdf.get.varinfo(con.check)[,'name']))
+    if (!is.element(var.name, infoNcdfVars(con.check)[,'name']))
       stop(paste('File does not have the main variable which has to be named ', var.name,
                  '(according to the file name targetvar.NumberLatitudes.NumberLongitudes.Year.nc )', sep = ''))    
   }
   
   #check attributes
-  variables <- ncdf.get.varinfo(con.check)[, 'name'][is.na(match(ncdf.get.varinfo(con.check)[, 'name'], ncdf.get.diminfo(con.check, extended = FALSE)[, 'name']))]
+  variables <- infoNcdfVars(con.check)[, 'name'][is.na(match(infoNcdfVars(con.check)[, 'name'], infoNcdfDims(con.check, extended = FALSE)[, 'name']))]
   variables <- variables[!is.element(variables, c("flag.orig", 'borders.low', 'borders.up'))]
   if (length(variables) > 1 && var.check == 'single')
-    variables  <- ncdf.get.varname(file.name)
+    variables  <- readNcdfVarName(file.name)
   
   if (type == 'strict') {       
     atts.check <- c('_FillValue', 'missing_value', 'add_offset', 'scale_factor', 'units')
     for (var.t in variables) {
-      atts.found <- match(atts.check, ncdf.get.attinfo(con.check, var.t)[, 'name'])
+      atts.found <- match(atts.check, infoNcdfAtts(con.check, var.t)[, 'name'])
       if (sum(is.na(atts.found)) > 0) {
         close.nc(con.check)
         cat(paste('Variable ', var.t, ' does not have attributes ', paste(atts.check[is.na(atts.found)], collapse=',  '), '\n', sep=''))
@@ -76,7 +76,7 @@ checkNcdfFile = function(
   #check time vector
   if (type == 'strict') {
     if (is.element('time', dims)) {
-      if (!is.element('units', ncdf.get.attinfo(con.check, 'time')[, 'name'])) {
+      if (!is.element('units', infoNcdfAtts(con.check, 'time')[, 'name'])) {
         close.nc(con.check)
         cat('Time variable needs units attribute!\n')
         return(invisible(FALSE))
@@ -92,12 +92,12 @@ checkNcdfFile = function(
   #check missing_values attribute
   atts.check <- c('_FillValue', 'missing_value')
   for (var.t in variables) {
-    if (sum(is.na(match(atts.check, ncdf.get.attinfo(con.check, var.t)[, 'name']))) == 2) {
+    if (sum(is.na(match(atts.check, infoNcdfAtts(con.check, var.t)[, 'name']))) == 2) {
       cat(paste('One of the attributes _FillValue or missing_value has to be available for variable ', var.t, '!.\n', sep=''))
       return(invisible(FALSE))
     }
     for (att.t in atts.check) {
-      if (!is.na(match(att.t, ncdf.get.attinfo(con.check, var.t)[, 'name']))) {
+      if (!is.na(match(att.t, infoNcdfAtts(con.check, var.t)[, 'name']))) {
         if (!(att.inq.nc(con.check, var.t, att.t)$type == var.inq.nc(con.check, var.t)$type)) {
           close.nc(con.check)
           cat(paste('Attribute ', att.t, ' of variable ', var.t, ' needs to be of the same class as ', var.t, '.\n', sep=''))
@@ -109,7 +109,7 @@ checkNcdfFile = function(
   #check non obligatory global atts
   if (type == 'strict') {
     atts.check.global <- c('title', 'reference', 'history', 'provided_by', 'created_by')
-    atts.missing      <- is.na(match(atts.check.global, ncdf.get.attinfo(con.check, 'NC_GLOBAL')[, 'name']))
+    atts.missing      <- is.na(match(atts.check.global, infoNcdfAtts(con.check, 'NC_GLOBAL')[, 'name']))
     if (sum(atts.missing)>0)
       cat(paste('Consider adding the following global attributes: ', paste(atts.check.global[atts.missing], collapse=',  '), '\n', sep=''))
   }

@@ -1,4 +1,4 @@
-ncdf.get.diminfo  <- function(
+infoNcdfDims  <- function(
 ##title<< show info about all dimensions in a ncdf file
 ##description<< This function displays summary information about all dimensions in an open ncdf file
      file.con  ##<< a NetCDF object pointing to the respective ncdf file.
@@ -6,7 +6,7 @@ ncdf.get.diminfo  <- function(
                        ##   may take time to compute for large files is computed.
 )
 ##seealso<<
-##\code{\link{ncdf.get.varinfo}}, \code{\link[RNetCDF]{dim.inq.nc}}
+##\code{\link{infoNcdfVars}}, \code{\link[RNetCDF]{dim.inq.nc}}
 
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
@@ -30,7 +30,7 @@ ncdf.get.diminfo  <- function(
     dim.info[i, 2] <- dim.name
     dim.info[i, 3] <- as.integer(dim.inq.nc(file.con, i - 1)$length)
     if (extended) {
-      if (is.element(dim.name, ncdf.get.varinfo(file.con)$name)) {
+      if (is.element(dim.name, infoNcdfVars(file.con)$name)) {
         if (dim.name == 'time') {
           dims.vals      <- convertDateNcdf2R(file.con)
           if (class(dims.vals)[1] == 'POSIXct') {

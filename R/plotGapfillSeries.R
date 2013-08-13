@@ -23,7 +23,7 @@ plotGapfillSeries <- function(
   ## preparation
   con.orig   <- open.nc(file.orig)
   con.filled <- open.nc(file.filled)
-  vars.all <- ncdf.get.varinfo(con.filled)[,'name']
+  vars.all <- infoNcdfVars(con.filled)[,'name']
   vars.filled <- sub('_', '', sub('flag.orig$', '', vars.all[grepl('flag.orig$', vars.all)]))
 
 

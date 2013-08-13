@@ -1,4 +1,4 @@
-ncdf.def.all.atts <- structure(function(
+modifyNcdfDefAtts <- structure(function(
 ##title<< define several ncdf attributes at once
     file.con      ##<< a NetCDF object pointing to the respective ncdf file.
     , var.id      ##<< the variable id (integer) or name (string) for which to define attributes.
@@ -51,8 +51,8 @@ ncdf.def.all.atts <- structure(function(
   file.con   <- create.nc('test.nc')
   dim.def.nc(file.con, 'testdim')
   var.def.nc(file.con, 'test', 'NC_CHAR', 'testdim')
-  ncdf.def.all.atts(file.con, 'test', atts = attributes.define)
+  modifyNcdfDefAtts(file.con, 'test', atts = attributes.define)
 
   ## show all attributes
-  ncdf.get.attinfo(file.con, 'test')
+  infoNcdfAtts(file.con, 'test')
 })

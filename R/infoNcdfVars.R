@@ -1,4 +1,4 @@
-ncdf.get.varinfo  <- function(
+infoNcdfVars  <- function(
 ##title<<  display information about all variables in ncdf file
 ##description<< This function eturns different summary information about all variables
 ##              in a NCDF file.
@@ -12,7 +12,7 @@ ncdf.get.varinfo  <- function(
   
 )
 ##seealso<<
-##\code{\link{ncdf.get.diminfo}}, \code{\link{ncdf.get.varinfo}}
+##\code{\link{infoNcdfDims}}, \code{\link{infoNcdfAtts}}
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
@@ -54,7 +54,7 @@ ncdf.get.varinfo  <- function(
         }
         dims.cols            <- match(var.inq.nc(file.con, i - 1)$dimids, dim.ids)
         dim.names.var[i, dims.cols] <- dim.names[dims.cols]
-        att.unit.id          <- grep('Unit', ncdf.get.attinfo(file.con, i - 1)[, 1], ignore.case = TRUE)
+        att.unit.id          <- grep('Unit', infoNcdfAtts(file.con, i - 1)[, 1], ignore.case = TRUE)
         if (length(att.unit.id) == 1)
             units.var[i]     <- att.get.nc(file.con, i-1, att.unit.id - 1)
     }

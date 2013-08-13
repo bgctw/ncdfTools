@@ -1,19 +1,19 @@
-ncdf.get.attinfo <- function(
-##title<< return a summary of all ncdf variable attributes
-##description<< This function returns a summary of all attributes of a single variable
-## in a ncdf file
+infoNcdfAtts <- function(
+  ##title<< return a summary of all ncdf variable attributes
    file.con   ##<< a NetCDF object pointing to the respective ncdf file.
    , var.id ='NC_GLOBAL'  ##<< the name or id of the variable for which to display atributes.
 )
-##details<<
-## If an id or variable name is given for 'vaar.id ', attributes from one variable are returned.
-## Global attributes are returned if 'NC_GLOBAL' is given.
-
-##seealso<<
-##\code{\link{ncdf.get.diminfo}}, \code{\link{ncdf.get.varinfo}}, \code{\link[RNetCDF]{att.inq.nc}}
-
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  ##description<< This function returns a summary of all attributes of a single variable
+  ## in a ncdf file
+  ##details<<
+  ## If an id or variable name is given for 'vaar.id ', attributes from one variable are returned.
+  ## Global attributes are returned if 'NC_GLOBAL' is given.
+  
+  ##seealso<<
+  ##\code{\link{infoNcdfDims}}, \code{\link{infoNcdfVars}}, \code{\link[RNetCDF]{att.inq.nc}}
+  
+  ##author<<
+  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     if  (var.id == 'NC_GLOBAL') {
          n.atts              <- file.inq.nc(file.con)$ngatts

@@ -11,12 +11,12 @@ transNcdfRotate  = function(
                 ## Supplying both data.object and file.con only makes sense if data.object
                 ## is an array which saves time as the data does not have to be loaded again.              
     , var.name = c() ##<< character string: name of the variable to transpose. If
-                ## not gives, this name is tried to be inferred by using ncdf.get.varname.
+                ## not gives, this name is tried to be inferred by using readNcdfVarName.
 ) {
   if (inherits(data.object,  "NetCDF")) {
     file.con <- data.object
     if (length(var.name) == 0)
-      var.name = ncdf.get.varname(file.con)
+      var.name = readNcdfVarName(file.con)
     datacube <- var.get.nc(file.con, var.name)
   } else if (inherits(data.object,  "array")) {
     datacube     <- data.object
@@ -25,7 +25,7 @@ transNcdfRotate  = function(
   } else {
     stop(paste('Function not designed for data.object of class', class(data.object), '!'))
   }
-  dims.file      <- ncdf.get.diminfo(file.con)[,'name'][var.inq.nc(file.con, var.name)$dimids + 1]
+  dims.file      <- infoNcdfDims(file.con)[,'name'][var.inq.nc(file.con, var.name)$dimids + 1]
   new.dimorder   <- na.omit(pmatch(c('lat', 'lon', 'time'), dims.file))
 
   # order dimensions in datacube
@@ -33,11 +33,11 @@ transNcdfRotate  = function(
     datacube   <- aperm(datacube, new.dimorder)
 
   # sort values according to coordinate values order
-  lat.name       <- ncdf.get.diminfo(file.con)$name[pmatch('lat', ncdf.get.diminfo(file.con)$name)]
+  lat.name       <- infoNcdfDims(file.con)$name[pmatch('lat', infoNcdfDims(file.con)$name)]
   lat.values     <- var.get.nc(file.con, lat.name)
   if (sum(unique(diff(order(lat.values, decreasing = TRUE))) != 1) > 0)
     datacube   <- datacube[order(lat.values, decreasing = TRUE), , ]
-  lon.name       <- ncdf.get.diminfo(file.con)$name[pmatch('lon', ncdf.get.diminfo(file.con)$name)]
+  lon.name       <- infoNcdfDims(file.con)$name[pmatch('lon', infoNcdfDims(file.con)$name)]
   lon.values     <- var.get.nc(file.con, lon.name)
   if (sum(unique(diff(order(lon.values))) != 1) > 0)
     datacube   <- datacube[, order(lon.values), ]

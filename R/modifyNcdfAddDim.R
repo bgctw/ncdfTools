@@ -18,15 +18,15 @@ modifyNcdfAddDim <- function(
 )
 ##seealso<<
 ##\code{\link{modifyNcdfCopyMetadata}}, \code{\link[RNetCDF]{att.copy.nc}},
-## \code{\link{ncdf.var.copy}}
+## \code{\link{modifyNcdfCopyVar}}
 
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     #test input
     if (var.name == 'Default') {
-        var.name = setdiff(ncdf.get.varinfo(file.con.orig)$name, ncdf.get.diminfo(file.con.orig)$name)
-    } else if (sum(!is.element(var.name, ncdf.get.varinfo(file.con.orig)$name)) > 0) {
+        var.name = setdiff(infoNcdfVars(file.con.orig)$name, infoNcdfDims(file.con.orig)$name)
+    } else if (sum(!is.element(var.name, infoNcdfVars(file.con.orig)$name)) > 0) {
         stop('Variable name(s) not available in file.con.orig!')
     }
     if(dim.length == 0)
@@ -48,7 +48,7 @@ modifyNcdfAddDim <- function(
     
     #create variable
     var.name    <- sort(var.name)
-    vars.orig   <- ncdf.get.varinfo(file.con.orig)[match(var.name, ncdf.get.varinfo(file.con.orig)$name), ]
+    vars.orig   <- infoNcdfVars(file.con.orig)[match(var.name, infoNcdfVars(file.con.orig)$name), ]
     for (i in 1:length(var.name)) {
         print(paste('Add ncdf dimension: Processing variable ', i, ' of ', length(var.name), ' : ', var.name[i], sep=''))
         vars.orig.dims.t <- var.inq.nc(file.con.orig, var.name[i])$dimids
@@ -59,7 +59,7 @@ modifyNcdfAddDim <- function(
         if (!(dim.pos.copy == 0)) {
             data.transfer    <- var.get.nc(file.con.orig, var.name[1])
             start.ind <- rep(1, times = length(vars.copy.dims.t))
-            stop.ind  <- ncdf.get.diminfo(file.con.copy)$length
+            stop.ind  <- infoNcdfDims(file.con.copy)$length
             start.ind[id.new.dim + 1] <-  dim.pos.copy
             stop.ind[id.new.dim + 1]  <-  dim.pos.copy
             var.put.nc(file.con.copy, var.name[i], data.transfer, start = start.ind, count = stop.ind)

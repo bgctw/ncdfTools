@@ -15,7 +15,7 @@ convertDateNcdf2R  =  function(
   require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
   if (class(time.source) == 'NetCDF') {
     attget.result <- try({
-      time.units      <- ncdf.get.attinfo(time.source, 'time')[, 'value'][ncdf.get.attinfo(time.source, 'time')[, 'name'] == 'units']
+      time.units      <- infoNcdfAtts(time.source, 'time')[, 'value'][infoNcdfAtts(time.source, 'time')[, 'name'] == 'units']
       origin.file     <- as.POSIXct(sub('^.*since ', '', time.units), tz = 'UTC')
     }, silent = TRUE)
     if ((class(attget.result) == 'try-error') || !(sub(' since.*$', '', time.units) == 'days')) {

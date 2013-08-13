@@ -9,7 +9,7 @@ readNcdf <- function(
 {
   require(RNetCDF)
   file.con <- open.nc(file.name)
-  data     <- var.get.nc(file.con, ncdf.get.varname(file.con))
+  data     <- var.get.nc(file.con, readNcdfVarName(file.con))
   close.nc(file.con)
   ##value<< (multidimensional) array: data from the ncdf file.
   return(data)

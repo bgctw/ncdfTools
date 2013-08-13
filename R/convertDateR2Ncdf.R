@@ -25,11 +25,11 @@ convertDateR2Ncdf = function(
   } else {
     file.con   = open.nc(ncdf.obj,write=TRUE)
   }
-  if (!is.element('time',ncdf.get.diminfo(file.con)$name))
+  if (!is.element('time',infoNcdfDims(file.con)$name))
     stop('No time dimension present in specified ncdf file.')
   if (class(date.vec) ==  "character"  && date.vec=='auto')
   {
-    units = ncdf.get.attinfo(file.con, 'time')[ , 'value'][ncdf.get.attinfo(file.con, 'time')[, 'name'] == 'units']
+    units = infoNcdfAtts(file.con, 'time')[ , 'value'][infoNcdfAtts(file.con, 'time')[, 'name'] == 'units']
     orig.test <- try({as.POSIXct(as.POSIXlt(sub('^.*since ', '', units), tz = 'UTC'))}, silent=TRUE)
     if ((class(orig.test)=='try-error') || !(sub(' since.*$','',units)=='days'))
       stop('date format in ncdf file is in a non implemented format. Supply date vector by hand.')
@@ -39,14 +39,14 @@ convertDateR2Ncdf = function(
   }   
   
   if (write.to.ncdf) {
-    if (!is.element('time',ncdf.get.varinfo(file.con)$name))
+    if (!is.element('time',infoNcdfVars(file.con)$name))
       var.def.nc(file.con,'time', 'NC_float', 'time')
     
     var.put.nc(file.con, 'time', date.vec.conv)
     atts.def <- list(long_name = 'time', calendar = 'gregorian', units = paste('days since ', origin, sep = ''))
     modifyNcdfDefAtts(file.con, 'time', atts.def)
     history.string <- paste('time vector converted by ',Sys.info()['user'],' on ',Sys.time(),sep='')
-    if (is.element('history', ncdf.get.attinfo(file.con, 'NC_GLOBAL')[, 'name'])) 
+    if (is.element('history', infoNcdfAtts(file.con, 'NC_GLOBAL')[, 'name'])) 
       history.string <- paste(att.get.nc(file.con, 'NC_GLOBAL', 'history'), '; ', history.string, sep = '')
     att.put.nc(file.con,'NC_GLOBAL','history','NC_CHAR'
         , paste(att.get.nc(file.con,'NC_GLOBAL','history'),'; ',history.string,sep=''))

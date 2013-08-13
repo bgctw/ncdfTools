@@ -9,7 +9,7 @@ readCoordinatesNcdf = function(
   ##author<<
   ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
   ##seealso<<
-  ##\code{\link{ncdf.get.diminfo}}
+  ##\code{\link{infoNcdfDims}}
   {
     closeNcdf  <- FALSE
     if (inherits(fileCon, 'character')) {
@@ -17,10 +17,10 @@ readCoordinatesNcdf = function(
         stop('Specified file not existent!')
       fileCon <- open.nc(fileCon)
     }
-    dimNames <- ncdf.get.diminfo(fileCon)$name
+    dimNames <- infoNcdfDims(fileCon)$name
     results <- list()
     for (dimNameT in dimNames) {
-      if (is.element(dimNameT, ncdf.get.varinfo(fileCon, dimvars = TRUE)$name)) {
+      if (is.element(dimNameT, infoNcdfVars(fileCon, dimvars = TRUE)$name)) {
         results[[dimNameT]] <- var.get.nc(fileCon, dimNameT)
       } else {
         results[[dimNameT]] <- NULL

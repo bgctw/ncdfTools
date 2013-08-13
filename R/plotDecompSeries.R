@@ -23,9 +23,9 @@ plotDecompSeries <- function(
   ## preparation
   con.orig    <- open.nc(file.orig)
   con.decomp  <- open.nc(file.decomp)
-  vars.all    <- ncdf.get.varinfo(con.decomp)[,'name']
-  vars.decomp <- as.vector(na.omit(vars.all[ncdf.get.varinfo(con.decomp)[,'2.dim'] == 'spectral_bands' & ncdf.get.varinfo(con.decomp)[,'1.dim'] == 'time']))
-  n.bands     <- ncdf.get.diminfo(con.decomp)[ncdf.get.diminfo(con.decomp)[, 'name']== 'spectral_bands', 'length']
+  vars.all    <- infoNcdfVars(con.decomp)[,'name']
+  vars.decomp <- as.vector(na.omit(vars.all[infoNcdfVars(con.decomp)[,'2.dim'] == 'spectral_bands' & infoNcdfVars(con.decomp)[,'1.dim'] == 'time']))
+  n.bands     <- infoNcdfDims(con.decomp)[infoNcdfDims(con.decomp)[, 'name']== 'spectral_bands', 'length']
 
 
   ## load data
@@ -34,7 +34,7 @@ plotDecompSeries <- function(
     assign(paste(var.t, '.decomp', sep =''), var.get.nc(con.decomp, var.t))
   }
   
-  if (is.element('time', ncdf.get.varinfo(con.orig)[,'name'])) {
+  if (is.element('time', infoNcdfVars(con.orig)[,'name'])) {
     x.vals <- convertDateNcdf2R(con.orig)
   } else {
     x.vals <- 1:length(var.get.nc(con.orig, vars.decomp[1]))

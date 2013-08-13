@@ -151,7 +151,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 ## calculated sequential without these dependencies. The package foreach is needed in all cases.
 
 ##seealso<<
-##\code{\link[Rssa]{ssa}}, \code{\link[spectral.methods]{GapfillSSA}}, \code{\link{decomposeNcdf}}
+##\code{\link[Rssa]{ssa}}, \code{\link[spectral.methods]{gapfillSSA}}, \code{\link{decomposeNcdf}}
 
 ##author<<
 ##Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de                         
@@ -264,9 +264,9 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 
     #determine some filenames etc
     if (var.names[1] == 'auto')
-      var.names = ncdf.get.varname(file.name)
+      var.names = readNcdfVarName(file.name)
     file.con.orig <- open.nc(file.name)
-    dims.info     <- ncdf.get.diminfo(file.con.orig)
+    dims.info     <- infoNcdfDims(file.con.orig)
     
     # start parallel processing workers
     if (calc.parallel)
@@ -767,7 +767,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     att.put.nc(file.con.copy, 'NC_GLOBAL', 'Filling_settings', 'NC_CHAR', string.args)
     hist.string.append <- paste('Gaps filled on ', as.character(Sys.time()), ' by ',
                                 Sys.info()['user'], sep = '')
-    if (is.element('history', ncdf.get.attinfo(file.con.copy, 'NC_GLOBAL')[, 'name'])) {
+    if (is.element('history', infoNcdfAtts(file.con.copy, 'NC_GLOBAL')[, 'name'])) {
       hist.string    <- paste(att.get.nc(file.con.copy, 'NC_GLOBAL', 'history'), 
                               '; ', hist.string.append)
       att.put.nc(file.con.copy, 'NC_GLOBAL', 'history', 'NC_CHAR', hist.string)
@@ -1172,12 +1172,12 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
   file.con.orig <- open.nc(args$file.name)
   if (args$var.names[1] != 'auto')
     for (var.name in args$var.names)
-      if (!is.element(var.name, ncdf.get.varinfo(file.con.orig)$name))
+      if (!is.element(var.name, infoNcdfVars(file.con.orig)$name))
         stop(paste('Variable name ', var.name, 'does not exist in ncdf file!', sep = ''))
   
   if(sum(is.na(match(unique(unlist(args$dimensions)), c('longitude', 'latitude', 'time')))) > 0)
     stop('Every dimensions value has to be one of time, longitude, latitude!')
-  dims.not.exist <- is.na(match(unlist(args$dimensions), ncdf.get.diminfo(file.con.orig)[, 'name']))
+  dims.not.exist <- is.na(match(unlist(args$dimensions), infoNcdfDims(file.con.orig)[, 'name']))
   if(sum(dims.not.exist) > 0)
     stop(paste('Dimension(s) ', paste(unlist(args$dimensions)[dims.not.exist], collapse = ', '),
             'not existent in ncdf file!', sep = ''))
@@ -1198,14 +1198,14 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
         stop('Name for supplied first guess file does not fit the standardized scheme!')
       }
       check.passed = checkNcdfFile(file.name = args$first.guess, 
-        dims = ncdf.get.diminfo(file.con.orig)[, 'name'], 
+        dims = infoNcdfDims(file.con.orig)[, 'name'], 
         type = "relaxed")
       if (!check.passed)
         stop('First guess NCDF file not consistent with CF ncdf conventions!')
     }
     
     ##transfer and check ocean mask
-    lengths.dim.nontime <- ncdf.get.diminfo(file.con.orig)['length'][!(ncdf.get.diminfo(file.con.orig)['name'] == 'time')]
+    lengths.dim.nontime <- infoNcdfDims(file.con.orig)['length'][!(infoNcdfDims(file.con.orig)['name'] == 'time')]
     
     if (!is.null(args$ocean.mask) && class(args$ocean.mask) == 'character') {
       if (!(file.exists(args$ocean.mask)))
@@ -1215,7 +1215,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       if (!check.passed)
         stop('ocean mask NCDF file not consistent with CF ncdf conventions!')
       con.ocean   <- open.nc(args$ocean.mask)
-      var.names.t <- ncdf.get.varinfo(con.ocean)[, 'name']
+      var.names.t <- infoNcdfVars(con.ocean)[, 'name']
       var.name.om <- var.names.t[is.na(match(var.names.t, c('time', 'longitude', 'latitude')))]
       if (length(var.name.om) > 1)
         stop('More then one variable existent in ocean mask!')
@@ -1228,7 +1228,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       ocean.cells <- var.get.nc(con.ocean, var.name.om)
       args$ocean.mask  <- array(FALSE, dim = dim(ocean.cells))
       args$ocean.mask[ocean.cells == 1 ] <- TRUE
-      data.orig      <- var.get.nc(file.con.orig, ncdf.get.varname(file.con.orig))
+      data.orig      <- var.get.nc(file.con.orig, readNcdfVarName(file.con.orig))
       oceancells.data<- sum(!is.na(data.orig[indexDatacube(data.orig, args$ocean.mask, c(1,2))]))
       if (oceancells.data > 0)
         stop('Some ocean cells seem to contain data. Is the ocean.mask file correctly set up?')
