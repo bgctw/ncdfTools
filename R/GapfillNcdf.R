@@ -1089,7 +1089,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
       ind.results <- (1 : n.series.steps[n]) + (((n>1) * 
                                                  (sum( n.series.steps[1 : max(c(n - 1, 1))]))))  
       data.results.iter[ind.results, ]  <- array(rcstr.local, dim = c(n.series.steps[n], datapts.n))
-      variances[n, ]                    <- as.vector(series.filled$variances)
+      variances[n, 1:length(as.vector(series.filled$variances))] <- as.vector(series.filled$variances)
       process_converged[n]              <- series.filled$process_converged
       iters.chosen[n, ]                 <- series.filled$iter.chosen
       'completed'      
