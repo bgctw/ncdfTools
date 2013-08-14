@@ -9,6 +9,8 @@ convertFilename2Date <- function(
 ## in transNcdfCutFiles.   
 ##author<<
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+##seealso<<
+##\code{\link{ transNcdfCutFiles}}  
 {
    date   <- do.call(fun.conv.string, list( do.call(fun.extr.string, list(file.names))))
    ##value<< POSIXct object with the date.

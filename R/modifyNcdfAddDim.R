@@ -7,9 +7,9 @@ modifyNcdfAddDim <- function(
         file.con.orig          ##<< a NetCDF object pointing to the respective ncdf file FROM which to copy
         , file.con.copy        ##<< a NetCDF object pointing to the respective ncdf file TO which to copy
         , var.name = 'Default' ##<< character vector: names of the variables to which a dimension should be added. Defaults to
-                               ##   all except those with identical names as dimensions in file.con.orig (cordinate variables)
+                               ##   all except those with identical names as dimensions in file.con.orig (coordinate variables)
         , dim.name = 'new.dim' ##<< character string: name of the dimension to add
-        , dim.values = c()     ##<< numeric/charcter vector with the values for the dimension (coordinate values)
+        , dim.values = c()     ##<< numeric/character vector with the values for the dimension (coordinate values)
         , dim.length = length(dim.values)  ##integer: length of the dimension to add
         , dim.pos.copy = 1     ##<< integer: position in the new dimension where to copy the original data. If set to 0,
                                ##   no values are copied and the variable in the new file will be empty. Setting to

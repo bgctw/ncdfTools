@@ -2,7 +2,7 @@ aggregateNcdf <- function(
   ##title<< aggregate data in ncdf files
   fileName ##<< character vector: names of the files to aggregate.
   , path.out = getwd() ##<< character: path to save the results files to. 
-  , period ##<< integer or one of hour, day, month or year: period to agggregate to. In case
+  , period ##<< integer or one of hour, day, month or year: period to aggregate to. In case
            ##   of an integer value, the unit is time steps.
   )
   ##description<<

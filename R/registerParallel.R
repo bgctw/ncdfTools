@@ -1,5 +1,5 @@
 registerParallel <- function(
-##title<< set up parallel computing frontend
+##title<< set up parallel computing front end
 ##description<< This function automatically sets up the system so that
 ## parallel computing is possible for doMC (yet).
  pckg.parallel = 'doMC'  ##<< character string: package to use for parallel

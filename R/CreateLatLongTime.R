@@ -19,7 +19,7 @@ createLatLongTime <- function(
 )
   ##description<<
   ## this function creates an empty standardized latitude/longitude/time ncdf file.
-  ##value <<
+  ##value<<
   ## nothing is returned.
   ##author<<
   ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de

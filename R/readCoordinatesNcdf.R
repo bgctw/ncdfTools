@@ -1,5 +1,5 @@
 readCoordinatesNcdf = function(
-  ##title<< read coordinate or dimesnion values from ncdf file
+  ##title<< read coordinate or dimension values from ncdf file
   fileCon ##<< ncdf file connection or character string: Connection to the
           ##   ncdf file or its file name. In the latter case, the connection is
           ##   created and closed automatically.

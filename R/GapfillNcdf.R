@@ -54,7 +54,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                       ##             in the ncdf file. As an alternative to a R matrix, the name of a ncdf file can be supplied.
                       ##             It should only contain one non coordinate variable with 1 at ocean cells and 0 at land cells.
 , package.parallel = 'doMC'
-                      ## character: package to use for linking foreach to the parallel computing backend. Only doMC
+                      ## character: package to use for linking foreach to the parallel computing back end. Only doMC
                       ##            has been rigorously tested!
 , pad.series = rep(list(   rep(list(c(0, 0)), times = length(dimensions[[1]]))) , times = length(dimensions))
                       ##<< list of integer vectors (of size 2): length of the extracts from series to use for
@@ -68,7 +68,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                       ##             understanding of the results trajectory to the final results.                                  
 , process.type = c('stepwise', 'variances')[1]
 , ratio.const = 0.05  ##<< numeric: max ratio of the time series that is allowed to be above tresh.const for the time series
-                      ##             still to be not cosidered constant.                                 
+                      ##             still to be not considered constant.                                 
 , ratio.test = 1      ##<< numeric: ratio (0-1) of the data that should be used in the cross validation step. If set to 1,
                       ##             all data is used.
 , reproducible = FALSE##<< logical: Whether a seed based on the characters of the file name should be set
@@ -89,7 +89,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                       ##             be filled with the "first guess" value of the last iteration alone. This can only be done
                       ##             if the cross validation scheme is switched off (e.g. by setting amnt.artgaps and size.biggap
                       ##             to zero.
-, tresh.fill.first = list(tresh.fill[[1]])    ##<< single numeric value between 0 and 1 indicating a different treshold for the
+, tresh.fill.first = list(tresh.fill[[1]])    ##<< single numeric value between 0 and 1 indicating a different threshold for the
                       ##             run when no first guess values from previous runs are available. As this can be specified anyway
                       ##             in the 'stepwise' sheme, supplying this value is only reasonable in the 'variances' sheme.
 , var.names = 'auto'  ##<< character string: name of the variable to fill. If set to 'auto' (default), the name
@@ -127,7 +127,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 ## NCDF file specifications
 ##
 ## Due to limitations in the file size the ncdf file can only contain one variable (and the dimensional
-## coordinate variables) (for the time beeing). This function will
+## coordinate variables) (for the time being). This function will
 ## create a second ncdf file identical to the input file but with an additional variable called 'flag.orig',
 ## which contains zero for . In general the file is internally split into
 ## individual time series or grids along ALL dimensions other than those specified in 'dimensions'.
@@ -157,6 +157,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 ##Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de                         
 ##value<<
 ##Nothing is returned but a ncdf file with the results is written.
+######################################################################################################
 {
     ##TODO extract iloop convergence information for all loops
     ##TODO test inner loop convergence scheme for scenarios 
@@ -166,7 +167,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     ##TODO facilitate one step filling process with global RMSE calculation
     ##TODO save convergence information in ncdf files
     ##TODO check for too gappy series at single dimension setting
-    ##TODO create possibilty for non convergence and indicate this in results
+    ##TODO create possibility for non convergence and indicate this in results
     ##TODO facilitate run without cross validation repetition
     ##TODO test stuff with different dimension orders in the file and in settings
     ##TODO substitute all length(processes)==2 tests with something more intuitive
@@ -174,7 +175,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     ##TODO remove first guess stuff
     ##TODO incorporate non convergence information in final datacube
     ##TODO facilitate easy run of different settings (e.g. with different default settings)
-    ##TODO switch off "force.all.dims" in case of non neccessity
+    ##TODO switch off "force.all.dims" in case of non necessity
 
     #load libraries
     if (print.status)
@@ -627,7 +628,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     }
     return(out)
   }, ex = function(){
-    ## prerequesites: go to dir with ncdf file and specify file.name
+    ## prerequisites: go to dir with ncdf file and specify file.name
     file.name        = 'scen_3_0.5_small.nc'
     max.cores        = 8
     calc.parallel    = TRUE

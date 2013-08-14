@@ -1,12 +1,12 @@
 convertBinary2Ncdf = function(
-##title<< tranform binary file to ncdf file
-##description<< This function transforms a binary data file to a ncdf file formated
+##title<< transform binary file to ncdf file
+##description<< This function transforms a binary data file to a ncdf file formatted
 ##              in a standardized way.
     file.input                             ##<< character string: name of the input file.
     , date.vec                             ##<< R date object: time vector for the time coordinate
     , length = 1                           ##<< integer: Length in bytes of each entry in the input file.
     , type = numeric()                     ##<< R data type of the data in the input file.
-    , type.ncdf = 'NC_DOUBLE'              ##<< cjaracter string: Desired data type in the ncdf file.
+    , type.ncdf = 'NC_DOUBLE'              ##<< character string: Desired data type in the ncdf file.
     , dimensions                           ##<< character vector: Names of the dimensions in the binary file.
     , dimension.values                     ##<< list: Each list element has to contain the coordinate values for
                                            ##   the respective dimension.

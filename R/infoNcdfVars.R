@@ -1,6 +1,6 @@
-infoNcdfVars  <- function(
+infoNcdfVars <- function(
 ##title<<  display information about all variables in ncdf file
-##description<< This function eturns different summary information about all variables
+##description<< This function returns different summary information about all variables
 ##              in a NCDF file.
   file.con            ##<< a NetCDF object pointing to the respective ncdf file.
   , order.var = c('id', 'name')[2]
@@ -8,7 +8,7 @@ infoNcdfVars  <- function(
                       ##   to their name (default) or id.
   , info.ext = FALSE  ##<< logical: whether to compute ranges/means etc. for the variables.
                       ##  Setting this to TRUE may take a while to compute with large files.
-  , dimvars = FALSE   ##<< logical: whether to include the cooridinate variables in the output. 
+  , dimvars = FALSE   ##<< logical: whether to include the coordinate variables in the output. 
   
 )
 ##seealso<<
@@ -17,10 +17,10 @@ infoNcdfVars  <- function(
 ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     if (!class(file.con) == 'NetCDF')
-        stop(paste('file.con needs to be a connection to an open netCDF file and of class',
+        stop(paste('file.con needs to be a connection to an open NetCDF file and of class',
                    'NetCDF (library(RNetCDF))', sep=''))
 
-    #determine dimnames and number of vars/dims
+    #determine dim names and number of vars/dims
     n.vars    <- file.inq.nc(file.con)$nvars
     n.dims    <- file.inq.nc(file.con)$ndims
     dim.names <- character(length = n.dims)
@@ -61,7 +61,7 @@ infoNcdfVars  <- function(
 
     #compile info into 1 dataframe
     ##value<<
-    ## a dataframe with the different information in its colums and each variable in one row.
+    ## a dataframe with the different information in its columns and each variable in one row.
     varinfo.out <- data.frame(id=0:(n.vars - 1),
                               name = varname.var,
                               unit = units.var,

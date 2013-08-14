@@ -1,11 +1,11 @@
 convertDateR2Ncdf = function(
-##title<< convert time vectors in ncdf files to julian days since the start of Gregorian calendar   
+##title<< convert time vectors in ncdf files to Julian days since the start of Gregorian calendar   
 ##description<< This function automatically converts time vectors in ncdf files to a standardized Gregorian calendar
        ncdf.obj              ##<< character string or ncdf connection: ncdf file for which to convert the dates    
       , date.vec='auto'      ##<< POSIXct vector: date vectors for the time dimension. If set to 'auto', this
                              ##   is tried to be extracted from the ncdf file
       , origin="1582-10-14"  ##<< character string: origin to be used for the time vector. This start of the 
-                             ##   Gregorian calendar should be kept to avoid possible mistakes due to erronous
+                             ##   Gregorian calendar should be kept to avoid possible mistakes due to flawed
                              ##   conversions.
       , write.to.ncdf = TRUE                       
 )

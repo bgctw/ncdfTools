@@ -1,7 +1,7 @@
 modifyNcdfAppendHistory = function(
     ##title<< automatically append string to ncdf history
-    file ##<< character sting or RNetCCDF file connection: file to write to.
-, string ##<< character string: string to append to teh history
+    file ##<< character sting or RNetCDF file connection: file to write to.
+, string ##<< character string: string to append to the history
 )
   ##description<<
   ## Convenience function to append a string together with the date and the user

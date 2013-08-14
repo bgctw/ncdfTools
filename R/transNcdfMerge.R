@@ -2,7 +2,7 @@ transNcdfMerge <- function(
     ##title<< merge several ncdf files
       file.names ##<< character vector: names of the files to merge.
       , name.change = function(x) return(x) 
-      , time.diff = NULL ##<< maximum time difference to be allowd between two subsequent 
+      , time.diff = NULL ##<< maximum time difference to be allowed between two subsequent 
                          ##   input files.
       , fun.start =  function(x) substr(x, nchar(x)-15, nchar(x)-10)
       , fun.end   =  function(x) substr(x, nchar(x)-8, nchar(x)-3)
@@ -13,7 +13,7 @@ transNcdfMerge <- function(
 )
   ##description<<
   ## Convenience wrapper around cdo to merge several ncdf files containing
-  ## subsequent time steps into one continous file.
+  ## subsequent time steps into one continuous file.
   ##author<<
   ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {

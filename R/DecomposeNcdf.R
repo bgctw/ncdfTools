@@ -1,5 +1,5 @@
 decomposeNcdf = structure(function(
-    ##title<< spectral decomposition o ftimeseries inside a ncdf file.
+    ##title<< spectral decomposition of time series inside a ncdf file.
     ##description<< Wrapper function to automatically decompose gridded time series inside a ncdf file and save the results
     ##              to another ncdf file using SSA.
   file.name             ##<< character: name of the ncdf file to decompose. The file has to be in the current working directory!
@@ -18,12 +18,12 @@ decomposeNcdf = structure(function(
   , max.cores = 16      ##<< integer: maximum number of cores to use.
   , n.comp = c()        ##<< SSA calculation parameter: see the documentation of filterTSeriesSSA!
   , package.parallel = 'doMC' ##<< character: package to use for linking foreach to
-                        ##   the parallel computing backend. Only doMC as the algorithm has been
+                        ##   the parallel computing back end. Only doMC as the algorithm has been
                         ##   extensively tested with this package.!
   , pad.series = c(0,0) ##<< SSA calculation parameter: see the documentation of filterTSeriesSSA!
   , print.status = TRUE ##<< logical: whether to print status information during the process
   , ratio.const = 0.05  ##<< numeric: max ratio of the time series that is allowed to be above tresh.const for the time series
-                        ##   still to be not cosidered constant. 
+                        ##   still to be not considered constant. 
   , repeat.extr = rep(1,times=length(borders.wl))##<< SSA calculation parameter: see the documentation of filterTSeriesSSA!
   , tresh.const = 1e-12 ##<< numeric: value below which abs(values) are assumed to be constant and excluded
                         ##   from the decomposition
@@ -98,7 +98,7 @@ decomposeNcdf = structure(function(
     require(multicore, warn.conflicts = FALSE, quietly = TRUE)
   }
   
-  ## prepare parallel backend
+  ## prepare parallel back end
   if (calc.parallel)
     registerParallel(package.parallel, max.cores)
 
