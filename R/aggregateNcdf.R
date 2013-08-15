@@ -33,6 +33,8 @@ aggregateNcdf <- function(
   ##run aggregation
   system(cdoCmd)
   cat(paste('Created file ', fileNameOut, '.\n', sep = ''))
+  ##value<<
+  ## character string: name of the file created. 
   invisible(fileNameOut)
 }
 

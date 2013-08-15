@@ -1,10 +1,11 @@
 readFLUXNETNcdf <- function(
   ##title<< read data from FLUXNET Ncdf file.
-    path = getwd()
-    , sites
-    , pars
-    , time.ends 
-    , dim.borders)
+    path = getwd()  ##<< character string: path to the input file(s)
+    , sites         ##<< character string: ids of the sites to extract
+    , pars          ##<< character string: names of the variables to extract
+    , time.ends     ##<< POSIXct object: start and end date of the period to extract.
+    , dim.borders   ##<< list: values for other dimensions
+  )
   ##description<<
   ## This function reads data from standard FLUXNET ncdf files and returns it in
   ## an R object.

@@ -1,12 +1,15 @@
 plotDecompSeries <- function(
   ##title<< visualize/plot an overview of a SSA gapfilled ncdf file.
-  file.orig                ##<< object to plot: file name or file.con object linking to a ncdf file
-  , file.decomp = sub('[.]nc', '_specdecomp.nc', file.orig)
-  , file.plot = ''
+  file.orig                ##<< object to plot: file name or file.con object linking
+                           ##   to the original ncdf file
+  , file.decomp = sub('[.]nc', '_specdecomp.nc', file.orig) ##<< object to plot:
+                           ##   file name or file.con object linking to the decomposed ncdf file.
+  , file.plot = ''         ##<< character string: name of the file containing the
+                           ##   plots. If not given, a plot window is opened.
   , ...
 )
 ##description<<
-## This function plots an Visualisation of a SSA gapfilled ncdf file.  
+## This function plots an visualisation of a SSA gapfilled ncdf file.  
 ##\if{html}{\out{<img src="../doc/visualize_ncdf_demo.png" alt="image ..visualize_ncdf_demo should be here"/>}}\ifelse{latex}{}{}
 {
   ##TODO facilitate datacube input

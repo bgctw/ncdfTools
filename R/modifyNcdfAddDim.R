@@ -6,7 +6,7 @@ modifyNcdfAddDim <- function(
                                ##   all except those with identical names as dimensions in file.con.orig (coordinate variables)
         , dim.name = 'new.dim' ##<< character string: name of the dimension to add
         , dim.values = c()     ##<< numeric/character vector with the values for the dimension (coordinate values)
-        , dim.length = length(dim.values)  ##integer: length of the dimension to add
+        , dim.length = length(dim.values)  ##<< integer: length of the dimension to add
         , dim.pos.copy = 1     ##<< integer: position in the new dimension where to copy the original data. If set to 0,
                                ##   no values are copied and the variable in the new file will be empty. Setting to
                                ##   1 (default) results in the original values to be filled in the first value of

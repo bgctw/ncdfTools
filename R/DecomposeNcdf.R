@@ -77,6 +77,8 @@ decomposeNcdf = structure(function(
 
   ##value<<
   ##Nothing is returned but a ncdf file with the results is written in the working directory.
+
+  ############################################################################################################
 {
   ##TODO add mechanism to get constant values in datacube after calculation.
   ##TODO Try zero line crossings for frequency determination

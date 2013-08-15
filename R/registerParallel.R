@@ -3,7 +3,6 @@ registerParallel <- function(
  pckg.parallel = 'doMC'  ##<< character string: package to use for parallel
                          ##   computing. Has to be one of doMC.
  , max.cores = 0         ##<< integer: amount of cores to use
- , ...
 )
   ##description<< This function automatically sets up the system so that
   ## parallel computing is possible for doMC (yet).

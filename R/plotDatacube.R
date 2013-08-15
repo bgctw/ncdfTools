@@ -1,13 +1,15 @@
 plotDatacube <- function(
   ##title<< visualize/plot an overview of a ncdf file
-  data.object             ##<< object to plot: file name or file.con object linking to a ncdf file
-  , forth.dim = 0        ##<< position in possible forth dimension (height, spectral band etc) to plot
-  , var.name = 'auto'     ##<< character string: name of the variable to plot
-  , parallel = FALSE
-  , n.series = 16
-  , lwd = 2
-  , data = c()
-  , max.cores = 16                            
+  data.object         ##<< object to plot: file name or file.con object linking to a ncdf file
+  , data = c()        ##<< array: data to plot. Can be passed to the function to
+                      ##   prevent the repeated loading of huge ncdf data.
+  , forth.dim = 0     ##<< position in possible forth dimension (height, spectral band etc) to plot
+  , var.name = 'auto' ##<< character string: name of the variable to plot
+  , parallel = FALSE  ##<< logical: Whether to parallelize the computations.
+  , max.cores = 16    ##<< integer: maximum amount of cores to use for the
+                      ##   parallelized computations.
+  , n.series = 16     ##<< integer: amount of example series to plot
+  , lwd = 2           ##<< integer: graphical parameter, see ?par                     
   , ...
 )
   ##description<<
@@ -183,6 +185,8 @@ plotDatacube <- function(
     close.nc(file.con)
   if (interactive())
     cat('Finished!\n')
+  ##value<<
+  ## some overview statistics of the different datacubes.
   invisible(cube.info.agg)
 }
 

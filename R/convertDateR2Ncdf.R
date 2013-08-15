@@ -7,12 +7,12 @@ convertDateR2Ncdf = function(
       , origin="1582-10-14"  ##<< character string: origin to be used for the time vector. This start of the 
                              ##   Gregorian calendar should be kept to avoid possible mistakes due to flawed
                              ##   conversions.
-      , write.to.ncdf = TRUE                       
+      , write.to.ncdf = TRUE ##<< logical: whether to write the time vector to the ncdf file.                      
 )
 ##details<< This function sets a time vector in a ncdf file to a standardized format which is readable by
 ##           most software. It transfers the time vector to days since the start of the Gregorian calendar.
-##value<< (invisibly): the time vector. Additionally the time vector is written to the respective file.
-{
+{}
+  #check input
   close.connection = TRUE
   if (class(ncdf.obj)=='character')
     if(!file.exists(ncdf.obj))
@@ -25,8 +25,9 @@ convertDateR2Ncdf = function(
   }
   if (!is.element('time',infoNcdfDims(file.con)$name))
     stop('No time dimension present in specified ncdf file.')
-  if (class(date.vec) ==  "character"  && date.vec=='auto')
-  {
+
+  # determine date vector
+  if (class(date.vec) ==  "character"  && date.vec=='auto') {
     units = infoNcdfAtts(file.con, 'time')[ , 'value'][infoNcdfAtts(file.con, 'time')[, 'name'] == 'units']
     orig.test <- try({as.POSIXct(as.POSIXlt(sub('^.*since ', '', units), tz = 'UTC'))}, silent=TRUE)
     if ((class(orig.test)=='try-error') || !(sub(' since.*$','',units)=='days'))
@@ -35,11 +36,11 @@ convertDateR2Ncdf = function(
   } else {
       date.vec.conv <- as.numeric(julian(date.vec, origin = as.POSIXlt(origin, tz="UTC")))
   }   
-  
+
+  ## write results to ncdf file
   if (write.to.ncdf) {
     if (!is.element('time',infoNcdfVars(file.con)$name))
-      var.def.nc(file.con,'time', 'NC_float', 'time')
-    
+      var.def.nc(file.con,'time', 'NC_float', 'time')    
     var.put.nc(file.con, 'time', date.vec.conv)
     atts.def <- list(long_name = 'time', calendar = 'gregorian', units = paste('days since ', origin, sep = ''))
     modifyNcdfDefAtts(file.con, 'time', atts.def)
@@ -52,6 +53,8 @@ convertDateR2Ncdf = function(
   }
   if (class(ncdf.obj)=='NetCDF' && close.connection) 
     close.nc(file.con)
-  
+  ##value<<
+  ## (invisibly): the time vector. Additionally the time vector is written to the respective file.
+  return(data.vec.conv)
 }    
 

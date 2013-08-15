@@ -1,14 +1,15 @@
 checkNcdfFile <- function(
-##tile<< check ncdf file for consistency with CF/COARDS/MDI ncdf conventions
+##title<< check ncdf file for consistency with CF/COARDS/MDI ncdf conventions
   file.name     ##<<character string: file name to check
-  , dims = c('longitude', 'latitude', 'time')
-                ##<< vector of strings: names of the dimensions which need to
-                ##  be in the file.
-  , type = 'strict'
-                ##<< character string: if 'strict', then all aspects are checked. If this
+  , dims = c('longitude', 'latitude', 'time') ##<< vector of strings:
+                ## names of the dimensions which need to be in the file.
+  , type = 'strict'  ##<< character string:
+                ##   if 'strict', then all aspects are checked. If this
                 ##   is any other value, only aspects relevant for the processing of
                 ##   decomp.ncdf are checked.
-  , var.check ='single'
+  , var.check ='single' ##<< character string: If 'single', then readNcdfVarName
+                ## is used to infer the name of the variable in the target file
+                ## which will then be checked,
 )
   ##description<< This function checks whether a ncdf file is consistent with the parts of the COARDS/CF
   ##              ncdf conventions that the MDI group agreed on.

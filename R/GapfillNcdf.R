@@ -2,24 +2,24 @@ gapfillNcdf <- structure(function(
 ##title<< fill gaps in time series or spatial fields inside a ncdf file using SSA.
 ##description<< Wrapper function to automatically fill gaps in series or spatial fields inside a ncdf file and save the results
 ##              to another ncdf file.
-amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1]]))) , times = length(dimensions))
-                      ##<< list of numeric vectors: the relative ratio (length gaps/series length) of
+amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1]]))) , times = length(dimensions)) ##<< list of numeric vectors: 
+                      ##             The relative ratio (length gaps/series length) of
                       ##             artificial gaps to include in the "innermost" SSA loop (e.g. the value used by the
                       ##             SSA run for each individual series/slice). These ratio is used to determine 
                       ##             the iteration with the best prediction (c(ratio big gaps, ratio small gaps)) (see ?gapfillSSA for details )                                  
-, amnt.iters = rep(list(   rep(list(c(10, 10)), times = length(dimensions[[1]]))) , times = length(dimensions))
-                      ##<< list of integer vectors: amount of iterations performed for the outer and inner
+, amnt.iters = rep(list(   rep(list(c(10, 10)), times = length(dimensions[[1]]))) , times = length(dimensions)) ##<< list of integer vectors: 
+                      ##             amount of iterations performed for the outer and inner
                       ##             loop (c(outer,inner)) (see ?gapfillSSA for details)
-, amnt.iters.start = rep(list(   rep(list(c(1, 1)), times = length(dimensions[[1]]))) , times = length(dimensions))
-                      ##<< list of integer vectors: index of the iteration to start with (outer, inner). If this
+, amnt.iters.start = rep(list(   rep(list(c(1, 1)), times = length(dimensions[[1]]))) , times = length(dimensions)) ##<< list of integer vectors:
+                      ##             index of the iteration to start with (outer, inner). If this
                       ##             value is >1, the reconstruction (!) part is started with this iteration. Currently
                       ##             it is only possible to set this to values >1 if amnt.artgaps and size.biggap == 0.
 , calc.parallel = TRUE##<< logical: whether to use parallel computing. Needs packages doMC, foreach or doSMP (and
                       ##             their dependencies) to be installed.                                  
 , debugging = FALSE   ##<< logical: if set to TRUE, debugging workspaces or dumpframes are saved at several stages
                       ##            in case of an error.                                  
-, dimensions = list(list('time'))
-                      ##<< list of string vectors: setting along which dimensions to perform SSA. These names
+, dimensions = list(list('time'))    ##<< list of string vectors: 
+                      ##             setting along which dimensions to perform SSA. These names
                       ##             have to be identical to the names of the dimensions in the ncdf file. Set this to
                       ##             'time' to do only temporal gap filling or to (for example) c('latitude','longitude')
                       ##             to do 2 dimensional spatial gap filling. See the description for details on how to
@@ -39,34 +39,36 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                       ##             given,  a default value of 0.5*length(time series) is computed.                                                               
 , max.cores = 8       ##<< integer: maximum number of cores to use (if calc.parallel = TRUE).                                  
 , max.steps = 10      ##<< integer: maximum amount of steps in the variances scheme                                 
-, MSSA =  rep(list(   rep(list(FALSE), times = length(dimensions[[1]]))) , times = length(dimensions))
-                      ##<< list of logical values: Whether to perform MSSA for this dimension (see description 
+, MSSA =  rep(list(   rep(list(FALSE), times = length(dimensions[[1]]))) , times = length(dimensions)) ##<< list of logical values: 
+                      ##             Whether to perform MSSA for this dimension (see description 
                       ##             for details). Has to have the same ind.extr e structure as dimensions.
-, MSSA.blck.trsh = tresh.fill[[1]][[1]]
-                      ##<< numeric: ratio (0-1) of gaps that a MSSA block may contain to be filled.                                   
+, MSSA.blck.trsh = tresh.fill[[1]][[1]] ##<< numeric: 
+                      ##             ratio (0-1) of gaps that a MSSA block may contain to be filled.                                   
 , MSSA.blocksize = 1  ##<< integer: size of the quadratic block used for MSSA.  
-, n.comp = lapply(amnt.iters, FUN = function(x)x[[1]][[1]][1] * 2)
-                      ##<< list of single integers: amount of eigentriples to extract (default (if no values are
+, n.comp = lapply(amnt.iters, FUN = function(x)x[[1]][[1]][1] * 2) ##<< list of single integers: 
+                      ##             amount of eigentriples to extract (default (if no values are
                       ##             supplied) is 2*amnt.iters[1] (see ?gapfillSSA for details)
 , ocean.mask = c()    ##<< logical matrix: contains TRUE for every ocean grid cell and FALSE for land cells. Ocean grid
                       ##             cells will be set to missing after spatial SSA and will be excluded from temporal SSA.
                       ##             The matrix needs to have dimensions identical in order and size to the spatial dimensions
                       ##             in the ncdf file. As an alternative to a R matrix, the name of a ncdf file can be supplied.
                       ##             It should only contain one non coordinate variable with 1 at ocean cells and 0 at land cells.
-, package.parallel = 'doMC'
-                      ## character: package to use for linking foreach to the parallel computing back end. Only doMC
+, package.parallel = 'doMC' ## character: 
+                      ##            package to use for linking foreach to the parallel computing back end. Only doMC
                       ##            has been rigorously tested!
-, pad.series = rep(list(   rep(list(c(0, 0)), times = length(dimensions[[1]]))) , times = length(dimensions))
-                      ##<< list of integer vectors (of size 2): length of the extracts from series to use for
+, pad.series = rep(list(   rep(list(c(0, 0)), times = length(dimensions[[1]]))) , times = length(dimensions)) ##<< list of integer vectors (of size 2):
+                      ##             length of the extracts from series to use for
                       ##             padding. Only possible in the one dimensional case. See the documentation of gapfillSSA for details!
 , print.status = TRUE ##<< logical: whether to print status information during the process                                  
-, process.cells = c('gappy','all')[1]
-                      ##<< character string: which grid/series to process. 'gappy' means that only series grids with actual
+, process.cells = c('gappy','all')[1] ##<< character string: 
+                      ##             which grid/series to process. 'gappy' means that only series grids with actual
                       ##             gaps will be processed, 'all' would result in also non gappy grids to be subjected to SSA. The
                       ##             first option results in faster computation times as reconstructions for non gappy grids/series
                       ##             are technically not needed for gap filling, whereas the second option provides a better
                       ##             understanding of the results trajectory to the final results.                                  
-, process.type = c('stepwise', 'variances')[1]
+, process.type = c('stepwise', 'variances')[1] ##character string<< Use 'stepwise' to stepwise fill using one dimension setting
+                      ##             and 'variances' to alternate between different dimension settings using the one with
+                      ##             the lowest residual variance to proceed. 
 , ratio.const = 0.05  ##<< numeric: max ratio of the time series that is allowed to be above tresh.const for the time series
                       ##             still to be not considered constant.                                 
 , ratio.test = 1      ##<< numeric: ratio (0-1) of the data that should be used in the cross validation step. If set to 1,
@@ -74,14 +76,14 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 , reproducible = FALSE##<< logical: Whether a seed based on the characters of the file name should be set
                       ##            which forces all random steps, including the nutrlan SSA algorithm to be
                       ##            exactly reproducible.
-, size.biggap = rep(list(   rep(list(20) , times = length(dimensions[[1]]))) , times = length(dimensions))
-                      ##<< list of single integers: length of the big artificial gaps (in time steps) (see ?gapfillSSA for details)
+, size.biggap = rep(list(   rep(list(20) , times = length(dimensions[[1]]))) , times = length(dimensions)) ##<< list of single integers: 
+                      ##             length of the big artificial gaps (in time steps) (see ?gapfillSSA for details)
 , tresh.const = 1e-12 ##<< numeric: value below which abs(values) are assumed to be constant and excluded
                       ##             from the decomposition.
 , tresh.converged = 0 ##<< numeric: ratio (0-1): determines the amount of SSA iterations that have to converge so that no error
                       ##             is produced.
-, tresh.fill = c(list(list(0.1)), rep(list(list(0,0)), length(dimensions) - 1))
-                      ##<< list of numeric fractions (0-1): This value determines the fraction of valid values below which
+, tresh.fill = c(list(list(0.1)), rep(list(list(0,0)), length(dimensions) - 1)) ##<< list of numeric fractions (0-1):
+                      ##             This value determines the fraction of valid values below which
                       ##             series/grids will not be filled in this step and are filled with the first guess from the
                       ##             previous step (if any). For filling global maps while using a ocean.mask you need
                       ##             to set this value relative to the global grid size (and not only the land mask). Setting this
@@ -89,7 +91,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                       ##             be filled with the "first guess" value of the last iteration alone. This can only be done
                       ##             if the cross validation scheme is switched off (e.g. by setting amnt.artgaps and size.biggap
                       ##             to zero.
-, tresh.fill.first = list(tresh.fill[[1]])    ##<< single numeric value between 0 and 1 indicating a different threshold for the
+, tresh.fill.first = list(tresh.fill[[1]]) ##<< single numeric value between 0 and 1 indicating a different threshold for the
                       ##             run when no first guess values from previous runs are available. As this can be specified anyway
                       ##             in the 'stepwise' sheme, supplying this value is only reasonable in the 'variances' sheme.
 , var.names = 'auto'  ##<< character string: name of the variable to fill. If set to 'auto' (default), the name
@@ -103,8 +105,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 ## the documentation of gapfillSSA() for details of the calculations and the necessary parameters.
 ##
 ##
-## dimensions
-##
+## dimensions:
 ## It is generally possible to perform one or two dimensional SSA for gap filling. The gapfillSSA
 ## algorithm automatically determines the right mode depending on whether a vector or a matrix is supplied.
 ## In this function 'dimensions' is used to determine this. If only one dimension name is supplied, only
@@ -114,8 +115,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 ## the remaining dimensions in the ncdf file. The input ncdf file has to contain a maximum of 3 dimensions.
 ##
 ##
-## stepwise calculation
-##
+## stepwise calculation:
 ## The algorithm can be run step wise with different settings for each step where the results from each
 ## step can be used as 'first guesses' for the subsequent step. To do this, amnt.artgaps, size.biggap, amnt.iters,
 ## n.comp, M, tresh.fill and dimensions have to be lists with their respective values for each step as their elements.
@@ -124,8 +124,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 ## a procedure dimensions has to be: list(a=c('longitude','latitude'),'time')).
 ##
 ##
-## NCDF file specifications
-##
+## NCDF file specifications:
 ## Due to limitations in the file size the ncdf file can only contain one variable (and the dimensional
 ## coordinate variables) (for the time being). This function will
 ## create a second ncdf file identical to the input file but with an additional variable called 'flag.orig',
@@ -142,8 +141,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 ## one time dimension. Even though it was programmed to be more flexible, its functionality can not
 ## be guaranteed under circumstances with more dimensions.
 ##
-## Parallel computing
-##
+## Parallel computing:
 ## If calc.parallel==TRUE, single time series are filled with parallel computing. This requires
 ## the package doSMP or doMP, respectively,  (and their dependencies) to be installed on the computer.
 ## Parallelization with other packages is theoretically possible but not yet implemented. If

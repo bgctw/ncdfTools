@@ -1,4 +1,5 @@
 readNcdfSpectral <- function(
+  ##title<< read spectrally saved Ncdf data
   fileName       ##<< character string: name of the ncdf file
   , varName      ##<< character string: name of the variable to extract.
   , rangeBandsGet##<< vector: Vector defining the bands to extract. Can be either
