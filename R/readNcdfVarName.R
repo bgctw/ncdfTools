@@ -1,8 +1,8 @@
 readNcdfVarName <- function(
+  ##title<< get name of variable in ncdf file
   file ##<< connection to the ncdf file.
 )
-##title<<
-## get name of variable in ncdf file
+
 
 ##description<<
 ## Try to automatically detect the name of the "main" variable in a ncdf file. The name returned is the
@@ -12,8 +12,6 @@ readNcdfVarName <- function(
 ##seealso<<
 ## \code{\link[RNetCDF]{RNetCDF}}, \code{\link{infoNcdfVars}}
 
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   require(RNetCDF)
   if (class(file) == 'character') {

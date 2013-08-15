@@ -6,8 +6,6 @@ readCoordinatesNcdf = function(
   )
   ##description<<
   ##This function reads the coordinate values from a ncdf file.
-  ##author<<
-  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
   ##seealso<<
   ##\code{\link{infoNcdfDims}}
   {

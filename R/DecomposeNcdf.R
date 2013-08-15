@@ -1,7 +1,5 @@
 decomposeNcdf = structure(function(
     ##title<< spectral decomposition of time series inside a ncdf file.
-    ##description<< Wrapper function to automatically decompose gridded time series inside a ncdf file and save the results
-    ##              to another ncdf file using SSA.
   file.name             ##<< character: name of the ncdf file to decompose. The file has to be in the current working directory!
   , borders.wl          ##<< list: borders of the different periodicity bands to extract. Units are
                         ##   sampling frequency of the series. In case of monthly data border.wl<- list(c(11, 13))
@@ -32,8 +30,11 @@ decomposeNcdf = structure(function(
                         ##   error is produced here in cases where more than one such variables exist.
   , ...                 ##<< additional arguments transferred to filterTSeriesSSA.
   )
+  ##description<<
+  ## Wrapper function to automatically decompose gridded time series inside a ncdf file and save the results
+  ## to another ncdf file using SSA.
+  ##
   ##details<<
-
   ## This is a wrapper function to automatically load, decompose and save a ncdf file using Singular Spectrum Analysis
   ## (SSA). It facilitates parallel computing and uses the filterTSeriesSSA() function. Refer to
   ## the documentation of filterTSeriesSSA() for details of the calculations and the necessary parameters, especially
@@ -76,9 +77,6 @@ decomposeNcdf = structure(function(
 
   ##value<<
   ##Nothing is returned but a ncdf file with the results is written in the working directory.
-
-  ##author<<
-  ##Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   ##TODO add mechanism to get constant values in datacube after calculation.
   ##TODO Try zero line crossings for frequency determination

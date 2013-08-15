@@ -9,9 +9,6 @@ modifyNcdfCopyAtts <- function(
    )
 ##seealso<<
 ##\code{\link{modifyNcdfCopyMetadata}}, \code{\link{modifyNcdfCopyVar}}
-
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     n.atts <- var.inq.nc(file.con.orig, var.orig)$natts
     if (n.atts > 0) {

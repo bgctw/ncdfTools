@@ -25,8 +25,6 @@ convertBinary2Ncdf = function(
     , offset.out = offset.in)              ##<< numeric: offset for output data.
 ##value<< Nothing is returned but a ncdf file with a standardized name is written
 ##        in the working directory.
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   require(chron)
   require(RNetCDF)

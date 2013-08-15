@@ -1,9 +1,5 @@
 modifyNcdfAddDim <- function(
-##title<<
-## Add a new dimension to some or more variables in a ncdf file
-##description<<
-## Adds another dimension to specified variables in a ncdf file and saves the results in
-## another ncdf file
+##title<< Add a new dimension to some or more variables in a ncdf file
         file.con.orig          ##<< a NetCDF object pointing to the respective ncdf file FROM which to copy
         , file.con.copy        ##<< a NetCDF object pointing to the respective ncdf file TO which to copy
         , var.name = 'Default' ##<< character vector: names of the variables to which a dimension should be added. Defaults to
@@ -16,12 +12,12 @@ modifyNcdfAddDim <- function(
                                ##   1 (default) results in the original values to be filled in the first value of
                                ##   the new dimension and the remaining values left empty (NaN).
 )
-##seealso<<
-##\code{\link{modifyNcdfCopyMetadata}}, \code{\link[RNetCDF]{att.copy.nc}},
-## \code{\link{modifyNcdfCopyVar}}
-
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  ##description<<
+  ## Adds another dimension to specified variables in a ncdf file and saves the results in
+  ## another ncdf file
+  ##seealso<< 
+  ##\code{\link{modifyNcdfCopyMetadata}}, \code{\link[RNetCDF]{att.copy.nc}},
+  ## \code{\link{modifyNcdfCopyVar}}
 {
     #test input
     if (var.name == 'Default') {

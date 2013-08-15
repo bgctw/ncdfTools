@@ -11,8 +11,6 @@
 ##details<< helper function for gapfillNCdf and decomposeNcdf that identifies the grid cells to process. 
 ##seealso<<
 ##\code{\link{gapfillNCdf}}, \code{\link{gapfillNCdf}}    
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {  
   ## TODO
   ## -possibility to identify gap less MSSA blocks

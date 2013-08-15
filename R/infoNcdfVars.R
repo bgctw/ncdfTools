@@ -1,7 +1,5 @@
 infoNcdfVars <- function(
 ##title<<  display information about all variables in ncdf file
-##description<< This function returns different summary information about all variables
-##              in a NCDF file.
   file.con            ##<< a NetCDF object pointing to the respective ncdf file.
   , order.var = c('id', 'name')[2]
                       ##<< character vector: Whether to sort the variables according
@@ -11,10 +9,10 @@ infoNcdfVars <- function(
   , dimvars = FALSE   ##<< logical: whether to include the coordinate variables in the output. 
   
 )
-##seealso<<
-##\code{\link{infoNcdfDims}}, \code{\link{infoNcdfAtts}}
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  ##description<< This function returns different summary information about all variables
+  ##              in a NCDF file.
+  ##seealso<<
+  ##\code{\link{infoNcdfDims}}, \code{\link{infoNcdfAtts}}
 {
     if (!class(file.con) == 'NetCDF')
         stop(paste('file.con needs to be a connection to an open NetCDF file and of class',

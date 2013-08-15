@@ -1,7 +1,5 @@
 convertDateNcdf2R  =  function(
 ##title<< convert ncdf time vector to POSIXct
-##description<< This function converts a time vector from a ncdf file or a vector of Julian days (or seconds, minutes, hours)
-##              since a specified origin into a POSIXct R vector.
         time.source ##<< numeric vector or ncdf connection: either a number of time units since
                     ##   origin or a ncdf file connection, In the latter case, the time 
                     ##   vector is extracted from the ncdf file, This file, and especially the 
@@ -13,8 +11,8 @@ convertDateNcdf2R  =  function(
                     ##   source. If the source is a ncdf file, this value is ignored and is read from that file.
             )
 )
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  ##description<< This function converts a time vector from a ncdf file or a vector of Julian days (or seconds, minutes, hours)
+  ##              since a specified origin into a POSIXct R vector.
 {
   require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
   if (class(time.source) == 'NetCDF') {

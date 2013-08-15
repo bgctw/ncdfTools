@@ -7,13 +7,9 @@ infoNcdfAtts <- function(
   ## in a ncdf file
   ##details<<
   ## If an id or variable name is given for 'var.id ', attributes from one variable are returned.
-  ## Global attributes are returned if 'NC_GLOBAL' is given.
-  
+  ## Global attributes are returned if 'NC_GLOBAL' is given. 
   ##seealso<<
   ##\code{\link{infoNcdfDims}}, \code{\link{infoNcdfVars}}, \code{\link[RNetCDF]{att.inq.nc}}
-  
-  ##author<<
-  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     if  (var.id == 'NC_GLOBAL') {
          n.atts              <- file.inq.nc(file.con)$ngatts

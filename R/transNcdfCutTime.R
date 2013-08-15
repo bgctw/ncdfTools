@@ -12,8 +12,6 @@ transNcdfCutFiles <- function(
        , convert = function(x) chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y'))
   ##description<< Convenience wrapper around cdo to cut outer (time) margins 
   ##              of Ncdf files.
-  ##author<<
-  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   ##TODO implement possibility to supply dates
   ##TODO implement possibility to extract dates from file

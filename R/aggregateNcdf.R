@@ -8,8 +8,6 @@ aggregateNcdf <- function(
   ##description<<
   ## This function aggregates time periods in ncdf files. Basically it is just a
   ## wrapper around the respective cdo function.
-  ##author<<
-  ##Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
 
   ##test input

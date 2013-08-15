@@ -153,8 +153,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 ##seealso<<
 ##\code{\link[Rssa]{ssa}}, \code{\link[spectral.methods]{gapfillSSA}}, \code{\link{decomposeNcdf}}
 
-##author<<
-##Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de                         
+                 
 ##value<<
 ##Nothing is returned but a ncdf file with the results is written.
 ######################################################################################################
@@ -1137,8 +1136,6 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
   ##          checks the consistency of the input parameters.
   ##seealso<<
   ##\code{\link{gapfillNcdf}}, \code{\link{decomposeNcdf}}
-  ##author<<
-  ##Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {    
   ##TODO
   # include test for MSSA and windowlength=1
@@ -1309,8 +1306,6 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 ##  helper function for gapfillNcdf and decomposeNcdf that identifies the grid cells to process. 
 ##seealso<<
 ##\code{\link{gapfillNcdf}}, \code{\link{gapfillNcdf}}    
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {  
   ## TODO
   ## -possibility to identify gap less MSSA blocks

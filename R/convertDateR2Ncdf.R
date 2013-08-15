@@ -12,8 +12,6 @@ convertDateR2Ncdf = function(
 ##details<< This function sets a time vector in a ncdf file to a standardized format which is readable by
 ##           most software. It transfers the time vector to days since the start of the Gregorian calendar.
 ##value<< (invisibly): the time vector. Additionally the time vector is written to the respective file.
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   close.connection = TRUE
   if (class(ncdf.obj)=='character')

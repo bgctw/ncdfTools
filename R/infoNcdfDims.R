@@ -1,15 +1,13 @@
 infoNcdfDims  <- function(
 ##title<< show info about all dimensions in a ncdf file
-##description<< This function displays summary information about all dimensions in an open ncdf file
      file.con  ##<< a NetCDF object pointing to the respective ncdf file.
      , extended = TRUE ##<< logical: if TRUE, some extended dimension info that 
                        ##   may take time to compute for large files is computed.
 )
-##seealso<<
-##\code{\link{infoNcdfVars}}, \code{\link[RNetCDF]{dim.inq.nc}}
-
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  ##description<<
+  ## This function displays summary information about all dimensions in an open ncdf file
+  ##seealso<<
+  ##\code{\link{infoNcdfVars}}, \code{\link[RNetCDF]{dim.inq.nc}}
 {
   require(RNetCDF)
 

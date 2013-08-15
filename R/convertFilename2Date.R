@@ -7,8 +7,6 @@ convertFilename2Date <- function(
 ##description<<
 ## This function converts parts of ncdf file names to date strings. This is used, e.g.
 ## in transNcdfCutFiles.   
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 ##seealso<<
 ##\code{\link{ transNcdfCutFiles}}  
 {

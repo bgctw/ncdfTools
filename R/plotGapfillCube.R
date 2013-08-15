@@ -1,21 +1,20 @@
 plotGapfillCube <- function(
   ##title<< visualize/plot an overview of a SSA gapfilled ncdf file.
-  file.orig                ##<< object to plot: file name or file.con object linking to a ncdf file
-  , file.filled
-  , file.prefill = ''                          
-  , data.orig = c()
-  , data.filled = c()
-  , data.prefill = c()                          
-  , n.series = 16
-  , lwd = 2
-  , max.cores = 36                           
+  file.orig                ##<< object to plot: file name or file.con object linking to the original (unfilled) ncdf file
+  , file.filled            ##<< object to plot: file name or file.con object linking to the filled ncdf file
+  , file.prefill = ''      ##<< object to plot: file name or file.con object linking to the prefilled ncdf file                      
+  , data.orig = c()        ##<< array: data (see above). can be transferred to prevent reloading
+                           ##   huge datacubes.
+  , data.filled = c()      ##<< see data.orig
+  , data.prefill = c()     ##<< see data.orig                
+  , n.series = 16          ##<< integer: how many example series to plot
+  , lwd = 2                ##<< graphical parameter, see ?par
+  , max.cores = 36         ##<< integer: amount of cores to use for parallelized computations.
   , ...
   )
   ##description<<
   ## This function plots some overview statistics of a ncdf file.
   ##\if{html}{\out{<img src="../doc/visualize_ncdf_demo.png" alt="image ..visualize_ncdf_demo should be here"/>}}\ifelse{latex}{}{}
-  ##author<<
-  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   ##TODO facilitate datacube input
   ##TODO include plot.nlines capabilites
@@ -235,6 +234,8 @@ plotGapfillCube <- function(
     mtext(characteristic, outer = TRUE, side = 3, cex = 2)
   }
  ## return stuff
+  ##value<<
+  ## some overview statistics of the different datacubes.
   invisible(cube.info.agg)
 }
 

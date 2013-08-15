@@ -10,10 +10,6 @@ classR2Ncdf = function(
 
 ##seealso<<
 ## \code{\link[RNetCDF]{RNetCDF}}
-
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
-
 {
     if (class(object) == 'numeric' || class(object) == 'integer') {
         if ((sum(abs(object - round(object)) < .Machine$double.eps ^ 0.5) == length(object)) &

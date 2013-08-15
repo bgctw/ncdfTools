@@ -8,8 +8,6 @@ plotDecompSeries <- function(
 ##description<<
 ## This function plots an Visualisation of a SSA gapfilled ncdf file.  
 ##\if{html}{\out{<img src="../doc/visualize_ncdf_demo.png" alt="image ..visualize_ncdf_demo should be here"/>}}\ifelse{latex}{}{}
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   ##TODO facilitate datacube input
   ##TODO include plot.nlines capabilites

@@ -7,15 +7,13 @@ transNcdfMerge <- function(
       , fun.start =  function(x) substr(x, nchar(x)-15, nchar(x)-10)
       , fun.end   =  function(x) substr(x, nchar(x)-8, nchar(x)-3)
       , time.range.out = c() 
-      , format ='%Y%m'
+      , format ='%Y%m'  ##<< character string: see ?transNcdfCutFile
       , convert = function(x) chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y')
       , path.target = getwd() ##<< file path: path where to copy to the results files.
 )
   ##description<<
   ## Convenience wrapper around cdo to merge several ncdf files containing
   ## subsequent time steps into one continuous file.
-  ##author<<
-  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   ##TODO useful defaults
   ##TODO detect overlapping time spans

@@ -1,17 +1,14 @@
 registerParallel <- function(
 ##title<< set up parallel computing front end
-##description<< This function automatically sets up the system so that
-## parallel computing is possible for doMC (yet).
  pckg.parallel = 'doMC'  ##<< character string: package to use for parallel
                          ##   computing. Has to be one of doMC.
  , max.cores = 0         ##<< integer: amount of cores to use
  , ...
 )
-##seealso<<
-##\code{\link[foreach]{foreach}}, \code{\link[doMC]{registerDoMC}}
-
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  ##description<< This function automatically sets up the system so that
+  ## parallel computing is possible for doMC (yet).
+  ##seealso<< 
+  ##\code{\link[foreach]{foreach}}, \code{\link[doMC]{registerDoMC}}
 {
   require(foreach, warn.conflicts = FALSE, quietly = TRUE)
   if (max.cores == 0) 

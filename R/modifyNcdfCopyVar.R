@@ -18,8 +18,6 @@ modifyNcdfCopyVar <- function(
 ##Case 2: copy of one variable to another one (of different name) in the same file.
 ##seealso<<
 ##\code{\link{modifyNcdfCopyMetadata}}, \code{\link[RNetCDF]{att.copy.nc}}
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
     ##get values to copy from
     var.name.orig      <- var.inq.nc(file.con.orig, var.id.orig)$name

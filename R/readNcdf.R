@@ -7,8 +7,6 @@ readNcdf <- function(
   ##description<<
   ## Convenience function to automatically read in data from a ncdf file
   ## without specifying variable names and opening file connections.
-  ##author<<
-  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   require(RNetCDF)
   file.con <- open.nc(file.name)

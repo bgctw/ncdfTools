@@ -6,8 +6,6 @@ modifyNcdfAppendHistory = function(
   ##description<<
   ## Convenience function to append a string together with the date and the user
   ## to the history attribute of an Ncdf file. 
-  ##author<<
-  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
   {
    if (class(file) == 'character') {
      con <- open.nc(file, write = TRUE)

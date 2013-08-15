@@ -1,7 +1,5 @@
-checkNcdfFile = function(
+checkNcdfFile <- function(
 ##tile<< check ncdf file for consistency with CF/COARDS/MDI ncdf conventions
-##description<< This function checks whether a ncdf file is consistent with the parts of the COARDS/CF
-##              ncdf conventions that the MDI group agreed on
   file.name     ##<<character string: file name to check
   , dims = c('longitude', 'latitude', 'time')
                 ##<< vector of strings: names of the dimensions which need to
@@ -12,8 +10,8 @@ checkNcdfFile = function(
                 ##   decomp.ncdf are checked.
   , var.check ='single'
 )
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
+  ##description<< This function checks whether a ncdf file is consistent with the parts of the COARDS/CF
+  ##              ncdf conventions that the MDI group agreed on.
 {
   require(RNetCDF)
   require(ncdf.tools)

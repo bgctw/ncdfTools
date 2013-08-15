@@ -15,8 +15,6 @@ modifyNcdfDefAtts <- structure(function(
 ##seealso<<
 ##\code{\link[RNetCDF]{att.put.nc}}
 
-##author<<
-## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de
 {
   require(RNetCDF)
   n.steps              <- length(atts)

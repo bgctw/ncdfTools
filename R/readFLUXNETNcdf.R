@@ -8,8 +8,6 @@ readFLUXNETNcdf <- function(
   ##description<<
   ## This function reads data from standard FLUXNET ncdf files and returns it in
   ## an R object.
-  ##author<<
-  ## Jannis v. Buttlar, MPI BGC Jena, Germany, jbuttlar@bgc-jena.mpg.de 
 {
   require(RNetCDF)
   require(chron)
