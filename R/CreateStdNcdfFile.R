@@ -27,7 +27,6 @@ createStdNcdfFile <- function(
 ##description<< This function writes an empty ncdf file with variable names, dimensions and
 ##              attributes formatted in a standardized way.
 {
-  require(RNetCDF)
   #copy attributes etc from other ncdf file (if chosen)
   if (class(con.atts) == 'NetCDF') {
     atts.file <- infoNcdfAtts(con.atts, readNcdfVarName(con.atts))

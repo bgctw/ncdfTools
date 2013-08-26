@@ -85,20 +85,8 @@ decomposeNcdf = structure(function(
   ##TODO Make method reproducible (seed etc)
   ##TODO Add way to handle non convergence
   
-  ## load libraries
-  if (print.status)
-    cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
-  require(foreach, warn.conflicts = FALSE, quietly = TRUE)
-  require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
-  require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
-  require(ncdf.tools, warn.conflicts = FALSE, quietly = TRUE)
-  require(Rssa, warn.conflicts = FALSE, quietly = TRUE)
-  require(abind, warn.conflicts = FALSE, quietly = TRUE)
-  if (calc.parallel) {
-    require(multicore, warn.conflicts = FALSE, quietly = TRUE)
-  }
-  
   ## prepare parallel back end
+  require(doMC)    
   if (calc.parallel)
     registerParallel(package.parallel, max.cores)
 
@@ -348,7 +336,6 @@ decomposeNcdf = structure(function(
   ##description<<
   ## Helper function for decomposeNcdf. Is run parallellised on each core.
 {
-  require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
   iter.ind                   <- iter.gridind[iter.nr, ]
   data.results.iter          <- array(NA,dim=c(n.timesteps, n.bands, diff(iter.ind) + 1))
   for (j in 1:(diff(iter.ind) + 1)) {

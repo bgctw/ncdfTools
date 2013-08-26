@@ -26,8 +26,6 @@ convertBinary2Ncdf = function(
 ##value<< Nothing is returned but a ncdf file with a standardized name is written
 ##        in the working directory.
 {
-  require(chron)
-  require(RNetCDF)
   call.args <- convertArgs2String()
   cat('Loading data ...\n')
   dims.lengths <- sapply(dimension.values,length)

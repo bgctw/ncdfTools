@@ -3,7 +3,6 @@ closeAllNcfiles = function()
 ##description<< convenience function to close all ncdf connections that are 
 ##              currently open. 
 {
-  require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
   object.close=character(length=0)
   for (i in 1:length(ls(globalenv())))
     if (class(get(ls(globalenv())[i]))[1]=='NetCDF')

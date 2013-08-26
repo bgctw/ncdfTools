@@ -13,7 +13,6 @@ readNcdfVarName <- function(
 ## \code{\link[RNetCDF]{RNetCDF}}, \code{\link{infoNcdfVars}}
 
 {
-  require(RNetCDF)
   if (class(file) == 'character') {
     file.con <- open.nc(file)
   } else {

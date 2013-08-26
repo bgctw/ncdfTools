@@ -14,7 +14,6 @@ convertDateNcdf2R  =  function(
   ##description<< This function converts a time vector from a ncdf file or a vector of Julian days (or seconds, minutes, hours)
   ##              since a specified origin into a POSIXct R vector.
 {
-  require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
   if (class(time.source) == 'NetCDF') {
     attget.result <- try({
       time.units      <- infoNcdfAtts(time.source, 'time')[, 'value'][infoNcdfAtts(time.source, 'time')[, 'name'] == 'units']

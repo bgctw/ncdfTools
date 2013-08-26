@@ -23,7 +23,6 @@ createLatLongTime <- function(
   ## Nothing is returned but a file is created. 
 {
   ##TODO: units has to work with more than one variable
-  require(RNetCDF)
   file.con  <- create.nc(file.name)
   
   if (0 != lat.length) {

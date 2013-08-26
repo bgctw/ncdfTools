@@ -8,7 +8,7 @@ convertFilename2Date <- function(
 ## This function converts parts of ncdf file names to date strings. This is used, e.g.
 ## in transNcdfCutFiles.   
 ##seealso<<
-##\code{\link{ transNcdfCutFiles}}  
+##\code{\link{transNcdfCutFiles}}  
 {
    date   <- do.call(fun.conv.string, list( do.call(fun.extr.string, list(file.names))))
    ##value<< POSIXct object with the date.

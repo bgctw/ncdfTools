@@ -17,7 +17,6 @@ transNcdfMerge <- function(
 {
   ##TODO useful defaults
   ##TODO detect overlapping time spans
-  require(chron)
   date.start.in <- convertFilename2Date(file.names, fun.start, convert)
   date.end.in   <- convertFilename2Date(file.names, fun.end, convert)
   

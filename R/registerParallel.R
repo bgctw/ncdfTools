@@ -9,18 +9,13 @@ registerParallel <- function(
   ##seealso<< 
   ##\code{\link[foreach]{foreach}}, \code{\link[doMC]{registerDoMC}}
 {
-  require(foreach, warn.conflicts = FALSE, quietly = TRUE)
   if (max.cores == 0) 
     max.cores   <- getCoreLimit()
   if (max.cores == 1 || getDoParWorkers() < max.cores) {
-    require(pckg.parallel, character.only = TRUE, warn.conflicts = FALSE, quietly = TRUE)
     cat(paste('Registering ', max.cores, ' cores.\n', sep = ''))
     if (pckg.parallel == 'doMC'){
-      require(doMC, warn.conflicts = FALSE, quietly = TRUE)
       w <<- max.cores
-      require(multicore, warn.conflicts = FALSE, quietly = TRUE)
     } else if (pckg.parallel == 'doParallel' || pckg.parallel == 'doSNOW'){
-      require(doSNOW, warn.conflicts = FALSE, quietly = TRUE)      
       w <<- makeCluster(max.cores)
     } else if (pckg.parallel == 'snow') {
       stop('Do not use this function to create snow clusters. Use sfInit from package snowfall instead!')

@@ -10,8 +10,6 @@ readFLUXNETNcdf <- function(
   ## This function reads data from standard FLUXNET ncdf files and returns it in
   ## an R object.
 {
-  require(RNetCDF)
-  require(chron)
   owd <- setwd(path)
   times = seq(from=as.chron(time.ends[1]), to = as.chron(time.ends[2]), by = times("00:30:00"))
   

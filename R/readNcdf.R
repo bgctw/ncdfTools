@@ -8,7 +8,6 @@ readNcdf <- function(
   ## Convenience function to automatically read in data from a ncdf file
   ## without specifying variable names and opening file connections.
 {
-  require(RNetCDF)
   file.con <- open.nc(file.name)
   if (length(var.name) == 0)
     var.name = readNcdfVarName(file.con)

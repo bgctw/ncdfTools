@@ -15,11 +15,6 @@ plotDecompSeries <- function(
   ##TODO facilitate datacube input
   ##TODO include plot.nlines capabilites
   set.seed(12233)
-  require(ncdf.tools, warn.conflicts = FALSE, quietly = TRUE)
-  require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
-  require(jannis.misc, warn.conflicts = FALSE, quietly = TRUE)
-  require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
-  require(DistributionUtils, warn.conflicts = FALSE, quietly = TRUE)
   
   ## preparation
   con.orig    <- open.nc(file.orig)

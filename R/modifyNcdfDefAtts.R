@@ -16,7 +16,6 @@ modifyNcdfDefAtts <- structure(function(
 ##\code{\link[RNetCDF]{att.put.nc}}
 
 {
-  require(RNetCDF)
   n.steps              <- length(atts)
   att.names            <- names(atts)
   ind.fillvalue        <- na.omit(match(c('_FillValue', 'missing_value'), att.names))
@@ -42,7 +41,6 @@ modifyNcdfDefAtts <- structure(function(
   }
 }, ex = function() {
   ## needs an open connection to a valid ncdf file pointed to by file.con
-  library(RNetCDF)
   attributes.define <- list(LongName = 'This is the long name',
                             missingValue = -99999,
                             units = 'm/s')

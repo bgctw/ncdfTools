@@ -14,8 +14,6 @@ checkNcdfFile <- function(
   ##description<< This function checks whether a ncdf file is consistent with the parts of the COARDS/CF
   ##              ncdf conventions that the MDI group agreed on.
 {
-  require(RNetCDF)
-  require(ncdf.tools)
   con.check     <- open.nc(file.name)
 
   dims.nonvalid <- is.na(match(dims, c('longitude', 'latitude', 'time')))

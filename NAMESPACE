@@ -1,6 +1,28 @@
-exportPattern("^[^\\.]")	#exports all variables that do not start with a period.
+export(aggregateNcdf, checkInstalled, checkNcdfFile, classR2Ncdf, closeAllNcfiles,
+       convertArgs2String, convertBinary2Ncdf, convertDateNcdf2R, convertDateR2Ncdf,
+       convertFilename2Date, createLatLongTime, createStdNcdfFile, decomposeNcdf,
+       gapfillNcdf, gapfillNcdfCoreprocess, getCoreLimit, getSysinfo, indexDatacube,
+       infoNcdfAtts, infoNcdfDims, infoNcdfVars, modifyNcdfAddDim,
+       modifyNcdfAppendHistory, modifyNcdfCopyAtts, modifyNcdfCopyMetadata,
+       modifyNcdfCopyVar, modifyNcdfDefAtts, plotDatacube, plotDecompSeries,
+       plotGapfillCube, plotGapfillSeries, rbindMod, readCoordinatesNcdf,
+       readFLUXNETNcdf, readNcdf, readNcdfSpectral, readNcdfVarName, registerParallel,
+       transNcdfCutFiles, transNcdfMerge, transNcdfRotate, transNcdfSubset)
+
 
 #import(aNamespace)	# only required when extending S3 methods 
 
 #useDynLib(ProjectsDllBaseName)	# only required when supplying C or FORTRAN code 
 
+import(RNetCDF)
+importFrom(chron, chron, as.chron)
+importFrom(DistributionUtils, logHist)
+#import(spectral.methods)
+importFrom(abind, abind)
+import(foreach)
+import(doMC)
+import(jannis.misc)
+importFrom(RColorBrewer, brewer.pal)
+import(snowfall)
+import(snow)
+importFrom(plotrix, color.legend)

@@ -11,7 +11,7 @@ convertDateR2Ncdf = function(
 )
 ##details<< This function sets a time vector in a ncdf file to a standardized format which is readable by
 ##           most software. It transfers the time vector to days since the start of the Gregorian calendar.
-{}
+{
   #check input
   close.connection = TRUE
   if (class(ncdf.obj)=='character')
@@ -34,7 +34,7 @@ convertDateR2Ncdf = function(
       stop('date format in ncdf file is in a non implemented format. Supply date vector by hand.')
     date.vec.conv <- as.numeric(var.get.nc(file.con,'time') + julian(orig.test,as.POSIXct(origin)))
   } else {
-      date.vec.conv <- as.numeric(julian(date.vec, origin = as.POSIXlt(origin, tz="UTC")))
+    date.vec.conv <- as.numeric(julian(date.vec, origin = as.POSIXlt(origin, tz="UTC")))
   }   
 
   ## write results to ncdf file
@@ -55,6 +55,6 @@ convertDateR2Ncdf = function(
     close.nc(file.con)
   ##value<<
   ## (invisibly): the time vector. Additionally the time vector is written to the respective file.
-  return(data.vec.conv)
+  return(date.vec.conv)
 }    
 

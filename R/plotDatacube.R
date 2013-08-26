@@ -18,16 +18,10 @@ plotDatacube <- function(
 {
   ##TODO facilitade datacube input
   ##TODO include plot.nlines capabilites
-  require(ncdf.tools)
-  require(RNetCDF)
-  require(plotrix)
-  require(jannis.misc)
-  library(RColorBrewer)
 
   if (interactive())
     cat('\nPreparing stuff ...')
   if (parallel) {
-    require(foreach)
     if (!exists('cl') || !inherits(cl, 'cluster')) {
       cl <- registerParallel('snow', min(c(getCoreLimit(), max.cores)))
     }

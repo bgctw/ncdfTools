@@ -174,25 +174,9 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     ##TODO facilitate easy run of different settings (e.g. with different default settings)
     ##TODO switch off "force.all.dims" in case of non necessity
 
-    #load libraries
-    if (print.status)
-        cat(paste(Sys.time(), ' : Loading libraries. \n', sep=''))
-    require(foreach, warn.conflicts = FALSE, quietly = TRUE)
-    require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
-    require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
-    require(ncdf.tools, warn.conflicts = FALSE, quietly = TRUE)
-    require(Rssa, warn.conflicts = FALSE, quietly = TRUE)
-    require(abind, warn.conflicts = FALSE, quietly = TRUE)
-    require(raster, warn.conflicts = FALSE, quietly = TRUE)
-    require(plyr, warn.conflicts = FALSE, quietly = TRUE)
-    if (calc.parallel) {
-      require(multicore, warn.conflicts = FALSE, quietly = TRUE)
-    }     
-    if (sum(!is.na(match(c('latitude', 'longitude', 'lat', 'long'), 
-                         unlist(dimensions)))) > 0)
-      library(raster, warn.conflicts = FALSE, quietly = TRUE)
-  
     #save argument values of call
+    require(doMC)
+    require(foreach)
     printStatus(paste('Filling file', file.name))
     args.call.filecheck <- as.list(environment())
     args.call.global    <- convertArgs2String()
@@ -849,11 +833,11 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     if (print.status)
       cat(paste(Sys.time(), ' : Starting calculation: Filling ', sum(slices.process),
               ' time series/grids of size ', datapts.n, '. \n', sep = ''))
-    
+
     if (calc.parallel) {
       results.parallel = foreach(i = 1:max.cores                       
-        , .combine = .rbindMod
-        , .multicombine = TRUE, .packages = 'spectral.methods') %dopar% .gapfillNcdfCoreprocess(
+        , .combine = rbindMod
+        , .multicombine = TRUE, .packages = 'spectral.methods') %dopar% gapfillNcdfCoreprocess(
                                   iter.nr = i, datacube = datacube,
                                   dims.process.id = dims.process.id, datapts.n = datapts.n, args.call.SSA = args.call.SSA,
                                   iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
@@ -863,7 +847,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
     } else {
        results.parallel = foreach(i = 1:1
          , .combine =  .rbindMod
-         , .multicombine = TRUE, packages = 'spectral.methods') %do% .gapfillNcdfCoreprocess(iter.nr = i, datacube = datacube,
+         , .multicombine = TRUE, packages = 'spectral.methods') %do% gapfillNcdfCoreprocess(iter.nr = i, datacube = datacube,
                                    dims.process.id = dims.process.id, datapts.n = datapts.n, args.call.SSA = args.call.SSA,
                                    iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
                                    print.status = print.status, iters.n = iters.n, dims.cycle.length = dims.cycle.length, 
@@ -984,7 +968,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 
 
 ##################  combine data from foreach iteration ########################
-.rbindMod <- function(...) 
+rbindMod <- function(...) 
 ##title<< helper function for gapfillNcdf
 ##details<< helper function for gapfillNcdf that combines the foreach output
 ##          in a convenient way.
@@ -1010,7 +994,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 
 
 ########################## gapfill function for single core ####################
-.gapfillNcdfCoreprocess <- function(args.call.SSA, datacube, datapts.n, dims.cycle.id,
+gapfillNcdfCoreprocess <- function(args.call.SSA, datacube, datapts.n, dims.cycle.id,
                                    dims.cycle.length, dims.process.id,
                                    dims.process.length, file.name, first.guess,
                                    ind.process.cube, iter.gridind, iter.nr, iters.n,
@@ -1146,8 +1130,6 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
   ## - facilitate old school SSA via gaps.cv, max.steps = 1, amnt.artgaps !=0
   ##   and length(dimensions) == 1
   ##TODO check intercorelation between ratio.test and gaps.cv
-  require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
-
   args <- list(...)
       
   if (is.null(args$file.name) )
@@ -1308,9 +1290,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
   ## TODO
   ## -possibility to identify gap less MSSA blocks
   ## -include possibility to infer slices.continuous max border
-  
-  require(jannis.misc, warn.conflicts = FALSE, quietly = TRUE)
-  require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
+
 
 
   if (print.status)

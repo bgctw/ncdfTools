@@ -18,15 +18,6 @@ plotGapfillCube <- function(
 {
   ##TODO facilitate datacube input
   ##TODO include plot.nlines capabilites
-  require(ncdf.tools, warn.conflicts = FALSE, quietly = TRUE)
-  require(RNetCDF, warn.conflicts = FALSE, quietly = TRUE)
-  require(plotrix, warn.conflicts = FALSE, quietly = TRUE)
-  require(jannis.misc, warn.conflicts = FALSE, quietly = TRUE)
-  require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
-  library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-  require(DistributionUtils, warn.conflicts = FALSE, quietly = TRUE)
-  require(snow, warn.conflicts = FALSE, quietly = TRUE)
-  require(snowfall, warn.conflicts = FALSE, quietly = TRUE)
   
   ## preparation
   setDefaultClusterOptions(port = sample(49152:65535, 1))
@@ -142,8 +133,8 @@ plotGapfillCube <- function(
       }   
     }
   }
-  LabelMargins(pars.plot, las = 3, side = 2, outer = TRUE, cex= 2, line = .2)
-  LabelMargins(c('orig', 'filled', 'orig - filled'), side = 3, outer = TRUE, cex = 2, line =0.5)
+  labelMargins(pars.plot, las = 3, side = 2, outer = TRUE, cex= 2, line = .2)
+  labelMargins(c('orig', 'filled', 'orig - filled'), side = 3, outer = TRUE, cex = 2, line =0.5)
   
   if(names(dev.cur()) == 'X11')
     x11()

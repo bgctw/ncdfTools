@@ -14,8 +14,6 @@ transNcdfSubset <- function(
 {
   ##ToDo facilitated other scenarios than lat/lon/time
   ##TODO merge with transNcdfCutTimes
-  require(RNetCDF)
-  require(jannis.misc)
 
   #determine dimension indices
   dim.indices=list(longitudes=c(), latitudes=c(), timesteps=c())

@@ -18,8 +18,6 @@ transNcdfCutFiles <- function(
   ##TODO useful defaults
   Sys.setenv(TZ='UTC')
   file.names.out <- c()
-  require(chron)
-  require(RNetCDF)
   for(i in 1:length(file.names)) {
     print(paste('Processing file', file.names[i]))
     if (length(time.range.file) == 0) {

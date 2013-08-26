@@ -9,8 +9,6 @@ infoNcdfDims  <- function(
   ##seealso<<
   ##\code{\link{infoNcdfVars}}, \code{\link[RNetCDF]{dim.inq.nc}}
 {
-  require(RNetCDF)
-
   if (inherits(file.con, 'character')) {
     if (!file.exists(file.con))
       stop('Specified file not existent!')

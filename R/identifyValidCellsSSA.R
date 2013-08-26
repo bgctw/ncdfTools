@@ -14,11 +14,7 @@
 {  
   ## TODO
   ## -possibility to identify gap less MSSA blocks
-  ## -include possibility to infer slices.continuous max border
-  
-  require(jannis.misc, warn.conflicts = FALSE, quietly = TRUE)
-  require(spectral.methods, warn.conflicts = FALSE, quietly = TRUE)
-
+  ## -include possibility to infer slices.continuous max borders
 
   if (print.status)
     cat(paste(Sys.time(), ' : Identifying valid cells ...\n', sep=''))
