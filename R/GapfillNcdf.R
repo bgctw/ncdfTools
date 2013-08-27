@@ -176,7 +176,6 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
 
     #save argument values of call
     require(doMC)
-    require(foreach)
     printStatus(paste('Filling file', file.name))
     args.call.filecheck <- as.list(environment())
     args.call.global    <- convertArgs2String()
@@ -846,7 +845,7 @@ amnt.artgaps = rep(list(   rep(list(c(0.05, 0.05)), times = length(dimensions[[1
                                   file.name = file.name, reproducible = reproducible)
     } else {
        results.parallel = foreach(i = 1:1
-         , .combine =  .rbindMod
+         , .combine =  rbindMod
          , .multicombine = TRUE, packages = 'spectral.methods') %do% gapfillNcdfCoreprocess(iter.nr = i, datacube = datacube,
                                    dims.process.id = dims.process.id, datapts.n = datapts.n, args.call.SSA = args.call.SSA,
                                    iter.gridind = iter.gridind, ind.process.cube = ind.process.cube, first.guess = first.guess,
