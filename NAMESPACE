@@ -15,13 +15,17 @@ export(aggregateNcdf, checkInstalled, checkNcdfFile, classR2Ncdf, closeAllNcfile
 #useDynLib(ProjectsDllBaseName)	# only required when supplying C or FORTRAN code 
 
 import(RNetCDF)
-importFrom(chron, chron, as.chron)
+importFrom(chron, chron, as.chron, years)
 importFrom(DistributionUtils, logHist)
-importFrom(spectral.methods, infoNcdfVars, infoNcdfDims)
 importFrom(abind, abind)
 import(foreach)
 import(doMC)
-import(jannis.misc)
+importFrom(raster, raster)
+importFrom(jannis.misc, labelMargins,  GetVecInfo, image.rotated, plot.bg,
+           plot.nlines, userCoords, RangeZeroEqui, IndVector2Array,
+           which.closest, IndVector2IndMatrix)
+importFrom(spectral.methods, MEF, RMSE, isSeriesContinuous, isSeriesConstant,
+           printStatus, gapfillSSA, filterTSeriesSSA, summarizeTemporalGaps)
 importFrom(RColorBrewer, brewer.pal)
 import(snowfall)
 import(snow)

@@ -39,7 +39,7 @@ convertDateR2Ncdf = function(
 
   ## write results to ncdf file
   if (write.to.ncdf) {
-    if (!is.element('time',.infoNcdfVars(file.con)$name))
+    if (!is.element('time',infoNcdfVars(file.con)$name))
       var.def.nc(file.con,'time', 'NC_float', 'time')    
     var.put.nc(file.con, 'time', date.vec.conv)
     atts.def <- list(long_name = 'time', calendar = 'gregorian', units = paste('days since ', origin, sep = ''))

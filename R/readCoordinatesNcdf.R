@@ -18,7 +18,7 @@ readCoordinatesNcdf = function(
     dimNames <- infoNcdfDims(fileCon)$name
     results <- list()
     for (dimNameT in dimNames) {
-      if (is.element(dimNameT, .infoNcdfVars(fileCon, dimvars = TRUE)$name)) {
+      if (is.element(dimNameT, infoNcdfVars(fileCon, dimvars = TRUE)$name)) {
         results[[dimNameT]] <- var.get.nc(fileCon, dimNameT)
       } else {
         results[[dimNameT]] <- NULL

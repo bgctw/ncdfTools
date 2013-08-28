@@ -31,7 +31,7 @@ readFLUXNETNcdf <- function(
     ind.start    <- which(abs(times - timevec.ends[1]) == min(abs(times - timevec.ends[1])))
     ind.end      <- which(abs(timevec.ends[2]- times) == min(abs(timevec.ends[2] - times)))
     
-    vars.available <- .infoNcdfVars(con.data)[,'name'] 
+    vars.available <- infoNcdfVars(con.data)[,'name'] 
     for (par.t in pars) {
       if (is.element(par.t, vars.available)) {
         for (j in 1:length(dim.borders))    

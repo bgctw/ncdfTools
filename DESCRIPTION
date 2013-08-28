@@ -1,12 +1,12 @@
 Package: ncdf.tools
 Title: Set of tools to ease the handling of ncdf files
-Version: 0.6.0.276
+Version: 0.6.0.277
 Date: 2011-02-15
 Author: Jannis v. Buttlar
 Maintainer: Jannis v. Buttlar <jannis.buttlar@gmx.de>
 Imports: RNetCDF, chron, foreach, iterators, codetools, multicore, doMC,
          DistributionUtils, abind, plotrix, snow, snowfall, raster, RColorBrewer, plyr, 
-         Rssa, jannis.misc, doSNOW
+         Rssa, jannis.misc, doSNOW, spectral.methods
 Description: Set of tools to ease the handling of ncdf files
 License: GPL-2
 LazyLoad: yes

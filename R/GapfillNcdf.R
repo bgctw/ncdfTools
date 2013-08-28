@@ -1149,7 +1149,7 @@ gapfillNcdfCoreprocess <- function(args.call.SSA, datacube, datapts.n, dims.cycl
   file.con.orig <- open.nc(args$file.name)
   if (args$var.names[1] != 'auto')
     for (var.name in args$var.names)
-      if (!is.element(var.name, .infoNcdfVars(file.con.orig)$name))
+      if (!is.element(var.name, infoNcdfVars(file.con.orig)$name))
         stop(paste('Variable name ', var.name, 'does not exist in ncdf file!', sep = ''))
   
   if(sum(is.na(match(unique(unlist(args$dimensions)), c('longitude', 'latitude', 'time')))) > 0)
@@ -1192,7 +1192,7 @@ gapfillNcdfCoreprocess <- function(args.call.SSA, datacube, datapts.n, dims.cycl
       if (!check.passed)
         stop('ocean mask NCDF file not consistent with CF ncdf conventions!')
       con.ocean   <- open.nc(args$ocean.mask)
-      var.names.t <- .infoNcdfVars(con.ocean)[, 'name']
+      var.names.t <- infoNcdfVars(con.ocean)[, 'name']
       var.name.om <- var.names.t[is.na(match(var.names.t, c('time', 'longitude', 'latitude')))]
       if (length(var.name.om) > 1)
         stop('More then one variable existent in ocean mask!')
