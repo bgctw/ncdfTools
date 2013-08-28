@@ -17,7 +17,7 @@ export(aggregateNcdf, checkInstalled, checkNcdfFile, classR2Ncdf, closeAllNcfile
 import(RNetCDF)
 importFrom(chron, chron, as.chron)
 importFrom(DistributionUtils, logHist)
-#import(spectral.methods)
+importFrom(spectral.methods, infoNcdfVars, infoNcdfDims)
 importFrom(abind, abind)
 import(foreach)
 import(doMC)

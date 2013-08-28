@@ -29,7 +29,7 @@ checkNcdfFile <- function(
   }
   if (type == 'strict') {
     #check coordinate variables
-    dims.exists <- match(dims, infoNcdfVars(con.check)[, 'name'])
+    dims.exists <- match(dims, .infoNcdfVars(con.check)[, 'name'])
     if (sum(is.na(dims.exists)) > 0)  {
       close.nc(con.check)
       cat(paste('Coordinate variable for dim ', dims[is.na(dims.exists)], ' not existent!\n', sep = ''))
@@ -47,13 +47,13 @@ checkNcdfFile <- function(
   #check file name
   if (type == 'strict') {
     var.name <- sub('[.].*', '', file.name)
-    if (!is.element(var.name, infoNcdfVars(con.check)[,'name']))
+    if (!is.element(var.name, .infoNcdfVars(con.check)[,'name']))
       stop(paste('File does not have the main variable which has to be named ', var.name,
                  '(according to the file name targetvar.NumberLatitudes.NumberLongitudes.Year.nc )', sep = ''))    
   }
   
   #check attributes
-  variables <- infoNcdfVars(con.check)[, 'name'][is.na(match(infoNcdfVars(con.check)[, 'name'], infoNcdfDims(con.check, extended = FALSE)[, 'name']))]
+  variables <- .infoNcdfVars(con.check)[, 'name'][is.na(match(.infoNcdfVars(con.check)[, 'name'], infoNcdfDims(con.check, extended = FALSE)[, 'name']))]
   variables <- variables[!is.element(variables, c("flag.orig", 'borders.low', 'borders.up'))]
   if (length(variables) > 1 && var.check == 'single')
     variables  <- readNcdfVarName(file.name)

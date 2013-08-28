@@ -21,8 +21,8 @@ modifyNcdfAddDim <- function(
 {
     #test input
     if (var.name == 'Default') {
-        var.name = setdiff(infoNcdfVars(file.con.orig)$name, infoNcdfDims(file.con.orig)$name)
-    } else if (sum(!is.element(var.name, infoNcdfVars(file.con.orig)$name)) > 0) {
+        var.name = setdiff(.infoNcdfVars(file.con.orig)$name, infoNcdfDims(file.con.orig)$name)
+    } else if (sum(!is.element(var.name, .infoNcdfVars(file.con.orig)$name)) > 0) {
         stop('Variable name(s) not available in file.con.orig!')
     }
     if(dim.length == 0)
@@ -44,7 +44,7 @@ modifyNcdfAddDim <- function(
     
     #create variable
     var.name    <- sort(var.name)
-    vars.orig   <- infoNcdfVars(file.con.orig)[match(var.name, infoNcdfVars(file.con.orig)$name), ]
+    vars.orig   <- .infoNcdfVars(file.con.orig)[match(var.name, .infoNcdfVars(file.con.orig)$name), ]
     for (i in 1:length(var.name)) {
         print(paste('Add ncdf dimension: Processing variable ', i, ' of ', length(var.name), ' : ', var.name[i], sep=''))
         vars.orig.dims.t <- var.inq.nc(file.con.orig, var.name[i])$dimids
