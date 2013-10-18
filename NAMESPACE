@@ -1,14 +1,4 @@
-export(aggregateNcdf, checkInstalled, checkNcdfFile, classR2Ncdf, closeAllNcfiles,
-       convertArgs2String, convertBinary2Ncdf, convertDateNcdf2R, convertDateR2Ncdf,
-       convertFilename2Date, createLatLongTime, createStdNcdfFile, decomposeNcdf,
-       gapfillNcdf, gapfillNcdfCoreprocess, getCoreLimit, getSysinfo, indexDatacube,
-       infoNcdfAtts, infoNcdfDims, infoNcdfVars, modifyNcdfAddDim,
-       modifyNcdfAppendHistory, modifyNcdfCopyAtts, modifyNcdfCopyMetadata,
-       modifyNcdfCopyVar, modifyNcdfDefAtts, plotDatacube, plotDecompSeries,
-       plotGapfillCube, plotGapfillSeries, rbindMod, readCoordinatesNcdf,
-       readFLUXNETNcdf, readNcdf, readNcdfSpectral, readNcdfVarName, registerParallel,
-       transNcdfCutFiles, transNcdfMerge, transNcdfRotate, transNcdfSubset)
-
+exportPattern("^[^\\.]")
 
 #import(aNamespace)	# only required when extending S3 methods 
 
@@ -23,7 +13,7 @@ import(doMC)
 importFrom(raster, raster)
 importFrom(jannis.misc, labelMargins,  GetVecInfo, image.rotated, plot.bg,
            plot.nlines, userCoords, RangeZeroEqui, IndVector2Array,
-           which.closest, IndVector2IndMatrix)
+           which.closest, IndVectors2IndMatrix)
 importFrom(spectral.methods, MEF, RMSE, isSeriesContinuous, isSeriesConstant,
            printStatus, gapfillSSA, filterTSeriesSSA, summarizeTemporalGaps)
 importFrom(RColorBrewer, brewer.pal)

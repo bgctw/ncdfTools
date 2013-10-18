@@ -1,7 +1,7 @@
 plotGapfillCube <- function(
   ##title<< visualize/plot an overview of a SSA gapfilled ncdf file.
   file.orig                ##<< object to plot: file name or file.con object linking to the original (unfilled) ncdf file
-  , file.filled            ##<< object to plot: file name or file.con object linking to the filled ncdf file
+  , file.filled = sub('[.]nc', '_gapfill.nc', file.orig)           ##<< object to plot: file name or file.con object linking to the filled ncdf file
   , file.prefill = ''      ##<< object to plot: file name or file.con object linking to the prefilled ncdf file                      
   , data.orig = c()        ##<< array: data (see above). can be transferred to prevent reloading
                            ##   huge datacubes.
@@ -29,25 +29,24 @@ plotGapfillCube <- function(
 
   ## load data
   if (length(data.orig) == 0) {
-    printStatus('Loading original data ...')
+    cat('Loading original data ...\n')
     data.orig   <- transNcdfRotate(data.object = con.orig, var.name = var.orig)
   }
   if (length(data.filled) == 0) {
-    printStatus('Loading gapfilled data ...')    
+    cat('Loading gapfilled data ...\n')    
     data.filled <-  transNcdfRotate(data.object = con.filled, var.name = var.filled)  
   }
   if (length(data.prefill) == 0 & nchar(file.prefill)!=0) {
-    printStatus('Loading pregapfilled data ...')
+    cat('Loading pregapfilled data ...\n')
     con.prefill  <- open.nc(file.prefill)
     var.prefill  <- readNcdfVarName(file.prefill)
     data.prefill <-  transNcdfRotate(data.object = con.prefill, var.name = var.prefill)  
   }
 
-
   
   
   ## calculate datacube info
-  printStatus('Doing calculations ...')
+  cat('Doing calculations ...\n')
   cube.info.orig     <- parApply(cl = sfGetCluster(), data.orig, 1:2, GetVecInfo)       
   cube.info.filled   <- parApply(cl = sfGetCluster(), data.filled, 1:2, GetVecInfo)
   sfStop()
@@ -82,7 +81,7 @@ plotGapfillCube <- function(
  
   
   ## do plots
-  printStatus('Doing plots ...')
+  cat('Doing plots ...\n')
   grids.valid   <- which(cube.info.orig['ratio na', , ] < 1, arr.ind = TRUE)
   ind.rand      <- round(runif(16, 1, dim(grids.valid)[1]), digits = 0)
   ind.lat.orig  <- grids.valid[ind.rand, 1]

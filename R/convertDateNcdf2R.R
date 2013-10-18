@@ -34,6 +34,8 @@ convertDateNcdf2R  =  function(
     stop(paste('Unit ', units, ' is not implemented.', sep  =  ''))
   multiplicator      <- switch(units, days = 60 * 60 * 24, hours = 60 * 60, minutes = 60, seconds = 1)
   time.out           <- as.POSIXct(date.vec.conv * multiplicator, origin = origin, tz = 'UTC')
+  if (origin <   as.POSIXct('1582-10-30', tz = 'UTC'))
+     time.out <- time.out + 10 * 24 * 60 * 60
   ##value<<
   ## POSIXct vector: time vector in native R format
   return(time.out)

@@ -121,7 +121,7 @@ decomposeNcdf = structure(function(
   if (length(M) == 0)
     M              <- rep(round(n.timesteps / 2,  digits = 0), times = n.steps)
   if (length(harmonics) == 0)
-    harmonics      <- rep(8, times = n.steps)
+    harmonics      <- rep(0, times = n.steps)
   if (length(n.comp) == 0)
     n.comp         <- rep(50, times = n.steps)
   
@@ -314,7 +314,7 @@ decomposeNcdf = structure(function(
                      , b = c(12, Inf)
                      , c = c(0, 12))
   M         <- c(2*12, 4*12, 12)
-  #extract first for harmonics for yearly cycle
+  #extract first four harmonics for yearly cycle
   harmonics <- c(4, 0, 0)
 
   # uncomment and run 
