@@ -17,7 +17,7 @@ plotDatacube <- function(
   ##\if{html}{\out{<img src="../doc/visualize_ncdf_demo.png" alt="image ..visualize_ncdf_demo should be here"/>}}\ifelse{latex}{}{}
 {
   ##TODO facilitade datacube input
-  ##TODO include plot.nlines capabilities
+  ##TODO include plotNLines capabilities
 
   cat('Preparing stuff ...\n')
   if (parallel) {
@@ -84,9 +84,9 @@ plotDatacube <- function(
   ## calculate datacube info
   cat('Doing calculations ...\n')
   if (parallel) {
-    cube.info          <- parApply(cl, data.cube.sort, c(1,2,4), GetVecInfo)       
+    cube.info          <- parApply(cl, data.cube.sort, c(1,2,4), getVecInfo)       
   } else {
-    cube.info          <- apply(data.cube.sort, c(1,2,4), GetVecInfo)
+    cube.info          <- apply(data.cube.sort, c(1,2,4), getVecInfo)
   } 
 #  if  (length(forth.dim) == 1 && forth.dim == 0)
 #    cube.info.t              <- array(cube.info, dim = c(dim(cube.info)[1:2], 1, dim(cube.info)[3]))
@@ -151,7 +151,7 @@ plotDatacube <- function(
     pars.plot = c('min.data', 'max.data', 'mean.data', 'sdev.data', 'na.data', 'inf.data')
     for (i in 1:length(pars.plot)) {
       if (sum(!is.na(cube.info[i, , , forth.dim.t])) > 0 ) {
-        image.rotated(cube.info[i, , , forth.dim.t], row.vals = latitudes,
+        plotImageRotated(cube.info[i, , , forth.dim.t], row.vals = latitudes,
             col.vals = longitudes, xlab = '', col = col.palette(60),
             zlim = range(pretty(cube.info[i, , , forth.dim.t])), scale = FALSE)
         if (i == 1) {
@@ -176,11 +176,11 @@ plotDatacube <- function(
     ## plot example series
     ind.series <-  array(FALSE, dim = dim(data.cube.sort)[1:2])
     ind.series[as.matrix(data.frame(a = grids.valid[ind.rand[1:n.series],1], b = grids.valid[ind.rand[1:n.series],2]))]=TRUE
-    plot.bg(rgb(0.9,0.9,0.9))
+    plotBG(rgb(0.9,0.9,0.9))
     data.cube.t <- data.cube.sort[,,,forth.dim.t]
     if (cube.info.agg[forth.dim.t, 'series.empty'] != 1) {
       ydata = t(array(data.cube.t[indexDatacube(datacube = data.cube.t, logical.ind = ind.series, dims = c(1,2))], dim = c(length(time), n.series)))
-      plot.nlines(x.data = 1:length(time), y.data = ydata, option = 'stacked', colors = cols[1:n.series], scale = 0.35, ...)
+      plotNLines(x.data = 1:length(time), y.data = ydata, option = 'stacked', colors = cols[1:n.series], scale = 0.35, ...)
       legend('topright', legend = paste(1:n.series, apply(ind.orig[1:n.series, ], MARGIN = 1, paste, collapse = ','), sep = ': '),
           col = cols[1:n.series], lty = lty[1:n.series], lwd = 2, bg = 'white', cex = par()$cex*2, ...)
     }

@@ -11,24 +11,35 @@ infoNcdfAtts <- function(
   ##seealso<<
   ##\code{\link{infoNcdfDims}}, \code{\link{infoNcdfVars}}, \code{\link[RNetCDF]{att.inq.nc}}
 {
-    if  (var.id == 'NC_GLOBAL') {
-         n.atts              <- file.inq.nc(file.con)$ngatts
+  close.file =  FALSE
+  if (inherits(file.con, 'character')) {
+    if (file.exists(file.con)) {
+      file.con =  open.nc(file.con)
+      close.file =  TRUE
     } else {
-        n.atts               <- var.inq.nc(file.con,var.id)$natts
+      stop(paste('File',  file.con, 'not existent!'))
     }
-##value<<
-## A matrix containing the name, value and type (columns) of all attributes (rows)
-    att.info <- matrix(NA, n.atts, 3)
-    if (n.atts > 0) {
-        colnames(att.info)   <- c('name', 'value', 'type')
-        for (i in 1:n.atts) {
-            att.info[i,1]    <- att.inq.nc(file.con, var.id, i - 1)$name
-            att.values.t     <- att.get.nc(file.con, var.id,i - 1)
-            if (length(att.values.t) > 1)
-                att.values.t <- paste(att.values.t,collapse='; ')
-            att.info[i,2]    <- att.values.t
-            att.info[i,3]    <- att.inq.nc(file.con,var.id,i-1)$type
-        }
+  }
+  if  (var.id == 'NC_GLOBAL') {
+    n.atts              <- file.inq.nc(file.con)$ngatts
+  } else {
+    n.atts               <- var.inq.nc(file.con,var.id)$natts
+  }
+  ##value<<
+  ## A matrix containing the name, value and type (columns) of all attributes (rows)
+  att.info <- matrix(NA, n.atts, 3)
+  if (n.atts > 0) {
+    colnames(att.info)   <- c('name', 'value', 'type')
+    for (i in 1:n.atts) {
+      att.info[i,1]    <- att.inq.nc(file.con, var.id, i - 1)$name
+      att.values.t     <- att.get.nc(file.con, var.id,i - 1)
+      if (length(att.values.t) > 1)
+        att.values.t <- paste(att.values.t,collapse='; ')
+      att.info[i,2]    <- att.values.t
+      att.info[i,3]    <- att.inq.nc(file.con,var.id,i-1)$type
     }
-    return(att.info)
+  }
+  if (close.file)
+    close.nc(file.con)
+  return(att.info)
 }

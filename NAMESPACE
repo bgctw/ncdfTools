@@ -6,16 +6,13 @@ exportPattern("^[^\\.]")
 
 import(RNetCDF)
 importFrom(chron, chron, as.chron, years)
-importFrom(DistributionUtils, logHist)
 importFrom(abind, abind)
 import(foreach)
 import(doMC)
 importFrom(raster, raster)
-importFrom(jannis.misc, labelMargins,  GetVecInfo, image.rotated, plot.bg,
-           plot.nlines, userCoords, RangeZeroEqui, IndVector2Array,
-           which.closest, IndVectors2IndMatrix)
-importFrom(spectral.methods, MEF, RMSE, isSeriesContinuous, isSeriesConstant,
-           printStatus, gapfillSSA, filterTSeriesSSA, summarizeTemporalGaps)
+importFrom(JBTools, checkInstalled, getVecInfo, getCoreLimit,  getSysinfo, indexVec2Array, indexVec2Mat,
+           isSeriesContinuous, isSeriesConstant, labelMargins, MEF, plotImageRotated, plotBG,
+           plotNLines, printStatus, rangeZeroEqui, registerParallel, RMSE, userCoords, whichClosest)
 importFrom(RColorBrewer, brewer.pal)
 import(snowfall)
 import(snow)

@@ -1,6 +1,6 @@
 Package: ncdf.tools
 Title: Set of tools to ease the handling of ncdf files
-Version: 0.6.0.278
+Version: 0.6.0.280
 Date: 2011-02-15
 Author: Jannis v. Buttlar
 Maintainer: Jannis v. Buttlar <jannis.buttlar@gmx.de>

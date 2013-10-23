@@ -4,12 +4,16 @@ transNcdfMerge <- function(
       , name.change = function(x) return(x) 
       , time.diff = NULL ##<< maximum time difference to be allowed between two subsequent 
                          ##   input files.
-      , fun.start =  function(x) substr(x, nchar(x)-15, nchar(x)-10)
-      , fun.end   =  function(x) substr(x, nchar(x)-8, nchar(x)-3)
-      , time.range.out = c() 
+      , fun.start =  NULL##<< function: function to retrieve the start date from
+                         ##   the file name e.g. function(x) substr(x, nchar(x)-15, nchar(x)-10)
+      , fun.end   =  NULL##<< see fun.start
+      , time.range.out = c() ##<< POSIXct vector: (start date, end date): start and end dates
+                         ##   of the final file. If not supplied,  all available data
+                         ##   are used.
       , format ='%Y%m'  ##<< character string: see ?transNcdfCutFile
       , convert = function(x) chron(paste(x, '15', sep=''), format='ymd', out.format='d-m-y')
       , path.target = getwd() ##<< file path: path where to copy to the results files.
+  ,  target.name =  ''
 )
   ##description<<
   ## Convenience wrapper around cdo to merge several ncdf files containing
@@ -17,12 +21,26 @@ transNcdfMerge <- function(
 {
   ##TODO useful defaults
   ##TODO detect overlapping time spans
-  date.start.in <- convertFilename2Date(file.names, fun.start, convert)
-  date.end.in   <- convertFilename2Date(file.names, fun.end, convert)
-  
-  file.names    <- file.names[order(date.start.in)]
-  date.end.in   <- date.end.in[order(date.start.in)]
-  date.start.in <- date.start.in[order(date.start.in)]
+
+  if (!is.null(fun.start) & !is.null(fun.end)) {
+    date.start.in <- convertFilename2Date(file.names, fun.start, convert)
+    date.end.in   <- convertFilename2Date(file.names, fun.end, convert)
+    
+    file.names    <- file.names[order(date.start.in)]
+    date.end.in   <- date.end.in[order(date.start.in)]
+    date.start.in <- date.start.in[order(date.start.in)]
+  } else {
+    date.start.in.l <- list()
+    date.end.in.l   <- list() 
+    
+    for (i in 1:length(file.names)) {
+      fileT <- file.names[i]
+      date.start.in.l[[i]] <- min(convertDateNcdf2R(fileT))
+      date.end.in.l[[i]] <- max(convertDateNcdf2R(fileT))
+    }
+    date.start.in <-  as.POSIXct(unlist(date.start.in.l), origin = '1970-01-01')
+    date.end.in   <-  as.POSIXct(unlist(date.end.in.l), origin = '1970-01-01')
+  }
   
   if (length(time.range.out) == 2) {
     files.remove <- c(which(date.end.in < time.range.out[1]),
@@ -65,8 +83,12 @@ transNcdfMerge <- function(
   }
   
   Sys.setenv(SKIP_SAME_TIME=1)
-  ofile  <- file.path(path.target, do.call(name.change, list(sub(do.call(fun.end, list(file.names[1])),
-        do.call(fun.end, list(file.names[length(file.names)])), file.names[1]))))
+  if (nchar(target.name) == 0) {
+    ofile  <- file.path(path.target, do.call(name.change, list(sub(do.call(fun.end, list(file.names[1])),
+                                                                   do.call(fun.end, list(file.names[length(file.names)])), file.names[1]))))
+  } else {
+    ofile <- file.path(path.target, target.name)
+  }
   system(paste('cdo -O mergetime ', paste(file.names, collapse =' '), ' ', ofile, sep ='') )   
   if (exists('files.delete') && length(files.delete) > 0 )
     for (file.t in files.delete)
