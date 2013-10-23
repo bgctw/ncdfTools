@@ -17,13 +17,13 @@ plotDatacube <- function(
   ##\if{html}{\out{<img src="../doc/visualize_ncdf_demo.png" alt="image ..visualize_ncdf_demo should be here"/>}}\ifelse{latex}{}{}
 {
   ##TODO facilitade datacube input
-  ##TODO include plot.nlines capabilites
+  ##TODO include plot.nlines capabilities
 
-  if (interactive())
-    cat('\nPreparing stuff ...')
+  cat('Preparing stuff ...\n')
   if (parallel) {
+    cat('Registering cluster ...\n')
     if (!exists('cl') || !inherits(cl, 'cluster')) {
-      cl <- registerParallel('snow', min(c(getCoreLimit(), max.cores)))
+      cl <- makeCluster(max.cores)
     }
   }  
   if (class(data.object) == 'NetCDF') {
@@ -41,20 +41,31 @@ plotDatacube <- function(
   dim.long   <- match(long.name, infoNcdfDims(file.con)$name)
   dim.lat    <- match(lat.name, infoNcdfDims(file.con)$name)
   dim.time   <- match('time', infoNcdfDims(file.con)$name)
-  longitudes <- round(var.get.nc(file.con, long.name), digits = 0)
-  latitudes  <- round(var.get.nc(file.con, lat.name), digits = 0)
-  time       <- convertDateNcdf2R(file.con, 'time')
+  if (is.element(long.name, infoNcdfVars(file.con,dimvars=TRUE)[, 'name'])) {
+    longitudes <- round(var.get.nc(file.con, long.name), digits = 0)
+  } else {
+    longitudes <-  1:infoNcdfDims(file.con)[dim.long, 'length']
+  }
+  if (is.element(long.name, infoNcdfVars(file.con,dimvars=TRUE)[, 'name'])) {
+    latitudes  <- round(var.get.nc(file.con, lat.name), digits = 0)  
+  } else {
+    latitudes  <-  1:infoNcdfDims(file.con)[dim.lat, 'length']
+  }
+  if (is.element('time', infoNcdfVars(file.con,dimvars=TRUE)[, 'name'])) {
+    time       <- convertDateNcdf2R(file.con)
+  } else {
+    time  <-  1:infoNcdfDims(file.con)[infoNcdfDims(file.con)$name == 'time', 'length']
+  }
   dims.par   <- infoNcdfDims(file.con)$name[var.inq.nc(file.con, var.name)$dimids + 1]
   
   ## sort dataframe
   aperm.data <- pmatch(c('lat', 'lon', 'time'), dims.par)
   if (length(data) == 0) {
-    if (interactive())
-      cat('Loading data ...')
+    cat('Loading data ...\n')
     data       <- var.get.nc(file.con, var.name)
   }
-  if (interactive())
-    cat('Transposing datacube ...')
+  cat('Transposing datacube ...\n')
+  
   if (length(forth.dim) > 1 || forth.dim != 0) {
     aperm.data <- c(aperm.data, 4)
     length.forth.dim <- dim(data)[4]
@@ -62,6 +73,7 @@ plotDatacube <- function(
     length.forth.dim <- 1
   }
   data.cube.unsort   <- aperm(data, aperm.data)
+  
   if (length(forth.dim) > 1 || forth.dim != 0) {
     data.cube.sort   <- data.cube.unsort[order(latitudes, decreasing = TRUE), order(longitudes), ,]
   } else {
@@ -70,8 +82,7 @@ plotDatacube <- function(
   data.cube.sort     <- array(data.cube.sort, dim = c(dim(data.cube.sort)[1:3], length.forth.dim) ) 
   
   ## calculate datacube info
-  if (interactive())
-    cat('Doing calculations ...')
+  cat('Doing calculations ...\n')
   if (parallel) {
     cube.info          <- parApply(cl, data.cube.sort, c(1,2,4), GetVecInfo)       
   } else {
@@ -98,8 +109,7 @@ plotDatacube <- function(
                                      series.full = sum(cube.info['ratio na',,,] == 0) / prod(dim(data.cube.sort)[2:3]), 
                                      series.gappy = sum(cube.info['ratio na',,,] != 0 & cube.info['ratio na',,,] != 1) / prod(dim(data.cube.sort)[2:3]))
   }
-  if (interactive())
-    cat('Doing plots ...')
+  cat('Doing plots ...\n')
   for (h in 1:length(forth.dim)) {
     forth.dim.t = forth.dim[h]
     if (length(forth.dim) == 1 && forth.dim == 0)
@@ -177,8 +187,7 @@ plotDatacube <- function(
   }
   if (!(class(data.object)=='NetCDF'))
     close.nc(file.con)
-  if (interactive())
-    cat('Finished!\n')
+  cat('Finished!\n')
   ##value<<
   ## some overview statistics of the different datacubes.
   invisible(cube.info.agg)
