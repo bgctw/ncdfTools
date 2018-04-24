@@ -1,0 +1,158 @@
+---
+output: 
+  rmarkdown::html_vignette:
+    keep_md: true
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown_notangle}
+  %\VignetteIndexEntry{typical use case}
+  %\usepackage[UTF-8]{inputenc}
+---
+
+```{r, include = FALSE}
+# do not execute on CRAN: 
+# https://stackoverflow.com/questions/28961431/computationally-heavy-r-vignettes
+is_check <- ("CheckExEnv" %in% search()) || any(c("_R_CHECK_TIMINGS_",
+             "_R_CHECK_LICENSE_") %in% names(Sys.getenv()))
+knitr::opts_chunk$set(eval = !is_check)
+```
+
+```{r setup, include = FALSE}
+#rmarkdown::render("vignettes/useCase.Rmd")
+knitr::opts_knit$set(root.dir = '..')
+knitr::opts_chunk$set(
+    #, fig.align = "center"
+    #, fig.width = 3.27, fig.height = 2.5, dev.args = list(pointsize = 10)
+    #,cache = TRUE
+    #, fig.width = 4.3, fig.height = 3.2, dev.args = list(pointsize = 10)
+    #, fig.width = 6.3, fig.height = 6.2, dev.args = list(pointsize = 10)
+    # works with html but causes problems with latex
+    #,out.extra = 'style = "display:block; margin: auto"' 
+    )
+knitr::knit_hooks$set(spar = function(before, options, envir) {
+    if (before) {
+        par(las = 1 )                   #also y axis labels horizontal
+        par(mar = c(2.0,3.3,0,0) + 0.3 )  #margins
+        par(tck = 0.02 )                          #axe-tick length inside plots             
+        par(mgp = c(1.1,0.2,0) )  #positioning of axis title, axis labels, axis
+     }
+})
+```
+
+
+```{r, include = FALSE, warning = FALSE}
+#themeTw <- theme_bw(base_size = 10) + theme(axis.title = element_text(size = 9))
+#bgiDir <- "~/bgi"
+```
+
+# Typical workflow
+
+## Creating a new point-nc-File
+```{r inputData, spar = TRUE, message = FALSE}
+nRec <- 30L
+times <- seq(ISOdatetime(2010,1,1,0,0,0, tz = "UTC")
+             , by = "30 min", length.out = nRec)
+dsTest <- data.frame(
+  time = times
+  , soilResp = rnorm(nRec), sdSoilResp = 0.1
+)
+ncFileDs <- createStdNcdfFile(
+  data = dsTest
+  , file.name = "dsSoilResp.nc"
+  , lat.values = 53.0
+  , long.values = 13
+  , time.values = times
+  , units = rep('g/m^2',2)
+  )
+# single variable: can supply data as vector
+ncFile <- createStdNcdfFile(
+  "soilResp"
+  , lat.values = 53.0
+  , long.values = 13
+  , time.values = dsTest$time
+  , units = 'g/m2'
+  , data = dsTest$soilResp
+  )
+fileName <- ncFile
+```
+
+## Getting information on file structure
+
+Dimensions
+```{r}
+infoNcdfDims(ncFile)
+```
+
+Variables
+```{r}
+infoNcdfVars(ncFile, order.var = 'id')
+infoNcdfVars(ncFileDs, order.var = 'id')
+```
+
+global attributes
+```{r}
+as.data.frame(infoNcdfAtts(ncFile))
+```
+and variable attributes
+```{r}
+as.data.frame(infoNcdfAtts(ncFile, "soilResp"))
+```
+
+Coordinate values
+```{r}
+readCoordinatesNcdf(ncFile)
+```
+
+Try matching the main variable (not dimensions, having most dimenstion, matching filename)
+```{r}
+readNcdfVarName(ncFile)
+```
+
+typing-sparse reading of a single variable from ncdf-File
+```{r}
+ans <- readNcdf(ncFile) 
+all(ans - dsTest$soilResp < 1e-10 )
+```
+
+
+checking file structure compliance to CF/COARDS/MDI ncdf conventions
+```{r}
+checkNcdfFile(ncFile)
+```
+
+## Modifying NetCDF files in place
+appending string to the history
+```{r}
+modifyNcdfAppendHistory( ncFile, "another history entry")
+cat(infoNcdfAtts(ncFile)["history","value"])
+```
+see also modifyNcdfDefAtts, modifyNcdfCopyAtts, modifyNcdfCopyMetadata, modifyNcdfCopyVar.
+
+## Conversion between R and NetCDF
+Dates
+```{r}
+ncCon <- RNetCDF::open.nc(fileName)
+timesNCOrig <- RNetCDF::var.get.nc(ncCon, 'time')
+RNetCDF::close.nc(ncCon)
+head(timesR <- convertDateNcdf2R(fileName))
+convertDateR2Ncdf(fileName, timesR, write.to.ncdf = FALSE) - timesNCOrig
+```
+
+## CDO commands
+time aggregation
+```{r}
+tmpDir <- tempdir()
+ans <- aggregateNcdf(ncFile, path.out = tmpDir, period = 2)
+```
+
+
+## Adding some data to it
+Here, we use functions from RNetCDF
+```{r}
+infoNcdfVars(ncFile)
+
+# get the name of the variable 
+readNcdfVarName(ncFile)
+
+# get information 
+```
+
