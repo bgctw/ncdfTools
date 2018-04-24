@@ -1,44 +1,41 @@
 readNcdfVarName <- function(
-  ##title<< get name of variable in ncdf file
+  ### get name of variable in ncdf file
   file ##<< connection to the ncdf file.
-)
-
-
-##description<<
-## Try to automatically detect the name of the "main" variable in a ncdf file. The name returned is the
-## name of the only non coordinate variable. If more than one of these is returned, the name of the variable
-## having the most dimensions is used.
-
-##seealso<<
-## \code{\link[RNetCDF]{RNetCDF}}, \code{\link{infoNcdfVars}}
-
-{
+) {
+  ##description<<
+  ## Try to automatically detect the name of the "main" variable in a ncdf file. 
+  ## The name returned is the
+  ## name of the only non coordinate variable. If more than one of these is 
+  ## returned, the name of the variable
+  ## having the most dimensions is used.
+  ## If there are still more than one variable, try to match the filename
+  ##seealso<<
+  ## \code{\link[RNetCDF]{RNetCDF}}, \code{\link{infoNcdfVars}}
   if (class(file) == 'character') {
     file.con <- open.nc(file)
+    on.exit(close.nc(file.con)) # when opened file, close on exit
   } else {
     file.con <- file
   }  
-  var.name         <- setdiff(infoNcdfVars(file.con, order.var ='id')$name, infoNcdfDims(file.con, extended = FALSE)$name)
+  infoVars <- infoNcdfVars(file.con, order.var = 'id', dimvars = FALSE)
+  infoDims <- infoNcdfDims(file.con, extended = FALSE)
+  var.name         <- infoVars$name
   names.excluded   <- c('time_bnds')
   var.name         <- setdiff(var.name, names.excluded)
   var.name         <- var.name[!grepl('flag.orig$', var.name)]
-  if(length(var.name) > 1) {
-    var.id.nocoord <- infoNcdfVars(file.con, order.var ='id')[match(var.name, infoNcdfVars(file.con, order.var ='id')$name), 1]
-    var.nocoord.ndims <- infoNcdfVars(file.con, order.var ='id')[var.id.nocoord + 1, 4]
-    var.id <- var.id.nocoord[var.nocoord.ndims == max(var.nocoord.ndims)]    
-    if (length(var.id) > 1 && class(file) == 'character') {
-      names.nocoord <- infoNcdfVars(file.con, order.var = 'id')[var.id + 1,'name']
-      var.id        <- var.id[which(!is.na(pmatch(names.nocoord, file)))]
+  if (length(var.name) > 1) {
+    posVars <- match(var.name, infoVars$name)
+    #var.id.nocoord <- infoVars[posVars, 1]
+    #var.nocoord.ndims <- infoVars[infoVars$id == var.id.nocoord, 4]
+    var.nocoord.ndims <- infoVars$n.dims[posVars]
+    posVarsMax <- posVars[ var.nocoord.ndims  == max(var.nocoord.ndims)]
+    if (length(posVarsMax) > 1 && class(file) == 'character') {
+      # take the one that matches the filename
+      names.nocoord <- infoVars$name[posVarsMax]
+      var.name <- names.nocoord[which(!is.na(pmatch(names.nocoord, basename(file))))]
     }
-    if ((length(var.id) > 1) ) {
-      stop('Not possible to detect variable name!')
-    } else {
-      var.name <-infoNcdfVars(file.con, order.var ='id')$name[var.id + 1]         
-    }
-  }
-  if (class(file) == 'character') {
-    close.nc(file.con)
   } 
+  if ((length(var.name) != 1) ) stop('Not possible to detect variable name!')
   ##value<< character string: name of the variable.   
   return(var.name)
 }  

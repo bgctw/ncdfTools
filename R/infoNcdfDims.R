@@ -1,25 +1,23 @@
 infoNcdfDims  <- function(
-##title<< show info about all dimensions in a ncdf file
-     file.con  ##<< a NetCDF object pointing to the respective ncdf file.
-     , extended = TRUE ##<< logical: if TRUE, some extended dimension info that 
-                       ##   may take time to compute for large files is computed.
-)
+  ### show info about all dimensions in a ncdf file
+  file.con  ##<< a NetCDF object pointing to the respective ncdf file.
+  , extended = TRUE ##<< logical: if TRUE, some extended dimension info that 
+  ##   may take time to compute for large files is computed.
+) {
   ##description<<
-  ## This function displays summary information about all dimensions in an open ncdf file
+  ## This function displays summary information about all dimensions in an 
+  ## open ncdf file
   ##seealso<<
   ##\code{\link{infoNcdfVars}}, \code{\link[RNetCDF]{dim.inq.nc}}
-{
   if (inherits(file.con, 'character')) {
     if (!file.exists(file.con))
       stop('Specified file not existent!')
     file.con <- open.nc(file.con)
-    closeNcdf = TRUE
-  } else {
-      closeNcdf = FALSE
-  }
-  n.dims            <- file.inq.nc(file.con)$ndims
-  dim.info          <- as.data.frame(matrix(NA, n.dims, 6))
-  colnames(dim.info)<- c('id', 'name', 'length', 'min', 'max', 'step')
+    on.exit(close.nc(file.con))
+  } 
+  n.dims             <- file.inq.nc(file.con)$ndims
+  dim.info           <- as.data.frame(matrix(NA, n.dims, 6))
+  colnames(dim.info) <- c('id', 'name', 'length', 'min', 'max', 'step')
   for (i in 1:n.dims) {
     dim.info[i, 1] <- as.integer(dim.inq.nc(file.con, i - 1)$id)
     dim.name       <- dim.inq.nc(file.con, i - 1)$name
@@ -30,7 +28,8 @@ infoNcdfDims  <- function(
         if (dim.name == 'time') {
           dims.vals      <- convertDateNcdf2R(file.con)
           if (class(dims.vals)[1] == 'POSIXct') {
-            dims.info      <- c(as.integer(format(range(dims.vals), '%Y%m%d')), mean(diff(dims.vals)))
+            dims.info      <- c(
+              as.integer(format(range(dims.vals), '%Y%m%d')), mean(diff(dims.vals)))
           } else {
             dims.info      <- c(range(dims.vals),  mean(diff(dims.vals)))              
           }
@@ -42,9 +41,8 @@ infoNcdfDims  <- function(
       }
     }
   }
-  if (closeNcdf)
-    close.nc(file.con)
   ##value<<
-  ## A matrix containing the id, name, length, range and step (columns) of all dimensions (rows)
+  ## A data.frame containing the id, name, length, range and step (columns) 
+  ## of all dimensions (rows)
   return(dim.info)
 }
