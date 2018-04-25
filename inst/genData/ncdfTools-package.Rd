@@ -3,8 +3,8 @@
 \alias{ncdfTools}
 \title{Post Processing of (Half-)Hourly Eddy-Covariance Measurements}
 \description{
-Set of tools to simplify the handling of ’NetCDF’ files with the ’RNetCDF’ package. 
-Most functions are wrappers of basic functions from the ’RNetCDF’ package to 
+Set of tools to simplify the handling of NetCDF files with the RNetCDF package. 
+Most functions are wrappers of basic functions from the RNetCDF package to 
 easily run combinations of these functions for frequently encountered tasks.
 }
 
@@ -23,9 +23,9 @@ Getting information on stored data:
 
 Modifying NetCDF files
 \itemize{
-\item copy variable values between ncdf files: \code{\link{modifyNcdfCopyVar }} 
-\item delete variable using cdo: \code{\link{modifyNcdfDeleteVar }} 
-\item appending history attribute: \code{\link{modifyNcdfAppendHistory }} 
+\item copy variable values between ncdf files: \code{\link{modifyNcdfCopyVar}} 
+\item delete variable using cdo: \code{\link{modifyNcdfDeleteVar}} 
+\item appending history attribute: \code{\link{modifyNcdfAppendHistory}} 
 \item copy all attributes between different variables: 
 \code{\link{modifyNcdfCopyAtts}} 
 \item copy attributes and dimensions between ncdf files: 
@@ -56,8 +56,6 @@ Futher functionality:
 \item close all open ncdf connections: \code{\link{closeAllNcfiles}} 
 \item checking file structure compliance to CF/COARDS/MDI ncdf conventions: 
 \code{\link{checkNcdfFile}} 
-\item visualize/plot an overview of a ncdf file of 3d/4d data: 
-\code{\link{plotDatacube}} 
 \item read data from FLUXNET Ncdf file: \code{\link{readFLUXNETNcdf}} 
 }%itemize
 
@@ -70,11 +68,12 @@ Some functionality is tailored for use at BGI department at bgc-jena.mpg.de
 No longer supported:
 \itemize{
 \item transform binary file to ncdf file: convertBinary2Ncdf
-\item convert file name to R date: convertFilename2Date
+\item convert file name to R date: .convertFilename2Date
 \item indexDatacube
 \item modifyNcdfAddDim
 \item registerParallel
-
+\item visualize/plot an overview of a ncdf file of 3d/4d data: 
+plotDatacube
 }%itemize
 
 

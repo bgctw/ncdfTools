@@ -4,8 +4,8 @@ modifyNcdfDeleteVar <- function(
   , varNames   ##<< string vector of variables to delete
 ) {
   ##details<< if varName is not found among variable names, does nothing
-  if (!(varName %in% infoNcdfVars(fileName)$name)) return(TRUE)
-  # cdo writes to a temporary file, which then replaces the ofiringal
+  if (!any(varNames %in% infoNcdfVars(fileName)$name)) return(TRUE)
+  # cdo writes to a temporary file, which then replaces the original
   intermediate <- tempfile()
   # intermediate <- "tmp.nc"
   cmd <- paste0(

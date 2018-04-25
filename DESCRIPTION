@@ -8,3 +8,7 @@ Description: Set of tools to ease the handling of ncdf files, lean version of nc
 License: GPL-2
 LazyLoad: yes
 Depends: R (>= 3.4)
+Imports: chron, RNetCDF, abind
+Suggests: testthat, knitr
+LazyData: true
+VignetteBuilder: knitr

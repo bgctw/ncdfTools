@@ -41,8 +41,10 @@ test_that('infoNcdfDims',{
 test_that('infoNcdfVars',{
   ans <- infoNcdfVars(fileName, order.var = 'id')
   expect_true( is.data.frame(ans) )
-  expect_true(all(c("soilResp","sdSoilResp") %in% ans$name))
-  expect_equal(ans$n.dims[match(c("soilResp","sdSoilResp"),ans$name)], c(3,3))
+  #expect_true(all(c("soilResp","sdSoilResp") %in% ans$name))
+  #expect_equal(ans$n.dims[match(c("soilResp","sdSoilResp"),ans$name)], c(3,3))
+  expect_true(all(c("soilResp") %in% ans$name))
+  expect_equal(ans$n.dims[match(c("soilResp"),ans$name)], c(3))
   ##TODO
   #expect_equal(ans$n.dims[match(c("soilResp","sdSoilResp"),ans$name)], c("g/m^2","g/m^2"))
 })

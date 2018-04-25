@@ -10,7 +10,7 @@ transNcdfMerge <- function(
   , time.range.out = c() ##<< POSIXct vector: (start date, end date): start 
   ## and end dates of the final file. If not supplied,  all available data
   ## are used.
-  , format ='%Y%m'  ##<< character string: see ?transNcdfCutFile
+  , format = character()  ##<< character string: see ?transNcdfCutFile
   , convert = .getChronDateFromName1
   , path.target = getwd() ##<< file path: where to copy to the results files.
   ,  target.name =  ''
@@ -21,9 +21,10 @@ transNcdfMerge <- function(
   ##TODO provide example
   ##TODO useful defaults
   ##TODO detect overlapping time spans
+  if (!length(format)) format <- '%Y%m'
   if (!is.null(fun.start) & !is.null(fun.end)) {
-    date.start.in <- convertFilename2Date(file.names, fun.start, convert)
-    date.end.in   <- convertFilename2Date(file.names, fun.end, convert)
+    date.start.in <- .convertFilename2Date(file.names, fun.start, convert)
+    date.end.in   <- .convertFilename2Date(file.names, fun.end, convert)
     
     file.names    <- file.names[order(date.start.in)]
     date.end.in   <- date.end.in[order(date.start.in)]

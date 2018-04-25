@@ -5,5 +5,10 @@ exportPattern("^[^\\.]")
 #useDynLib(ProjectsDllBaseName)	# only required when supplying C or FORTRAN code 
 
 import(RNetCDF)
-importFrom(chron, chron, as.chron, years)
+importFrom(chron, chron, as.chron, years, seq.dates)
 importFrom(abind, abind)
+
+  importFrom("grDevices", "colorRampPalette", "dev.cur", "rgb", "x11")
+  importFrom("graphics", "layout", "legend", "mtext", "par", "plot.new",
+             "points", "text")
+  importFrom("stats", "na.omit", "runif", "sd", "setNames")

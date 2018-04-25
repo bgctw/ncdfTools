@@ -9,13 +9,16 @@ convertDateNcdf2R  =  function(
   , origin = as.POSIXct('1582-10-14', tz = 'UTC') ##<< POSIXct object:
   ##   Origin or day/hour zero of the time source. If the source
   ##   is a ncdf file, this value is ignored and is read from that file.
-  , time.format =  c('%Y-%m-%d', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M'
-                     , '%Y-%m-%d %Z %H:%M', '%Y-%m-%d %Z %H:%M:%S')
+  , time.format =  character() ##<< may specify parsing format for time unit
   , timeVar = 'time'  ##<< variable holding the values of time
 ) {
   ##description<< This function converts a time vector from a ncdf file or a 
   ## vector of Julian days (or seconds, minutes, hours)
   ## since a specified origin into a POSIXct R vector.
+  # usage gets to long, if specified as default
+  if (!length(time.format)) time.format <- c(
+    '%Y-%m-%d', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M'
+    , '%Y-%m-%d %Z %H:%M', '%Y-%m-%d %Z %H:%M:%S')
   if (class(time.source) ==  'character') {
     if (file.exists(time.source)) {
       time.source = open.nc(time.source)

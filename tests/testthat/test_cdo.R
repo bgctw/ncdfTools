@@ -31,7 +31,7 @@ ncFile <- createStdNcdfFile(
 fileName <- ncFile
 
 test_that('aggregateNcdf',{
-  ans <- aggregateNcdf(file, path.out = tmpDir, period = 2)
+  ans <- aggregateNcdf(fileName, path.out = tmpDir, period = 2)
   ## TODO: check generated file
   expect_equal(basename(ans), "soilResp.1.1.30_2.nc")
 })
@@ -39,14 +39,20 @@ test_that('aggregateNcdf',{
 test_that('modifyNcdfDeleteVar',{
   # deleting the last variable causes errors with cdo, hence add a variable first
   varNameNew <- "varNew"
+  varNameNew2 <- "varNew2"
+  # work on tempfile to not change the original file
   tmpFile <- tempfile(); tmp <- file.copy(fileName, tmpFile)
   ans <- modifyNcdfCopyVar(
-    tmpFile, var.id.orig = infoNcdfVars(fileName)$name[1], var.id.copy = varNameNew)  
+    tmpFile, var.id.orig = infoNcdfVars(fileName)$name[1]
+    , var.id.copy = varNameNew)  
+  ans <- modifyNcdfCopyVar(
+    tmpFile, var.id.orig = infoNcdfVars(fileName)$name[1]
+    , var.id.copy = varNameNew2)  
   infoVars1 <- infoNcdfVars(tmpFile)
   expect_true( varNameNew %in% infoVars1$name)
-  # work on tempfile to not change the original file
-  modifyNcdfDeleteVar(tmpFile, varNames = varName)
+  # delete two variables at once
+  tmp <- modifyNcdfDeleteVar(tmpFile, varNames = c(varNameNew, varNameNew2))
   infoVars2 <- infoNcdfVars(tmpFile)
-  expect_true( !(varName %in% infoVars2$name))
+  expect_true( !(varNameNew %in% infoVars2$name))
 })
 

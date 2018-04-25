@@ -154,7 +154,7 @@ ans <- aggregateNcdf(ncFile, path.out = tmpDir, period = 2)
 Here, functions from RNetCDF package are used.
 First the variable, needs to be created, this is done easiest by copying an
 existing one, so that dimensions and attributes are taken care of.
-```{r}
+```{r eval = !is_check}
 require(RNetCDF)
 varName <- "soilRespSquared"
 # work on tempfile to not change the original file

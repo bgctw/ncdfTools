@@ -43,7 +43,7 @@ transNcdfSubset <- function(
   # load, transpose and subset source data
   data.orig   <- transNcdfRotate(con.source)
   data.target <- array(data.orig[
-    indexVec2Mat(dim.indices$latitudes,
+    .indexVec2Mat(dim.indices$latitudes,
                  dim.indices$longitudes,
                  dim.indices$timesteps)],
     dim =  sapply(dim.indices, length))
@@ -55,5 +55,15 @@ transNcdfSubset <- function(
   ##value<< character string: name of the file created.
   invisible(filename.new)
 }
+
+.indexVec2Mat <- function(
+  ### Transform integer indices to an index matrix
+  ... ##<< integer vectors: indices to use for the different dimensions
+) {
+  # copied from JBTools to save dependencies
+  ##value<< Index matrix
+  index.matrix <- as.matrix(do.call("expand.grid", list(...)))
+}
+
 
 

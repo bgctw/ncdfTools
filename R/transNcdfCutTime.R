@@ -1,11 +1,11 @@
-.transNcdfCutFiles <- function(
+transNcdfCutFiles <- function(
   ### cut margins of ncdf files
   file.names ##<< vector of character strings: file names to process.
   , time.range.out = c()
   , time.range.file =  c() ##<< POSIXct vector of length two or 'auto': 
   ## time range of the  original files. If not supplied, this is 
   ##   determined automatically from the file name 
-  ##   via convertFilename2Date and fun.start/fun.end.
+  ##   via .convertFilename2Date and fun.start/fun.end.
   , fun.start = c()        ##<< see time.range.file
   , fun.end = c()          ##<< see time.range.file
   , format = ''
@@ -23,8 +23,8 @@
   for (i in 1:length(file.names)) {
     print(paste('Processing file', file.names[i]))
     if (length(time.range.file) == 0) {
-      date.start.in <- convertFilename2Date(file.names[i], fun.start, convert)
-      date.end.in   <- convertFilename2Date(file.names[i], fun.end, convert)
+      date.start.in <- .convertFilename2Date(file.names[i], fun.start, convert)
+      date.end.in   <- .convertFilename2Date(file.names[i], fun.end, convert)
     } else if (time.range.file == 'auto') {
       con.t        <- open.nc(file.names[i])
       dates.range <- range(convertDateNcdf2R(con.t))
