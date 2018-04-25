@@ -3,9 +3,9 @@
 \alias{ncdfTools}
 \title{Post Processing of (Half-)Hourly Eddy-Covariance Measurements}
 \description{
-Set of tools to simplify the handling of ’NetCDF’ files with the ’RNetCDF’ package. Most functions
-are wrappers of basic functions from the ’RNetCDF’ package to easily run combinations of these
-functions for frequently encountered tasks.
+Set of tools to simplify the handling of ’NetCDF’ files with the ’RNetCDF’ package. 
+Most functions are wrappers of basic functions from the ’RNetCDF’ package to 
+easily run combinations of these functions for frequently encountered tasks.
 }
 
 \details{
@@ -15,17 +15,21 @@ Getting information on stored data:
 \item on variables: \code{\link{infoNcdfVars}} 
 \item on dimensions: \code{\link{infoNcdfDims}}
 \item on attributes (global and for variables): \code{\link{infoNcdfAtts}}
-\item read coordinate or dimension values from ncdf file: \code{\link{readCoordinatesNcdf}}
+\item read coordinate or dimension values from ncdf file: 
+\code{\link{readCoordinatesNcdf}}
 \item guess (single) variable name: \code{\link{readNcdfVarName}}
 \item fast reading of ncdf data: \code{\link{readNcdf}}
 }%itemize
 
 Modifying NetCDF files
 \itemize{
-\item appending history attribute: \code{\link{modifyNcdfAppendHistory }} 
-\item copy all attributes between different variables: \code{\link{modifyNcdfCopyAtts}} 
-\item copy attributes and dimensions between ncdf files: \code{\link{modifyNcdfCopyMetadata }} 
 \item copy variable values between ncdf files: \code{\link{modifyNcdfCopyVar }} 
+\item delete variable using cdo: \code{\link{modifyNcdfDeleteVar }} 
+\item appending history attribute: \code{\link{modifyNcdfAppendHistory }} 
+\item copy all attributes between different variables: 
+\code{\link{modifyNcdfCopyAtts}} 
+\item copy attributes and dimensions between ncdf files: 
+\code{\link{modifyNcdfCopyMetadata}} 
 \item define several ncdf attributes at once: \code{\link{modifyNcdfDefAtts}} 
 }%itemize
 
@@ -35,27 +39,30 @@ Conversion between R and NetCDF
 \item convert ncdf time vector to POSIXct: \code{\link{convertDateR2Ncdf}} 
 }%itemize
 
-Constructing and executing cdo commands:
+Constructing and executing cdo commands producing new ncdf-Files:
 \itemize{
 \item aggregate data across time: \code{\link{aggregateNcdf}} 
+\item merge several ncdf files: \code{\link{transNcdfMerge}} 
+\item cut outer (time) margins of Ncdf files: \code{\link{transNcdfCutFiles}} 
+\item transpose Ncdf datacube: \code{\link{transNcdfRotate}} 
+\item cut subset out of ncdf file: \code{\link{transNcdfSubset}} 
 }%itemize
 
 Futher functionality:
 \itemize{
-\item checking file structure compliance to CF/COARDS/MDI ncdf conventions: \code{\link{checkNcdfFile}} 
+\item checking file structure compliance to CF/COARDS/MDI ncdf conventions: 
+\code{\link{checkNcdfFile}} 
 \item determines ncdf class from R class: \code{\link{classR2Ncdf}} 
 \item close all open ncdf connections: \code{\link{closeAllNcfiles}} 
-\item checking file structure compliance to CF/COARDS/MDI ncdf conventions: \code{\link{checkNcdfFile}} 
-\item visualize/plot an overview of a ncdf file of 3d/4d data: \code{\link{plotDatacube}} 
+\item checking file structure compliance to CF/COARDS/MDI ncdf conventions: 
+\code{\link{checkNcdfFile}} 
+\item visualize/plot an overview of a ncdf file of 3d/4d data: 
+\code{\link{plotDatacube}} 
 \item read data from FLUXNET Ncdf file: \code{\link{readFLUXNETNcdf}} 
 }%itemize
 
 Some functionality is tailored for use at BGI department at bgc-jena.mpg.de
 \itemize{
-\item read data from FLUXNET Ncdf file: \code{\link{readFLUXNETNcdf}} 
-\item read data from FLUXNET Ncdf file: \code{\link{readFLUXNETNcdf}} 
-\item read data from FLUXNET Ncdf file: \code{\link{readFLUXNETNcdf}} 
-\item read data from FLUXNET Ncdf file: \code{\link{readFLUXNETNcdf}} 
 \item read data from FLUXNET Ncdf file: \code{\link{readFLUXNETNcdf}} 
 }%itemize
 
@@ -66,6 +73,8 @@ No longer supported:
 \item convert file name to R date: convertFilename2Date
 \item indexDatacube
 \item modifyNcdfAddDim
+\item registerParallel
+
 }%itemize
 
 
