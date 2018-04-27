@@ -53,7 +53,7 @@
 #     latitudes  <-  1:infoDims[dim.lat, 'length']
 #   }
 #   if (is.element('time', infoVars$name)) {
-#     time       <- convertDateNcdf2R(file.con)
+#     time       <- readNcdfTime(file.con)
 #   } else {
 #     time  <-  1:infoDims[infoDims$name == 'time', 'length']
 #   }

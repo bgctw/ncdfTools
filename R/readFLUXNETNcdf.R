@@ -35,7 +35,7 @@ readFLUXNETNcdf <- function(
     con.data     <- open.nc(file.t)
     on.exit(close.nc(con.data))
     timevec.t    <- var.get.nc(con.data, 'time')
-    time.vec.t.R <- as.chron(convertDateNcdf2R(timevec.t, units = 'days'))
+    time.vec.t.R <- as.chron(ncdf2POSIX(timevec.t))
     #
     timevec.ends <- time.vec.t.R[c(1,length(timevec.t))]
     ind.start    <- which(abs(times - timevec.ends[1]) == 

@@ -27,16 +27,18 @@ Modifying NetCDF files
 \item delete variable using cdo: \code{\link{modifyNcdfDeleteVar}} 
 \item appending history attribute: \code{\link{modifyNcdfAppendHistory}} 
 \item copy all attributes between different variables: 
-\code{\link{modifyNcdfCopyAtts}} 
+  \code{\link{modifyNcdfCopyAtts}} 
 \item copy attributes and dimensions between ncdf files: 
-\code{\link{modifyNcdfCopyMetadata}} 
+  \code{\link{modifyNcdfCopyMetadata}} 
 \item define several ncdf attributes at once: \code{\link{modifyNcdfDefAtts}} 
+\item set or read the values of the time dimension in a netCDF file: 
+  \code{\link{modifyNcdfWriteTime}} and \code{\link{readNcdfTime}}
 }%itemize
 
 Conversion between R and NetCDF
 \itemize{
-\item convert ncdf time vector to POSIXct: \code{\link{convertDateNcdf2R}} 
-\item convert ncdf time vector to POSIXct: \code{\link{convertDateR2Ncdf}} 
+\item convert ncdf time to POSIXct and back: 
+  \code{\link{POSIX2ncdf}} and \code{\link{ncdf2POSIX}}
 }%itemize
 
 Constructing and executing cdo commands producing new ncdf-Files:

@@ -86,8 +86,8 @@ test_that('readNcdf',{
 
 
 
-test_that('convertDateNcdf2R',{
-  ans <- convertDateNcdf2R(fileName)
+test_that('readNcdfTime',{
+  ans <- readNcdfTime(fileName)
   expect_true( inherits(ans, "POSIXct") )
   #TODO expect_equal( ans[1], times[1] )
 })

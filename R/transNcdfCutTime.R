@@ -27,7 +27,7 @@ transNcdfCutFiles <- function(
       date.end.in   <- .convertFilename2Date(file.names[i], fun.end, convert)
     } else if (time.range.file == 'auto') {
       con.t        <- open.nc(file.names[i])
-      dates.range <- range(convertDateNcdf2R(con.t))
+      dates.range <- range(readNcdfTime(con.t))
       date.start.in <- dates.range[1]
       date.end.in   <- dates.range[2]
       close.nc(con.t)

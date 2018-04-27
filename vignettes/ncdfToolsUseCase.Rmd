@@ -137,8 +137,8 @@ Dates
 ncCon <- RNetCDF::open.nc(fileName)
 timesNCOrig <- RNetCDF::var.get.nc(ncCon, 'time')
 RNetCDF::close.nc(ncCon)
-head(timesR <- convertDateNcdf2R(fileName))
-convertDateR2Ncdf(fileName, timesR, write.to.ncdf = FALSE) - timesNCOrig
+head(timesR <- readNcdfTime(fileName))
+all( (POSIX2ncdf(timesR) - timesNCOrig) == 0)
 ```
 
 ## CDO commands

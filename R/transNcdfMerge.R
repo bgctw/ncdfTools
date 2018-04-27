@@ -33,9 +33,9 @@ transNcdfMerge <- function(
     date.start.in.l <- list()
     date.end.in.l   <- list() 
     for (i in 1:length(file.names)) {
-      fileT <- file.names[i]
-      date.start.in.l[[i]] <- min(convertDateNcdf2R(fileT))
-      date.end.in.l[[i]] <- max(convertDateNcdf2R(fileT))
+      times <- readNcdfTime(file.names[i])
+      date.start.in.l[[i]] <- min(times)
+      date.end.in.l[[i]] <- max(times)
     }
     date.start.in <-  as.POSIXct(unlist(date.start.in.l), origin = '1970-01-01')
     date.end.in   <-  as.POSIXct(unlist(date.end.in.l), origin = '1970-01-01')
