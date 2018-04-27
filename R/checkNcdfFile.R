@@ -72,8 +72,8 @@ checkNcdfFile <- function(
         return(invisible(FALSE))
       }
       att.time.units <- att.get.nc(con.check, 'time', 'units')
-      if (!(att.time.units == 'days since 1582-10-14 00:00')) {
-        cat('Change time vector to days since 1582-10-14 00:00 !')
+      if (!(att.time.units == 'days since 1582-10-15 00:00')) {
+        cat('Change time vector to days since 1582-10-15 00:00 !')
         return(invisible(FALSE))
       }
     }

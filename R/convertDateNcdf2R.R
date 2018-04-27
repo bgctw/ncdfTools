@@ -6,7 +6,7 @@ convertDateNcdf2R  =  function(
   ##   time variable, has to follow the CF ncdf conventions.
   , units = 'days' ##<< character string: units of the time source. If the source
   ##   is a ncdf file, this value is ignored and is read from that file.
-  , origin = as.POSIXct('1582-10-14', tz = 'UTC') ##<< POSIXct object:
+  , origin = ISOdatetime(1582,10,15,0,0,0, tz = 'UTC') ##<< POSIXct object:
   ##   Origin or day/hour zero of the time source. If the source
   ##   is a ncdf file, this value is ignored and is read from that file.
   , time.format =  character() ##<< may specify parsing format for time unit
