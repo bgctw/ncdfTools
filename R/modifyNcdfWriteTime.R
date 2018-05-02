@@ -10,6 +10,7 @@ modifyNcdfWriteTime = function(
   ## mistakes due to flawed conversions.
   , write.to.ncdf = TRUE ##<< logical: whether writing  time to the ncdf file.                      
   , timeVar = 'time'  ##<< variable holding the values of time
+  , user = Sys.info()['user'] ##<< user name in history attribute entry
 ) {
   #make sure to use UTC based origin
   origin <- as.POSIXct(origin, tz = "UTC")
@@ -25,7 +26,7 @@ modifyNcdfWriteTime = function(
     file.con   = open.nc(ncdf.obj,write = TRUE)
     on.exit(close.nc(file.con))
   }
-  if (!is.element('time',infoNcdfDims(file.con)$name))
+  if (!is.element(timeVar,infoNcdfDims(file.con)$name))
     stop('No time dimension present in specified ncdf file.')
   # determine date vector
   if (class(date.vec) ==  "character"  && date.vec == 'auto') {
@@ -37,21 +38,21 @@ modifyNcdfWriteTime = function(
     # if ((class(orig.test) == 'try-error') || !(sub(' since.*$','',units) == 'days'))
     #   stop('date format in ncdf file is in a non implemented format. '
     #        , 'Supply date vector by hand.')
-    # date.vec.conv <- as.numeric(var.get.nc(file.con,'time') + 
+    # date.vec.conv <- as.numeric(var.get.nc(file.con,timeVar) + 
     #                               julian(orig.test,as.POSIXct(origin)))
     date.vec <- ncdf2POSIX(var.get.nc(file.con,timeVar), unit = units)
   }   
   date.vec.conv <- .POSIX2DaysSinceOrigin(date.vec, origin = origin)
   ## write results to ncdf file
   if (write.to.ncdf) {
-    if (!is.element('time',infoNcdfVars(file.con)$name))
-      var.def.nc(file.con,'time', 'NC_float', 'time')    
-    var.put.nc(file.con, 'time', date.vec.conv)
+    if (!is.element(timeVar,infoNcdfVars(file.con, dimvars = TRUE)$name))
+      var.def.nc(file.con,timeVar, 'NC_DOUBLE', 'time')    
+    var.put.nc(file.con, timeVar, date.vec.conv)
     atts.def <- list(long_name = 'time', calendar = 'gregorian'
                      , units = paste('days since ', origin, sep = ''))
-    modifyNcdfDefAtts(file.con, 'time', atts.def)
+    modifyNcdfDefAtts(file.con, timeVar, atts.def)
     history.string <- paste('time vector converted by ', 
-                            Sys.info()['user'],' on ',Sys.time(),sep = '')
+                            user,' on ',Sys.time(),sep = '')
     if (is.element('history', infoNcdfAtts(file.con, 'NC_GLOBAL')[, 'name'])) 
       history.string <- paste(
         att.get.nc(file.con, 'NC_GLOBAL', 'history'), '; '
