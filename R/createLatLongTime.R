@@ -15,7 +15,7 @@ createLatLongTime <- function(
   , add_offset = 0         ##<< numeric: offset
   , type.var = 'NC_DOUBLE' ##<< character string: type of the data
   , missing_value = -9999  ##<< numeric: missing data value
-  , units = '[]'           ##<< character string: units of the variables in target file.  
+  , units = '[]'           ##<< string vector: units of the variables in target file.  
   , timeVar = 'time'       ##<< the name of the time variable
   , user = Sys.info()['user'] ##<< user name put to history entry
 ) {
@@ -62,13 +62,15 @@ createLatLongTime <- function(
   # define attributes
   dims.used  <- c('latitude', 'longitude', timeVar)[
     c(0 != lat.length, 0 != long.length, 0 != time.length)]
-  for (var.name.t in var.names) {
+  for (i in seq_along(var.names))  {
+    var.name.t <- var.names[i]
+    unit <- units[i]
     var.def.nc <- var.def.nc(file.con, var.name.t, type.var, dims.used)
     modifyNcdfDefAtts( file.con, var.name.t, atts = list(
       scale_factor = scale_factor
       , add_offset = add_offset
       , missing_value = missing_value
-      , `_FillValue` = missing_value, units = units))
+      , `_FillValue` = missing_value, units = unit))
   }
   hist_string <- paste0(Sys.time(),': File created by ', user)
   att.put.nc(file.con, 'NC_GLOBAL', 'history', 'NC_CHAR', hist_string)

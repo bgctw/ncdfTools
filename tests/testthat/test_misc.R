@@ -43,16 +43,20 @@ test_that('read and write ncdf time',{
   )
   tmpDir <- tempdir()
   #tmpDir <- "tmp"
+  unitsOrig <- c('g/m2','g2/m4')
   ncFileDs <- createStdNcdfFile(
     data = dsTest
     , file.name = file.path(tmpDir,"dsTestTime.nc")
     , lat.values = 53.0
     , long.values = 13
     , time.values = times
-    , units = rep('g/m^2',2)
+    , units = unitsOrig
   )
   ans <- readNcdfTime(ncFileDs)  
   expect_equal(ans, times)
+  infoVars <- infoNcdfVars(ncFileDs)
+  units <- infoVars$unit[match(names(dsTest)[-1], infoVars$name)]
+  expect_equal(units, unitsOrig)
   #
   # modify file to use different origin
   origin2 <-  ISOdatetime(1970,1,1,0,0,0, tz = "UTC")

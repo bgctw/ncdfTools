@@ -18,7 +18,8 @@ Getting information on stored data:
 \item read coordinate or dimension values from ncdf file: 
 \code{\link{readCoordinatesNcdf}}
 \item guess (single) variable name: \code{\link{readNcdfVarName}}
-\item fast reading of ncdf data: \code{\link{readNcdf}}
+\item fast reading of ncdf data: \code{\link{readNcdf}} and 
+\code{\link{readNcdfDataframe}}
 }%itemize
 
 Modifying NetCDF files

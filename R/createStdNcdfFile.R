@@ -5,7 +5,7 @@ createStdNcdfFile <- function(
   , file.name = c()    ##<< character string: name of the file. If not given, this
   ##   is determined automatically in a standardized way from 
   ##   the variable name and the dimension extends.
-  , units = '[]'       ##<< character string: units of variable (should be 
+  , units = '[]'       ##<< string vector: units of variable (should be 
   ## compatible with udunits)
   , lat.values = numeric()   ##<< numeric values: coordinate values for the latitude
   ##   positions.
@@ -32,6 +32,10 @@ createStdNcdfFile <- function(
   ##details<< 
   ##  This function writes an empty ncdf file with variable names, dimensions and
   ##  attributes formatted in a standardized way.
+  ##
+  ## All variables, except time, are stored using the same specification
+  ## (scale_factor, add_offset, missing_value, type.var)
+  #
   #copy attributes etc from other ncdf file (if chosen)
   if (class(con.atts) == 'NetCDF') {
     atts.file <- infoNcdfAtts(con.atts, readNcdfVarName(con.atts))

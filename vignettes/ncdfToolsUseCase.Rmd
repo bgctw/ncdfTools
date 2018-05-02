@@ -54,8 +54,10 @@ times <- seq(ISOdatetime(2010,1,1,0,0,0, tz = "UTC")
              , by = "30 min", length.out = nRec)
 dsTest <- data.frame(
   time = times
-  , soilResp = rnorm(nRec), sdSoilResp = 0.1
+  , soilResp = rnorm(nRec)
+  , sdSoilResp = 0.1
 )
+dsTest$sdSoilResp[2:4] <- NA
 tmpDir <- tempdir()
 #tmpDir <- "tmp"
 ncFileDs <- createStdNcdfFile(
@@ -170,9 +172,45 @@ tryCatch({
 }, finally = {
  close.nc(ncCon)
 })
-infoNcdfVars(tmpFile)
-# delete variable again
+infoNcdfVars(tmpFile)  # note line with variable soilRespSquared
+# delete variable again (uses CDO command)
 tmp <- modifyNcdfDeleteVar(tmpFile, varNames = varName)
-infoNcdfVars(tmpFile)
+infoNcdfVars(tmpFile)  # note that soilRespSquared disappeared
+```
+
+## Reading and writing data.frames
+
+First write a dta.frame to file. 
+Note that colum 'time' by default is written to the time dimension.
+```{r}
+tmpFile <- tempfile()
+str(dsTest)
+fName <- createStdNcdfFile(
+  data = dsTest
+  , file.name = tmpFile
+  , lat.values = 53.0
+  , long.values = 13
+  , units = rep('g/m2',2)
+  )
+infoNcdfVars(fName, dimvars = TRUE)
+```
+
+Use RNetCDF to read data into a general list.
+```{r}
+require(RNetCDF)
+ncCon <- open.nc(fName)
+tryCatch({
+  ans <- read.nc(ncCon)
+}, finally = {
+ close.nc(ncCon)
+})
+str(ans)
+```
+
+Use ncdfTools to read single dimensional data into a data.frame.
+The default single dimension is time and is by default converted to POSIXct.
+```{r}
+ans <- readNcdfDataframe(fName)
+ans
 ```
 
