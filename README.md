@@ -5,7 +5,7 @@ README.md is generated from README.Rmd. Please edit that file
 rmarkdown::render("README.Rmd") 
 maybe clear cache before
 -->
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/REddyProc)](http://cran.r-project.org/package=ncdfTools) [![Travis-CI Build Status](https://travis-ci.org/bgctw/REddyProc.svg?branch=master)](https://travis-ci.org/bgctw/ncdfTools)
+[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/ncdfTools)](http://cran.r-project.org/package=ncdfTools) [![Travis-CI Build Status](https://travis-ci.org/bgctw/ncdfTools.svg?branch=master)](https://travis-ci.org/bgctw/ncdfTools)
 
 Overview
 --------
@@ -63,18 +63,19 @@ Installation
 - install required system libraries libnetcdf-dev, udunits-bin and libudunits2-dev
 - install [RNetCDF package](http://r-forge.r-project.org/projects/rnetcdf)
 - install this package
+  -  currently only from source from [git.bgc-jena.mpg.de](https://git.bgc-jena.mpg.de/twutz/ncdfTools)
 
 ``` r
 # Release stable version from CRAN
-# not yet: install.packages("REddyProc")
+# not yet: install.packages("ncdfTools")
 
 # The development version from GitHub using devtools:
 # install.packages("devtools")
-devtools::install_github("bgctw/REddyProc")
+# not yet devtools::install_github("bgctw/ncdfTools")
 ```
 
 Usage
 -----
 
-See  examples are in [vignette(ncdfToolsUseCase)](https://github.com/bgctw/REddyProc/blob/master/vignettes/ncdfToolsUseCase.md) 
+See  examples are in [vignette(ncdfToolsUseCase)](https://git.bgc-jena.mpg.de/twutz/ncdfTools/blob/master/vignettes/ncdfToolsUseCase.md) 
 
