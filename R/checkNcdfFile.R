@@ -17,7 +17,7 @@ checkNcdfFile <- function(
   ##ncdf conventions that the MDI group agreed on.
   con.check     <- open.nc(file.name)
   on.exit(close.nc(con.check))
-  infoVars <- infoNcdfVars(con.check)
+  infoVars <- infoNcdfVars(con.check, dimvars = TRUE)
   infoDims <- infoNcdfDims(con.check, extended = FALSE)
   dims.nonvalid <- is.na(match(dims, c('longitude', 'latitude', 'time')))
   if (sum(dims.nonvalid) > 0) stop(
@@ -45,10 +45,11 @@ checkNcdfFile <- function(
       }
     }
     #check file name
-    var.name <- sub('[.].*', '', file.name)
+    baseName <- basename(file.name)
+    var.name <- sub('[.].*', '', baseName)
     if (!is.element(var.name, infoVars$name)) stop(
       'File does not have the main variable which has to be named ', var.name
-      , '(according to the file name '
+      , '(according to the file base name '
       ,' targetvar.NumberLatitudes.NumberLongitudes.Year.nc )')    
     #check attributes
     variables <- infoVars$name[is.na(match(infoVars$name, infoDims$name))]
@@ -92,13 +93,13 @@ checkNcdfFile <- function(
   for (var.t in variables) {
     infoAtts <- infoNcdfAtts(con.check, var.t)
     varInq <- var.inq.nc(con.check, var.t)
-    if (sum(is.na(match(atts.check, infoAtts$name))) == 2) {
+    if (sum(is.na(match(atts.check, infoAtts[,'name']))) == 2) {
       warning('One of the attributes _FillValue or missing_value has to be'
               , ' available for variable ', var.t, '!.')
       return(invisible(FALSE))
     }
     for (att.t in atts.check) {
-      if (!is.na(match(att.t, infoAtts$name))) {
+      if (!is.na(match(att.t, infoAtts[,'name']))) {
         if (!(att.inq.nc(con.check, var.t, att.t)$type == varInq$type)) {
           warning('Attribute ', att.t, ' of variable ', var.t, ' needs to be'
                   , ' of the same class as ', var.t, '.')

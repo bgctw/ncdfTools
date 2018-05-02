@@ -41,12 +41,14 @@ test_that('infoNcdfDims',{
 test_that('infoNcdfVars',{
   ans <- infoNcdfVars(fileName, order.var = 'id')
   expect_true( is.data.frame(ans) )
-  #expect_true(all(c("soilResp","sdSoilResp") %in% ans$name))
-  #expect_equal(ans$n.dims[match(c("soilResp","sdSoilResp"),ans$name)], c(3,3))
   expect_true(all(c("soilResp") %in% ans$name))
   expect_equal(ans$n.dims[match(c("soilResp"),ans$name)], c(3))
+  expect_equal(ans$unit[match(c("soilResp"),ans$name)], c("g/m2"))
   ##TODO
-  #expect_equal(ans$n.dims[match(c("soilResp","sdSoilResp"),ans$name)], c("g/m^2","g/m^2"))
+  ans <- infoNcdfVars(ncFileDs, order.var = 'id')
+  expect_true(all(c("soilResp","sdSoilResp") %in% ans$name))
+  expect_equal(ans$n.dims[match(c("soilResp","sdSoilResp"),ans$name)], c(3,3))
+  expect_equal(ans$unit[match(c("soilResp","sdSoilResp"),ans$name)], c("g/m^2","g/m^2"))
 })
 
 test_that('infoNcdfAtts global',{
@@ -79,17 +81,13 @@ test_that('readNcdfVarName',{
 
 test_that('readNcdf',{
   ans <- readNcdf(fileName)
-  #TODO
-  #expect_equal( ans, "soilResp" )
+  expect_equal( as.numeric(ans), dsTest$soilResp )
 })
-
-
-
 
 test_that('readNcdfTime',{
   ans <- readNcdfTime(fileName)
   expect_true( inherits(ans, "POSIXct") )
-  #TODO expect_equal( ans[1], times[1] )
+  expect_equal( ans, dsTest$time )
 })
 
 test_that('modifyNcdfAppendHistory',{
@@ -138,8 +136,9 @@ test_that('plotDatacube',{
 })
 
 test_that('checkNcdfFile',{
-  ans <- checkNcdfFile(fileName)
-  #TODO expect_true(ans)
+  expect_warning(
+    expect_true(ans <-  checkNcdfFile(fileName))
+  )
 })
 
 
