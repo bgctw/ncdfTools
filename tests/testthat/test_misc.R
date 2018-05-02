@@ -31,8 +31,6 @@ test_that('.POSIX2DaysSinceOrigin and back',{
   expect_true(all( timesPosix == timesOrig))
 })
 
-
-# TODO test writing and reading times in NetCDF files
 test_that('read and write ncdf time',{
   nRec <- 30L
   times <- seq(ISOdatetime(2010,1,1,0,0,0, tz = "UTC")
