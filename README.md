@@ -5,7 +5,7 @@ README.md is generated from README.Rmd. Please edit that file
 rmarkdown::render("README.Rmd") 
 maybe clear cache before
 -->
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/ncdfTools)](http://cran.r-project.org/package=ncdfTools) [![Travis-CI Build Status](https://travis-ci.org/bgctw/ncdfTools.svg?branch=master)](https://travis-ci.org/bgctw/ncdfTools)
+[![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/ncdfTools)](http://cran.r-project.org/package=ncdfTools) [![Travis-CI Build Status](https://travis-ci.org/bgctw/ncdfTools.svg?branch=master)](https://travis-ci.org/bgctw/ncdfTools)
 
 Overview
 --------

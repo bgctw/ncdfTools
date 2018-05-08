@@ -5,7 +5,8 @@ modifyNcdfWriteTime = function(
   , date.vec='auto'     ##<< POSIXct vector: date vectors for the time dimension. 
   ## If set to 'auto', this is tried to be extracted from the ncdf file.
   ## This supports converting the time unit in a netCDF file to a days since origin.
-  , origin="1582-10-15"  ##<< character string: origin to be used for the time  
+  , origin = ISOdatetime(1582,10,15,0,0,0, tz = "UTC")  ##<< 
+  ## POXISct: origin to be used for the time  
   ## vector. This start of the Gregorian calendar should be kept to avoid possible 
   ## mistakes due to flawed conversions.
   , write.to.ncdf = TRUE ##<< logical: whether writing  time to the ncdf file.                      

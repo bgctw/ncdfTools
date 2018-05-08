@@ -1,10 +1,10 @@
 Package: ncdfTools
-Title: Handling ncdf files
-Version: 0.6.0.281
+Title: Handling NetCDF Files
+Version: 1.1.4
 Author: Jannis v. Buttlar, Thomas Wutzler
-Maintainer: Jannis v. Buttlar <jannis.buttlar@gmx.de>
+Maintainer: Thomas Wutzler <twutz@bgc-jena.mpg.de>
 Imports: RNetCDF, chron, abind
-Description: Set of tools to ease the handling of ncdf files, lean version of ncdf.tools.
+Description: Set of tools to ease the handling of netCDF files. Its a lean version of ncdf.tools.
 License: GPL-2
 LazyLoad: yes
 Depends: R (>= 3.4)

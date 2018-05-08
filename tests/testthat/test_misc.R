@@ -1,6 +1,9 @@
 #require(testthat)
 context('misc')
 
+# TRUE during testthat::check()
+isNotOnCRAN <- identical(Sys.getenv("NOT_CRAN"), "true")
+
 test_that('classR2Ncdf',{
   expect_equal( classR2Ncdf(1L), "NC_INT")
   expect_equal( classR2Ncdf(1.01), "NC_DOUBLE")

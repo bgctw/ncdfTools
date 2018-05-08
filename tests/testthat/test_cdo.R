@@ -1,6 +1,9 @@
 #require(testthat)
 context('cdo')
 
+# TRUE during testthat::check()
+isNotOnCRAN <- identical(Sys.getenv("NOT_CRAN"), "true")
+
 nRec <- 30L
 times <- seq(ISOdatetime(2010,1,1,0,0,0, tz = "UTC")
              , by = "30 min", length.out = nRec)
@@ -31,12 +34,14 @@ ncFile <- createStdNcdfFile(
 fileName <- ncFile
 
 test_that('aggregateNcdf',{
+  skip_on_cran()
   ans <- aggregateNcdf(fileName, path.out = tmpDir, period = 2)
   ## TODO: check generated file
   expect_equal(basename(ans), "soilResp.1.1.30_2.nc")
 })
 
 test_that('modifyNcdfDeleteVar',{
+  skip_on_cran()
   # deleting the last variable causes errors with cdo, hence add a variable first
   varNameNew <- "varNew"
   varNameNew2 <- "varNew2"
