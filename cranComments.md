@@ -5,7 +5,10 @@
 * win_builder: x86_64-w64-mingw32 (64-bit), r74674
 
 ## R CMD check results
-No further notes, warnings, nor errors.
+No warnings, nor errors.
+The words of the note on possible misspelling are spelled correctly:
+The name of the file format netCDF, uppercase in title: NetCDF, and 
+an existing package name ncdf.tools.
 
 ## Notes
 Packages code that was formerly part of REddyProc 1.1.3, but 
