@@ -38,7 +38,7 @@ infoNcdfAtts <- function(
       att.info[i,2]    <- att.values.t
       att.info[i,3]    <- attInq$type
     }
+    rownames(att.info) <- att.info[,'name']
   }
-  rownames(att.info) <- att.info[,'name']
   return(att.info)
 }

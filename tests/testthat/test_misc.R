@@ -42,7 +42,8 @@ test_that('read and write ncdf time',{
                , by = "30 min", length.out = nRec)
   dsTest <- data.frame(
     time = times
-    , soilResp = rnorm(nRec), sdSoilResp = 0.1
+    , soilResp = rnorm(nRec)
+    , sdSoilResp = 0.1
   )
   tmpDir <- tempdir()
   #tmpDir <- "tmp"
@@ -77,5 +78,41 @@ test_that('read and write ncdf time',{
   expect_equal(ansInfo["units","value"], "days since 1582-10-15")
   ans <- readNcdfTime(ncFileDs)  
   expect_equal(ans, times)
+})
+
+
+test_that('defining a factor dimension',{
+  #require(testthat)
+  nRec <- 30L
+  times <- seq(ISOdatetime(2010,1,1,0,0,0, tz = "UTC")
+               , by = "30 min", length.out = nRec)
+  dsTest <- data.frame(
+    time = times
+    , soilResp = rnorm(nRec)
+  )
+  tmpDir <- tempdir()
+  #tmpDir <- "tmp"
+  ncFile <- createStdNcdfFile(
+    "soilResp"
+    , file.name = file.path(tmpDir,"soilResp.1.1.30.nc")
+    , lat.values = 53.0
+    , long.values = 13
+    , time.values = dsTest$time
+    , units = 'g/m2'
+    , data = dsTest$soilResp
+  )
+  createFactorDim(ncFile,"treatment",c("ctrl","Nadd","NPadd"))
+  infoVars <- infoNcdfVars(ncFile, dimvars = TRUE)
+  expect_true("treatment" %in% infoVars$name)
+  infoAtts <- infoNcdfAtts(ncFile, "treatment")
+})
+
+test_that('.parseLevelAttr',{
+  levelsOrig <- c("ctrl","Nadd","NPadd")
+  nLevel <- length(levelsOrig)
+  levelsAttr <- paste(paste(1:nLevel, levelsOrig, sep = "="), collapse = ",")
+  levelsParsed <- ncdfTools:::.parseLevelAttr(levelsAttr)
+  expect_equal(levelsParsed, levelsOrig)
+  expect_equal(ncdfTools:::.parseLevelAttr("1=bla"), "bla")
 })
 

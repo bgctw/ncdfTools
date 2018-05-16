@@ -1,5 +1,5 @@
 createStdNcdfFile <- function(
-  ### create an empty ncdf file with standardized attributes and dimensions
+  ### create an new ncdf file with standardized attributes and dimensions
   var.names = setdiff(names(data), timeVar)   ##<< string vector: 
   ## name of the target variables in the file
   , file.name = c()    ##<< character string: name of the file. If not given, this

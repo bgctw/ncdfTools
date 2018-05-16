@@ -34,6 +34,8 @@ Modifying NetCDF files
 \item define several ncdf attributes at once: \code{\link{modifyNcdfDefAtts}} 
 \item set or read the values of the time dimension in a netCDF file: 
   \code{\link{modifyNcdfWriteTime}} and \code{\link{readNcdfTime}}
+\item creating a standard netCDF file: \code{\link{createStdNcdfFile}}   
+\item creating a factor dimension: \code{\link{createFactorDim}}   
 }%itemize
 
 Conversion between R and NetCDF

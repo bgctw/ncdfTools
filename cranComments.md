@@ -10,8 +10,3 @@ The words of the note on possible misspelling are spelled correctly:
 The name of the file format netCDF, uppercase in title: NetCDF, and 
 an existing package name ncdf.tools.
 
-## Notes
-Packages code that was formerly part of REddyProc 1.1.3, but 
-required dependencies on NetCDF system libraries and R-Packages. 
-Moving this to its own packages helps easier installation of the REddyProc package for users not working with the NetCDF file format.
-
