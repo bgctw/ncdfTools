@@ -1,0 +1,280 @@
+---
+output: 
+  rmarkdown::html_vignette:
+    keep_md: true
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown_notangle}
+  %\VignetteIndexEntry{typical use case}
+  %\usepackage[UTF-8]{inputenc}
+---
+
+```{r, include = FALSE}
+# do not execute on CRAN: 
+# https://stackoverflow.com/questions/28961431/computationally-heavy-r-vignettes
+is_check <- ("CheckExEnv" %in% search()) || any(c("_R_CHECK_TIMINGS_",
+             "_R_CHECK_LICENSE_") %in% names(Sys.getenv()))
+#knitr::opts_chunk$set(eval = !is_check)
+```
+
+```{r setup, include = FALSE}
+#rmarkdown::render("vignettes/useCase.Rmd")
+#knitr::opts_knit$set(root.dir = '..')
+knitr::opts_chunk$set(
+    #, fig.align = "center"
+    #, fig.width = 3.27, fig.height = 2.5, dev.args = list(pointsize = 10)
+    #,cache = TRUE
+    #, fig.width = 4.3, fig.height = 3.2, dev.args = list(pointsize = 10)
+    #, fig.width = 6.3, fig.height = 6.2, dev.args = list(pointsize = 10)
+    # works with html but causes problems with latex
+    #,out.extra = 'style = "display:block; margin: auto"' 
+    )
+knitr::knit_hooks$set(spar = function(before, options, envir) {
+    if (before) {
+        par(las = 1 )                   #also y axis labels horizontal
+        par(mar = c(2.0,3.3,0,0) + 0.3 )  #margins
+        par(tck = 0.02 )                          #axe-tick length inside plots             
+        par(mgp = c(1.1,0.2,0) )  #positioning of axis title, axis labels, axis
+     }
+})
+```
+
+
+```{r, include = FALSE, warning = FALSE}
+#themeTw <- theme_bw(base_size = 10) + theme(axis.title = element_text(size = 9))
+#bgiDir <- "~/bgi"
+```
+
+# NetCDF in R Tutorial
+
+from [Dept. Geography, Univ. Oregon](http://geog.uoregon.edu/GeogR/topics/netCDF-in-R.html)
+
+## Data frame-to-array conversion
+
+In this set of example code, an R data frame is reshaped into an array that can be written out as a netCDF file. This could be a trivial transformation, if all rows and columns of the target array are contained in the data frame. In many real-world cases, however, the data frame contains, for example, only land data points, and so transforming or reshaping the data frame to an array is not straighforward, because it contains only a subset of points in the full array.
+
+The examples here assume that the CRU long-term mean temperature data have been read in as illustrated in the following examples [netCDF-ncdf4-read.html] and converted to a data frame as in [netCDF-dataframe]
+
+The individual approaches below can be timed using the proc.time() function.
+
+### Convert a “full” R data frame to an array
+
+#### Initial setup
+In this first example, a “full” data frame (e.g. one with nlon by nlat rows, and nt columns) is reshaped into a 3-d nlon by nlat by nt array. (The example also illustrates the conversion of a nlon by nlat rows by 1 column variable in a data frame into a 2-d nlon by nlat array.)
+Initial set up
+
+The first step is to create the dimension variables for the “full” array; in this example, the longitudes (lon), latitudes (lat) and time (t) variables. These variables should be defined for the “full” array, and not just for the observations in the data frame. One approach is to simply copy those values from an “original” netCDF data set.
+
+```{r}
+# copy lon, lat and time from the initial netCDF data set
+lon2 <- lon
+lat2 <- lat
+t2 <- t
+tunits2 <- tunits
+nlon2 <- nlon; nlat2 <- nlat; nt2 <- nt
+```
+
+Another approach is to generate or specify the dimension variables explicitly. However, this may be problematical if the source file longitudes and latitudes were not generated in exactly the same way, or were saved at lower (single) precision.
+
+```{r}
+# generate lons, lats and set time
+lon2 <- as.array(seq(-179.75,179.75,0.5))
+nlon2 <- 720
+lat2 <- as.array(seq(-89.75,89.75,0.5))
+nlat2 <- 360
+t2 <- as.array(c(27773.5, 27803.5, 27833.5, 27864.0, 27894.5, 27925.0,
+       27955.5, 27986.5, 28017.0, 28047.5, 28078.0, 28108.5))
+nt2 <- 12
+tunits2 <- "days since 1900-01-01 00:00:00.0 -0:00"
+```
+
+#### Reshaping a “full” data frame to an array
+
+In this example, the tmp_df02 data frame, which contains 259200 rows and 17 columns (with missing values over the oceans), is transformed into a nlon2 by nlat2 by nt2 array. In the new array, lon varies most rapidly, lat next, and t least rapidly, in a fashion consistent with the “CF-1.6” conventions for netCDF files. The size (and shapes) of the various arrays are confirmed by repeated applications of the dim() function (recalling that dim() will list the number of columns first, number of rows second (and if approriate, the number of times third)). The conversion is done in two steps: 
+
+- 1) converting that part of the the data frame containing the 12 monthly values into into a 2-d matrix, and then 
+- 2) reshaping the 2-d matrix into a 3-d array.
+
+```{r}
+# convert tmp_df02 back into an array
+#tmp_mat2 <- as.matrix(tmp_df02[3:(3 + nt - 1)])
+tmp_mat2 <- as.matrix(tmp_df02[3 + 0:(nt - 1)])
+dim(tmp_mat2)
+```
+```{r}
+# then reshape the array
+tmp_array2 <- array(tmp_mat2, dim = c(nlon2,nlat2,nt))
+dim(tmp_array2)
+```
+
+The columns containing mtwa, mtco and mat are each transformed into 2-d arrays.
+
+```{r}
+# convert mtwa, mtco and mat to arrays
+mtwa_array2 <- array(tmp_df02$mtwa, dim = c(nlon2,nlat2))
+dim(mtwa_array2)
+```
+
+```{r}
+mtco_array2 <- array(tmp_df02$mtco, dim = c(nlon2,nlat2))
+dim(mtco_array2)
+```
+
+```{r}
+mat_array2 <- array(tmp_df02$mat, dim = c(nlon2,nlat2))
+dim(mat_array2)
+
+```
+
+#### Check the conversion
+
+It’s generally a good idea to plot (map) the resulting arrays to check for anomalies or misapprehensions about the layout of the data. First plot the January values, 
+then MTWA, MTCO and MAT.
+
+```{r}
+# some plots to check creation of arrays
+library(lattice)
+library(RColorBrewer)
+#
+levelplot(tmp_array2[,,1] ~ lon * lat, data = grid, at = cutpts, cuts = 11, pretty = T, 
+  col.regions = (rev(brewer.pal(10,"RdBu"))), main = "Mean July Temperature (C)")
+levelplot(mtwa_array2 ~ lon * lat, data = grid, at = cutpts, cuts = 11, pretty = T, 
+  col.regions = (rev(brewer.pal(10,"RdBu"))), main = "MTWA (C)")
+levelplot(mtco_array2 ~ lon * lat, data = grid, at = cutpts, cuts = 11, pretty = T, 
+  col.regions = (rev(brewer.pal(10,"RdBu"))), main = "MTCO (C)")
+levelplot(mat_array2 ~ lon * lat, data = grid, at = cutpts, cuts = 11, pretty = T, 
+  col.regions = (rev(brewer.pal(10,"RdBu"))), main = "MAT (C)")
+```
+
+Looks ok.
+
+### Convert a “short” R data frame to an array
+
+In this second example, a “short” data frame, containing, for example, data only for land grid points, is converted to a “full” array. Unlike the conversion of a “full” data frame, this can’t be accomplished by simple conversion and reshaping, but instead the rows in the “short” data frame have to be assigned to the specific locations. This can be done explicity, by looping over the individual rows of the data frame, and copying the values from each row into the appropriate locations of the array. This can be very slow, but it has the advantage of being explict. “Loop-avoidance” approaches are much faster, but can be rather cryptic, and depend on the data frame and “target” arrays being properly structured. In this example, the “short” data frame tmp_df03 is moved into a 3-d array tmp_array3. Using three different approaches.
+Initial set up
+
+As before, dimension variables are generated or copied:
+
+```{r}
+# generate lons, lats and set time
+lon3 <- as.array(seq(-179.750,179.750,0.50))
+nlon3 <- 720
+lat3 <- as.array(seq(-89.750,89.750,0.50))
+nlat3 <- 360
+t3 <- as.array(c(27773.5, 27803.5, 27833.5, 27864.0, 27894.5, 27925.0,
+       27955.5, 27986.5, 28017.0, 28047.5, 28078.0, 28108.5))
+nt3 <- 12
+tunits3 <- "days since 1900-01-01 00:00:00.0 -0:00"
+
+# copy lon, lat and time from initial netCDF data set
+lon4 <- lon
+lat4 <- lat
+t4 <- t
+tunits4 <- tunits
+nlon4 <- nlon; nlat4 <- nlat; nt4 <- nt
+```
+
+Next, an nlon by nlat by nt array is created, and filled with the original fill value (or an alternative). Also, three nlon by nlat arrays for MTWA, MTCO, and MAT are created and filled. The generated lontitudes and latitudes are used here (as opposed to copies from the original netCDF file–this is more general)
+
+```{r}
+# nlon * nlat * nt array
+fillvalue <- 1e32
+tmp_array3 <- array(fillvalue, dim = c(nlon3,nlat3,nt3))
+# nlon * nlat arrays for mtwa, mtco and mat
+mtwa_array3 <- array(fillvalue, dim = c(nlon3,nlat3))
+mtco_array3 <- array(fillvalue, dim = c(nlon3,nlat3))
+mat_array3 <- array(fillvalue, dim = c(nlon3,nlat3))
+```
+
+
+#### Explicit copying from a data frame to array
+
+In the first, most explict, approach, we loop over the rows in the data frame, find the j-th and k-th column and row that each observation falls in (using the which.min() function), and then copy the values for each row into the arrays. This takes a long time for data sets with hundreds of rows and columns.
+
+```{r eval=FALSE}
+# loop over the rows in the data frame 
+# most explicit, but takes a VERY LONG TIME
+nobs <- dim(tmp_df03)[1]
+for (i in 1:nobs) {
+  # figure out location in the target array of the values in each row of the data frame
+  j <- which.min(abs(lon3 - tmp_df03$lon[i]))
+  k <- which.min(abs(lat3 - tmp_df03$lat[i]))
+  # copy data from the data frame to array
+  tmp_array3[j,k,1:nt] <- as.matrix(tmp_df03[i,3:(nt + 2)])
+  mtwa_array3[j,k] <- tmp_df03$mtwa[i]
+  mtco_array3[j,k] <- tmp_df03$mtco[i]
+  mat_array3[j,k] <- tmp_df03$mat[i]
+}
+```
+
+
+#### Partial loop avoidance
+
+In the second approach, the sapply() function is used to repeatedly apply a function to create two vectors of indices (j2 and k2) that describe which column and row of the array each row of the data frame is assigned to. For example, the function function(x) which.min(abs(lon3-x)) finds the closest longitude of the full array (lon3) to the longitude of each row of the data frame (tmp_df03$lon, the x argument of the function).
+
+```{r}
+# loop-avoidance approaches 
+# get vectors of the grid-cell indices for each row in the data frame
+j2 <- sapply(tmp_df03$lon, function(x) which.min(abs(lon3 - x)))
+k2 <- sapply(tmp_df03$lat, function(x) which.min(abs(lat3 - x)))
+```
+
+Then, the values are copied (one time at a time) by first reshaping the appropriate column in the data frame (using the as.matrix() function) into a temporary array (temp_array), which is then copied into tmp_array3 (with temp meaning “temporary” and tmp denoting temperature here). Note how the square-bracket selection on the left side of the assignment ([cbind(j2,k2)]) puts each row of the data frame into the proper location in the array.
+
+```{r}
+fillvalue <- 1e32
+# partial loop avoidance for tmp_array3
+temp_array <- array(fillvalue, dim = c(nlon3,nlat3))
+nobs <- dim(tmp_df03)[1]
+# l <- 2
+for (l in 1:nt) {
+  temp_array[cbind(j2,k2)] <- as.matrix(tmp_df03[1:nobs, l + 2]) 
+  tmp_array3[,,l] <- temp_array
+}
+```
+
+The 2-d arrays can be copied directly
+```{r}
+# can copy 2-d arrays directly
+mtwa_array3[cbind(j2,k2)] <- as.matrix(tmp_df03$mtwa)
+mtco_array3[cbind(j2,k2)] <- as.matrix(tmp_df03$mtco) 
+mat_array3[cbind(j2,k2)] <- as.matrix(tmp_df03$mat) 
+```
+
+#### Loop-avoidance approach
+
+Loops can be totally avoided as follows, extending the [...] selection to all three dimensions of the full array (tmp_array3). Note that the code fragment 3:(nt3+2) implies that the data are in columns 3 through 14 in the data frame (i.e. lon and lat are in the first two columns)
+
+```{r}
+# loop avoidance for all of the variables
+nobs <- nrow(tmp_df03)
+l <- rep(1:nt3, each = nobs)
+tmp_array3[cbind(j2,k2,l)] <- as.matrix(tmp_df03[1:nobs, 3:(nt3 + 2)])
+mtwa_array3[cbind(j2,k2)] <- as.matrix(tmp_df03$mtwa) 
+mtco_array3[cbind(j2,k2)] <- array(tmp_df03$mtco) 
+mat_array3[cbind(j2,k2)] <- array(tmp_df03$mat) 
+```
+
+# some plots to check creation of arrays
+
+```{r}
+library(lattice)
+library(RColorBrewer)
+m <- 1
+levelplot(tmp_array3[,,m] ~ lon * lat, data = grid, at = cutpts, cuts = 11, pretty = T, 
+  col.regions = (rev(brewer.pal(10,"RdBu"))), main = "Mean July Temperature (C)")
+levelplot(mtwa_array3 ~ lon * lat, data = grid, at = cutpts, cuts = 11, pretty = T, 
+  col.regions = (rev(brewer.pal(10,"RdBu"))), main = "MTWA (C)")
+levelplot(mtco_array3 ~ lon * lat, data = grid, at = cutpts, cuts = 11, pretty = T, 
+  col.regions = (rev(brewer.pal(10,"RdBu"))), main = "MTCO (C)")
+levelplot(mat_array3 ~ lon * lat, data = grid, at = cutpts, cuts = 11, pretty = T, 
+  col.regions = (rev(brewer.pal(10,"RdBu"))), main = "MAT (C)")
+```
+
+Check what’s in the current workspace:
+```{r}
+ls()
+outworkspace = "netCDF03.RData"
+save.image(file = outworkspace)
+```
+
+

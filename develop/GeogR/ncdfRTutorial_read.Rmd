@@ -1,0 +1,139 @@
+---
+output: 
+  rmarkdown::html_vignette:
+    keep_md: true
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown_notangle}
+  %\VignetteIndexEntry{typical use case}
+  %\usepackage[UTF-8]{inputenc}
+---
+
+```{r, include = FALSE}
+# do not execute on CRAN: 
+# https://stackoverflow.com/questions/28961431/computationally-heavy-r-vignettes
+is_check <- ("CheckExEnv" %in% search()) || any(c("_R_CHECK_TIMINGS_",
+             "_R_CHECK_LICENSE_") %in% names(Sys.getenv()))
+#knitr::opts_chunk$set(eval = !is_check)
+```
+
+```{r setup, include = FALSE}
+#rmarkdown::render("vignettes/useCase.Rmd")
+#knitr::opts_knit$set(root.dir = '..')
+knitr::opts_chunk$set(
+    #, fig.align = "center"
+    #, fig.width = 3.27, fig.height = 2.5, dev.args = list(pointsize = 10)
+    #,cache = TRUE
+    #, fig.width = 4.3, fig.height = 3.2, dev.args = list(pointsize = 10)
+    #, fig.width = 6.3, fig.height = 6.2, dev.args = list(pointsize = 10)
+    # works with html but causes problems with latex
+    #,out.extra = 'style = "display:block; margin: auto"' 
+    )
+knitr::knit_hooks$set(spar = function(before, options, envir) {
+    if (before) {
+        par(las = 1 )                   #also y axis labels horizontal
+        par(mar = c(2.0,3.3,0,0) + 0.3 )  #margins
+        par(tck = 0.02 )                          #axe-tick length inside plots             
+        par(mgp = c(1.1,0.2,0) )  #positioning of axis title, axis labels, axis
+     }
+})
+```
+
+
+```{r, include = FALSE, warning = FALSE}
+#themeTw <- theme_bw(base_size = 10) + theme(axis.title = element_text(size = 9))
+#bgiDir <- "~/bgi"
+```
+
+# NetCDF in R Tutorial
+
+from [Dept. Geography, Univ. Oregon](http://geog.uoregon.edu/GeogR/topics/netCDF-in-R.html)
+
+## Reading a netCDF data set using the ncdf4 package
+
+The ndcf4 package works much the same way as the ncdf package, but the functions in this package are a little more similar to the functions in the netCDF Fortran or C libraries than are those in the ncdf package. To begin, load the ncdf4 package.
+
+```{r}
+library(ncdf4)
+```
+
+Open the NetCDF data set, and print some basic information. The print() function applied to the ncin object produces information similar to that produced by the command-line utility ncdump.
+
+```{r}
+ncname <- "cru10min30_tmp"  
+ncfname <- paste(ncname,".nc", sep = "")
+dname <- "tmp"  # note: tmp means temperature (not temporary)
+# open a netCDF file
+getwd()
+ncin <- nc_open(ncfname)
+print(ncin)
+```
+
+
+Get the longtiudes and latitudes as before, using now the ncvar_get() function in ncdf4.
+```{r}
+lon <- ncvar_get(ncin,"lon")
+nlon <- dim(lon)
+head(lon)
+
+lat <- ncvar_get(ncin,"lat",verbose = F)
+nlat <- dim(lat)
+head(lat)
+
+print(c(nlon,nlat))
+```
+
+Get the time variable and its attributes using the ncvar_get() and ncatt_get() functions, and list them, and also get the number of times using the dim() function.
+```{r}
+t <- ncvar_get(ncin,"time")
+t
+
+tunits <- ncatt_get(ncin,"time","units")
+nt <- dim(t)
+nt
+```
+
+
+Print the time units string. Note the structure of the time units attribute. The object tunits has two components hasatt (a logical variable), and tunits$value, the actual “time since” string.
+
+```{r}
+tunits
+```
+
+Get the input variable (tmp) and its attributes, and verify the size of the array.
+
+```{r}
+tmp_array <- ncvar_get(ncin,dname)
+dlname <- ncatt_get(ncin,dname,"long_name")
+dunits <- ncatt_get(ncin,dname,"units")
+fillvalue <- ncatt_get(ncin,dname,"_FillValue")
+dim(tmp_array)
+```
+
+
+Get the global attributes.
+```{r}
+title <- ncatt_get(ncin,0,"title")
+institution <- ncatt_get(ncin,0,"institution")
+datasource <- ncatt_get(ncin,0,"source")
+references <- ncatt_get(ncin,0,"references")
+history <- ncatt_get(ncin,0,"history")
+Conventions <- ncatt_get(ncin,0,"Conventions")
+```
+
+
+Close the netCDF file using the nc_close() function.
+
+```{r}
+nc_close(ncin)
+```
+
+
+Check what’s in the current workspace:
+```{r}
+ls()
+outworkspace = "netCDF01.RData"
+save.image(file = outworkspace)
+```
+
+
+
