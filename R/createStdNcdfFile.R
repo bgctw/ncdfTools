@@ -72,7 +72,7 @@ createStdNcdfFile <- function(
     file.name = file.name, lat.values = lat.values
     , lat.length = lat.length, long.values = long.values
     , long.length = long.length, time.values = time.values
-    , time.length = time.length, var.names = var.names
+    , time.length = time.length, varNames = var.names
     , scale_factor = scale_factor, add_offset = add_offset
     , type.var = type.var, missing_value = missing_value
     , units = units)

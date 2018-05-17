@@ -36,6 +36,7 @@ Modifying NetCDF files
   \code{\link{modifyNcdfWriteTime}} and \code{\link{readNcdfTime}}
 \item creating a standard netCDF file: \code{\link{createStdNcdfFile}}   
 \item creating a factor dimension: \code{\link{createFactorDim}}   
+\item adding missing variables: \code{\link{modifyNcdfAddVars}}   
 }%itemize
 
 Conversion between R and NetCDF

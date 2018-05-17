@@ -1,7 +1,7 @@
 createLatLongTime <- function(
   ### create empty lat/lon/time ncdf file
   file.name                 ##<< character string: name of the target file.
-  , var.names = sub('[.]nc', '', file.name) ##<< character vector: names of the 
+  , varNames = sub('[.]nc', '', file.name) ##<< character vector: names of the 
                             ##  variablesin the target file.
   , lat.values = c()        ##<< numeric values: coordinate values for the latitude
                             ##   positions.
@@ -11,11 +11,8 @@ createLatLongTime <- function(
   , lat.length  = length(lat.values)  ##<< integer: length of the latitude dimension
   , long.length = length(long.values) ##<< integer: length of the longitude dimension
   , time.length = length(time.values) ##<< integer: length of the time dimension
-  , scale_factor = 1       ##<< numeric: scale factor
-  , add_offset = 0         ##<< numeric: offset
-  , type.var = 'NC_DOUBLE' ##<< character string: type of the data
-  , missing_value = -9999  ##<< numeric: missing data value
-  , units = '[]'           ##<< string vector: units of the variables in target file.  
+  , ...                    ##<< further arguments to \code{\link{modifNcdfAddVars}}
+  , units = '1'            ##<< string vector: units of the variables in target file.  
   , timeVar = 'time'       ##<< the name of the time variable
   , user = Sys.info()['user'] ##<< user name put to history entry
 ) {
@@ -62,17 +59,51 @@ createLatLongTime <- function(
   # define attributes
   dims.used  <- c('latitude', 'longitude', timeVar)[
     c(0 != lat.length, 0 != long.length, 0 != time.length)]
-  for (i in seq_along(var.names))  {
-    var.name.t <- var.names[i]
+  modifyNcdfAddVars( file.con, varNames, units = units, dimNames = dims.used, ...)
+  hist_string <- paste0(Sys.time(),': File created by ', user)
+  att.put.nc(file.con, 'NC_GLOBAL', 'history', 'NC_CHAR', hist_string)
+  message('Created file', file.name)
+}
+
+modifyNcdfAddVars <- function(
+  ### add a variable definition 
+  ncFile                 ##<< character string: name of the target file.
+  , varNames            ##<< character vector: names of the
+  , units = '1'           ##<< string vector: units of the variables in target file.  
+  , dimNames = c('latitude', 'longitude', 'time')
+  , isStopOnOverriding = TRUE ##<< set to FALSE to disregard variables alread defined
+  , scale_factor = 1       ##<< numeric: scale factor
+  , add_offset = 0         ##<< numeric: offset
+  , type.var = 'NC_DOUBLE' ##<< character string: type of the data
+  , missing_value = -9999  ##<< numeric: missing data value
+  , dimVars = 'time'       ##<< the name of the time variable
+  , user = Sys.info()['user'] ##<< user name put to history entry  
+){
+  if (class(ncFile) ==  'character') {
+    if (file.exists(ncFile)) {
+      ncFile = open.nc(ncFile, write = TRUE)
+      on.exit(close.nc(ncFile))
+    } else stop('File ', ncFile, ' is not existent.')
+  }
+  if (length(units) != length(varNames)) stop(
+    "lenght of units argument must equal lenght of varNames=", length(varNames)
+    , " but was ",length(units))
+  infoVars <- infoNcdfVars(ncFile)
+  varNamesExisting <- intersect(infoVars$name, varNames)
+  iVarsCreate <- if (length(varNamesExisting)) {
+    if (isStopOnOverriding) stop(
+      "Following variables already exist: "
+      , paste(varNamesExisting, collapse = ","))
+    which(!(varNames %in% varNamesExisting))
+  } else seq_along(varNames)
+  for (i in iVarsCreate)  {
+    var.name.t <- varNames[i]
     unit <- units[i]
-    var.def.nc <- var.def.nc(file.con, var.name.t, type.var, dims.used)
-    modifyNcdfDefAtts( file.con, var.name.t, atts = list(
+    var.def.nc <- var.def.nc(ncFile, var.name.t, type.var, dimNames)
+    modifyNcdfDefAtts( ncFile, var.name.t, atts = list(
       scale_factor = scale_factor
       , add_offset = add_offset
       , missing_value = missing_value
       , `_FillValue` = missing_value, units = unit))
   }
-  hist_string <- paste0(Sys.time(),': File created by ', user)
-  att.put.nc(file.con, 'NC_GLOBAL', 'history', 'NC_CHAR', hist_string)
-  message('Created file', file.name)
 }
