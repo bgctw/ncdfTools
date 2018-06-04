@@ -40,11 +40,13 @@ readNcdfDataframe <- function(
   } else {
     var.get.nc(file.con, dimVar)
   }
-  vars <- lapply(varInfo$name, function(var.name){
-    var.get.nc(file.con, var.name)
-  })
-  ans <- cbind(dimData, as.data.frame(do.call(cbind, vars)))
-  names(ans) <- c(dimVar, varInfo$name)
+  if (nrow(varInfo)) {
+    vars <- lapply(varInfo$name, function(var.name){
+      var.get.nc(file.con, var.name)
+    })
+    ans <- cbind(dimData, as.data.frame(do.call(cbind, vars)))
+    names(ans) <- c(dimVar, varInfo$name)
+  } else ans <- structure( data.frame(x = dimVar), names = dimVar)
   ##value<< data.frame of all variables in the file. First column is the 
   ## dimension, usually time.
   return(ans)
