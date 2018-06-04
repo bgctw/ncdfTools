@@ -11,7 +11,7 @@ createLatLongTime <- function(
   , lat.length  = length(lat.values)  ##<< integer: length of the latitude dimension
   , long.length = length(long.values) ##<< integer: length of the longitude dimension
   , time.length = length(time.values) ##<< integer: length of the time dimension
-  , ...                    ##<< further arguments to \code{\link{modifNcdfAddVars}}
+  , ...                    ##<< further arguments to \code{\link{modifyNcdfAddVars}}
   , units = '1'            ##<< string vector: units of the variables in target file.  
   , timeVar = 'time'       ##<< the name of the time variable
   , user = Sys.info()['user'] ##<< user name put to history entry
@@ -65,6 +65,7 @@ createLatLongTime <- function(
   message('Created file', file.name)
 }
 
+#' @export
 modifyNcdfAddVars <- function(
   ### add a variable definition 
   ncFile                 ##<< character string: name of the target file.
