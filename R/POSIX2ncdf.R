@@ -1,24 +1,33 @@
 ncdf2POSIX <- function(
   ### convert ncdf time to POSIXct
-  x  ##<< POSIXct vector
+  x  ##<< ncdf time
   , unit = "days since 1582-10-15 00:00" ##<< unit in which x is given
+  , tzone = "UTC"  ##<< timezone formatting applied to the return value.
+  ## Use e.g. "CET" for central european time and 
+  ## "Etc/GMT-1" for central european time without daylight savings.
 ){
+  ##seealso<< \code{\link{POSIX2ncdf}}
   # if (!requireNamespace("udunits2")) stop(
   #   "need to install udunits2 package before calling ncdf2POSIX")
   # udunits2::ud.convert(
   #   as.numeric(x), unit, "seconds since 1970-01-01")
-  utcal.nc(unit, x, type = "c")
+  ##value<< POSIXct vector
+  ans <- utcal.nc(unit, x, type = "c")
+  attr(ans, "tzone") <- tzone
+  ans
 }
 
 POSIX2ncdf <- function(
   ### convert POSIXct to ncdf time
-  x  ##<< ncdf time
+  x  ##<< POSIXct vector
   , unit = "days since 1582-10-15 00:00" ##<< unit to convert to
 ){
+  ##seealso<< \code{\link{ncdf2POSIX}}
   # if (!requireNamespace("udunits2")) stop(
   #   "need to install udunits2 package before calling POSIX2ncdf")
   # udunits2::ud.convert(
   #   as.numeric(x), "seconds since 1970-01-01", unit)
+  ##value<< numeric vector of ncdf-Time 
   utinvcal.nc(unit,x)
 }
 attr(POSIX2ncdf,"ex") <- function(){
