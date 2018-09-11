@@ -22,7 +22,9 @@ readNcdf <- function(
 readNcdfDataframe <- function(
   ### fast reading of a single point netCDF file into an data.frame
   file.name   ##<< character string: name of the ncdf file to read the data from.
-  ,var.name = c()  ##<< scalar string: name of the variable to extract. 
+  ,varPattern = character() ##<< string vector of regular expression patterns of 
+  ##  variable names to extract, that are concatenated by OR.
+  ##  Default empty corresponds to all variables.
   , dimVar = "time" ##<< scalar string: name of the single dimension
   , isConvertTime = (dimVar == 'time') ##<< if true, the dimension is read by 
   ## \code{\link{readNcdfTime}}
@@ -42,11 +44,16 @@ readNcdfDataframe <- function(
     var.get.nc(file.con, dimVar)
   }
   if (nrow(varInfo)) {
-    vars <- lapply(varInfo$name, function(var.name){
+    varNames <- if (length(varPattern)) {
+      pattern <- paste( paste0("(",varPattern,")"), collapse = "|")
+      iNames <- grep(pattern, varInfo$name)
+      varInfo$name[iNames]
+    } else varInfo$name
+    vars <- lapply(varNames, function(var.name){
       var.get.nc(file.con, var.name)
     })
     ans <- cbind(dimData, as.data.frame(do.call(cbind, vars)))
-    names(ans) <- c(dimVar, varInfo$name)
+    names(ans) <- c(dimVar, varNames)
   } else ans <- structure( data.frame(x = dimVar), names = dimVar)
   ##value<< data.frame of all variables in the file. First column is the 
   ## dimension, usually time.

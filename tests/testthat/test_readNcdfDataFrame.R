@@ -32,6 +32,17 @@ test_that("readNcdfDataframe",{
   expect_equal(ans, dsTest)
 })
 
+test_that("readNcdfDataframe with variable name pattern",{
+  fName <- createTestFile()
+  ans <- readNcdfDataframe(fName, c("^soilResp"))
+  ans2 <- readNcdfDataframe(fName, c("^soilResp","^sdSoilResp"))
+  unlink(fName)
+  expect_true("soilResp" %in% names(ans))
+  expect_true(!("sdSoilResp" %in% names(ans)))
+  expect_true(all(c("soilResp","sdSoilResp") %in% names(ans2)))
+})
+
+
 test_that("updateNcdfDataframe normal",{
   fName <- createTestFile()
   iRecMod = 10:15
