@@ -2,6 +2,7 @@ modifyNcdfDeleteVar <- function(
   ### delete variable using cdo
   fileName     ##<< scalar string name of the file, that must not be open
   , varNames   ##<< string vector of variables to delete
+  , isVerbose = FALSE ##<< set to TRUE to repeat CDO command
 ) {
   ##details<< if varName is not found among variable names, does nothing
   if (!any(varNames %in% infoNcdfVars(fileName)$name)) return(TRUE)
@@ -11,6 +12,7 @@ modifyNcdfDeleteVar <- function(
   cmd <- paste0(
     "cdo delname,",paste(varNames, collapse = ",")
     , " ", fileName, " ", intermediate)
+  if (isTRUE(isVerbose)) message(cmd)
   ans <- system(cmd)
   if (ans != 0) return(FALSE)
   return( file.rename(intermediate, fileName) )

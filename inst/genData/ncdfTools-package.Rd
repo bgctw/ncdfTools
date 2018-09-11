@@ -37,6 +37,8 @@ Modifying NetCDF files
 \item creating a standard netCDF file: \code{\link{createStdNcdfFile}}   
 \item creating a factor dimension: \code{\link{createFactorDim}}   
 \item adding missing variables: \code{\link{modifyNcdfAddVars}}   
+\item update/write a single-dimensional netCDF file by a data.frame:  
+  \code{\link{updateNcdfDataframe}}
 }%itemize
 
 Conversion between R and NetCDF

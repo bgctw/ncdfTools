@@ -5,8 +5,6 @@ classR2Ncdf = function(
   ##description<<
   ## Crudely determines the ncdf class from R classes. Only integer, character
   ## and double are implemented yet.
-  ##seealso<<
-  ## \code{\link[RNetCDF]{RNetCDF}}
   if (class(object) == 'numeric' || class(object) == 'integer') {
     if ((sum(abs(object - round(object)) < .Machine$double.eps ^ 0.5) == length(object)) &
         (min(object, na.rm = TRUE) > -32.768 & max(object, na.rm = TRUE) < 32.767)) {

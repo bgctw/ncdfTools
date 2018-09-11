@@ -180,7 +180,7 @@ infoNcdfVars(tmpFile)  # note that soilRespSquared disappeared
 
 ## Reading and writing data.frames
 
-First write a dta.frame to file. 
+First write a data.frame to file. 
 Note that colum 'time' by default is written to the time dimension.
 ```{r}
 tmpFile <- tempfile()
@@ -210,7 +210,17 @@ str(ans)
 Use ncdfTools to read single dimensional data into a data.frame.
 The default single dimension is time and is by default converted to POSIXct.
 ```{r}
-ans <- readNcdfDataframe(fName)
+ans <- ds1 <- readNcdfDataframe(fName)
 head(ans)
+```
+
+Use ncdfTools to update a single dimensional data by a data.frame.
+The name of the dimension and the corresponding column in the data.frame must
+match.
+```{r}
+dsMod <- ds1[5:10, c("time","sdSoilResp")]
+dsMod$sdSoilResp <- 0.2
+updateNcdfDataframe(dsMod, fName)
+head(readNcdfDataframe(fName))
 ```
 

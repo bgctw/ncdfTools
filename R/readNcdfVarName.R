@@ -10,7 +10,7 @@ readNcdfVarName <- function(
   ## having the most dimensions is used.
   ## If there are still more than one variable, try to match the filename
   ##seealso<<
-  ## \code{\link[RNetCDF]{RNetCDF}}, \code{\link{infoNcdfVars}}
+  ## \code{\link{infoNcdfVars}}
   if (class(file) == 'character') {
     file.con <- open.nc(file)
     on.exit(close.nc(file.con)) # when opened file, close on exit
