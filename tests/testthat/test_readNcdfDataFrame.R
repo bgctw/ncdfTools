@@ -42,6 +42,36 @@ test_that("readNcdfDataframe with variable name pattern",{
   expect_true(all(c("soilResp","sdSoilResp") %in% names(ans2)))
 })
 
+test_that("readNcdfDataframe with dimRange",{
+  fName <- createTestFile()
+  ans <- readNcdfDataframe(fName, dimRange = dsTest$time[c(4,8)])
+  unlink(fName)
+  expect_equivalent(ans, dsTest[4:8,,drop = FALSE]) # rownames differ
+})
+
+test_that("readNcdfDataframe with dimRange higher than data",{
+  fName <- createTestFile()
+  expect_warning(
+  ans <- readNcdfDataframe(
+    fName, dimRange = c(dsTest$time[4], ISOdate(2025,1,1)))
+  ,"dimension end"
+  )
+  unlink(fName)
+  expect_equivalent(ans, dsTest[4:nrow(dsTest),,drop = FALSE]) # rownames differ
+})
+
+test_that("readNcdfDataframe with dimRange lower than data",{
+  fName <- createTestFile()
+  expect_warning(
+    ans <- readNcdfDataframe(
+      fName, dimRange = c(ISOdate(1800,1,1), dsTest$time[4]))
+    ,"dimension start"
+  )
+  unlink(fName)
+  expect_equivalent(ans, dsTest[1:4,,drop = FALSE]) # rownames differ
+})
+
+
 
 test_that("updateNcdfDataframe normal",{
   fName <- createTestFile()

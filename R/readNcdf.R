@@ -28,6 +28,10 @@ readNcdfDataframe <- function(
   , dimVar = "time" ##<< scalar string: name of the single dimension
   , isConvertTime = (dimVar == 'time') ##<< if true, the dimension is read by 
   ## \code{\link{readNcdfTime}}
+  , tzone = "UTC"  ##<< timezone formatting applied to the time dimension.
+  , dimRange = NULL  ##<< possibility to specify start and end of 
+  ## the single dimension to read only a subset.
+  ## Values must exactly match entries in dimVar
 ) {
   ##seealso<< \code{\link{updateNcdfDataframe}}
   ##details<<
@@ -38,27 +42,66 @@ readNcdfDataframe <- function(
   file.con <- open.nc(file.name)
   on.exit(close.nc(file.con))
   varInfo <- infoNcdfVars(file.con, order.var = "id")
-  dimData <- if (isConvertTime) {
-    readNcdfTime(file.con, timeVar = dimVar)
+  dimData0 <- if (isConvertTime) {
+    readNcdfTime(file.con, timeVar = dimVar, tzone = tzone)
   } else {
     var.get.nc(file.con, dimVar)
   }
-  if (nrow(varInfo)) {
-    varNames <- if (length(varPattern)) {
-      pattern <- paste( paste0("(",varPattern,")"), collapse = "|")
-      iNames <- grep(pattern, varInfo$name)
-      varInfo$name[iNames]
-    } else varInfo$name
+  ansEmpty <- structure( data.frame(x = dimVar), names = dimVar)
+  if (!nrow(varInfo)) return(ansEmpty)
+  varNames <- if (length(varPattern)) {
+    pattern <- paste( paste0("(",varPattern,")"), collapse = "|")
+    iNames <- grep(pattern, varInfo$name)
+    varInfo$name[iNames]
+  } else varInfo$name
+  if (!length(varNames)) return(ansEmpty)
+  if (length(dimRange)) {
+    dimRangeIndices <- .getDimRangeIndices(dimRange, dimData0)
+    dimData <- dimData0[dimRangeIndices[1]:dimRangeIndices[2]]
+    vars <- lapply(varNames, function(var.name){
+      var.get.nc(
+        file.con, var.name
+        , start = c(1,1,dimRangeIndices[1]), count = c(1,1,1 + diff(dimRangeIndices)))
+    })
+  } else {
+    dimData <- dimData0
     vars <- lapply(varNames, function(var.name){
       var.get.nc(file.con, var.name)
     })
-    ans <- cbind(dimData, as.data.frame(do.call(cbind, vars)))
-    names(ans) <- c(dimVar, varNames)
-  } else ans <- structure( data.frame(x = dimVar), names = dimVar)
+  }
+  ans <- cbind(dimData, as.data.frame(do.call(cbind, vars)))
+  names(ans) <- c(dimVar, varNames)
   ##value<< data.frame of all variables in the file. First column is the 
   ## dimension, usually time.
   return(ans)
 }  
+
+.getDimRangeIndices <- function(
+  ### get the indices of dimRange within dimData0
+  dimRange   ##<< vector (start, end) of values in \code{dimData0}
+  , dimData0 ##<< dimension values in ascending order
+) {
+  if (length(dimRange) != 2) stop(
+    "dimRange must be of length two c(start,end) but was of length "
+    ,length(dimRange))
+  iStart <- if (dimRange[1] < dimData0[1]) {
+    warning(
+      "Supplied a dimension start lower than the data. Using data start")
+    iStart <- 1
+  } else match(dimRange[1], dimData0)
+  if (is.na(iStart)) stop(
+    "range start ", dimRange[1], "is not among dimension values")
+  iEnd <- if (dimRange[2] > dimData0[length(dimData0)]) {
+    warning(
+      "Supplied a dimension end higher than the data. Using data end")
+    iEnd <- length(dimData0)
+  } else match(dimRange[2], dimData0)
+  if (is.na(iEnd)) stop(
+    "range end ", dimRange[2], "is not among dimension values")
+  ##value<< vector of length 2 (start, end) of indices in dimData0
+  c(iStart, iEnd)
+}
+
 
 updateNcdfDataframe <- function(
   ### fast writing of a data.frame to a single point netCDF file 
