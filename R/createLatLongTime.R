@@ -107,4 +107,9 @@ modifyNcdfAddVars <- function(
       , missing_value = missing_value
       , `_FillValue` = missing_value, units = unit))
   }
+  modifyNcdfAppendHistory(
+    ncFile
+    , paste0("added variables ",paste(varNames, collapse = ","))
+    , user = user)  
+  TRUE
 }
