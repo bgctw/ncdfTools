@@ -59,9 +59,10 @@ createLatLongTime <- function(
   # define attributes
   dims.used  <- c('latitude', 'longitude', timeVar)[
     c(0 != lat.length, 0 != long.length, 0 != time.length)]
-  modifyNcdfAddVars( file.con, varNames, units = units, dimNames = dims.used, ...)
+  # define history before adding variables
   hist_string <- paste0(Sys.time(),': File created by ', user)
   att.put.nc(file.con, 'NC_GLOBAL', 'history', 'NC_CHAR', hist_string)
+  modifyNcdfAddVars( file.con, varNames, units = units, dimNames = dims.used, ...)
   message('Created file', file.name)
 }
 
@@ -86,6 +87,7 @@ modifyNcdfAddVars <- function(
       on.exit(close.nc(ncFile))
     } else stop('File ', ncFile, ' is not existent.')
   }
+  if (!length(varNames)) return(character(0))
   if (length(units) != length(varNames)) stop(
     "lenght of units argument must equal lenght of varNames=", length(varNames)
     , " but was ",length(units))
@@ -109,7 +111,7 @@ modifyNcdfAddVars <- function(
   }
   modifyNcdfAppendHistory(
     ncFile
-    , paste0("added variables ",paste(varNames, collapse = ","))
+    , paste0("added variables ",paste(varNames[iVarsCreate], collapse = ","))
     , user = user)  
-  TRUE
+  varNames[iVarsCreate]
 }
