@@ -42,3 +42,18 @@ infoNcdfAtts <- function(
   }
   return(att.info)
 }
+
+infoNcdfAttr <- function(  
+  ### get summary of all ncdf variable attributes
+  file.con   ##<< a NetCDF object pointing to the respective ncdf file.
+  , attr     ##<< string of the attribute name, e.g. "units"
+  , var.id ='NC_GLOBAL'  ##<< the name or id of the variable for which to 
+  ## get attribute
+  , info = infoNcdfAtts(file.con, var.id) ##<< may provide result of
+  ## \code{\link{infoNcdfAtts}} for efficiency
+) {
+  iRow <- match(attr, info[,"name"])
+  if (is.na(iRow)) stop("attribute ", attr, " not found for variable ", var.id)
+  ##value<< scalar attribute string of first matched attribute
+  info[iRow[1],"value"]
+}

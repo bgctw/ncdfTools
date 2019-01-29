@@ -116,7 +116,7 @@ readNcdfVarName(ncFile)
 typing-sparse reading of a single variable from ncdf-File
 ```{r}
 ans <- readNcdf(ncFile) 
-all(ans - dsTest$soilResp < 1e-10 )
+all(as.vector(ans) - dsTest$soilResp < 1e-10 )
 ```
 
 
@@ -134,20 +134,25 @@ cat(infoNcdfAtts(ncFile)["history","value"])
 see also modifyNcdfDefAtts, modifyNcdfCopyAtts, modifyNcdfCopyMetadata, modifyNcdfCopyVar.
 
 ## Conversion between R and NetCDF
-Dates
+Dates in netcdf are stored as "days since 1582-10-15 00:00". 
+Hence, POSIXt values need to be converted to this number.
+
 ```{r}
 ncCon <- RNetCDF::open.nc(fileName)
 timesNCOrig <- RNetCDF::var.get.nc(ncCon, 'time')
 RNetCDF::close.nc(ncCon)
 head(timesR <- readNcdfTime(fileName))
+head(POSIX2ncdf(timesR)) - POSIX2ncdf(timesR[1])
 all( (POSIX2ncdf(timesR) - timesNCOrig) == 0)
 ```
 
 ## CDO commands
-time aggregation
+time aggregation. In the example take the mean over each 2 time steps.
 ```{r eval = !is_check}
 tmpDir <- tempdir()
 ans <- aggregateNcdf(ncFile, path.out = tmpDir, period = 2)
+#infoNcdfDims(ncFile)
+#infoNcdfDims(ans)
 ```
 
 
