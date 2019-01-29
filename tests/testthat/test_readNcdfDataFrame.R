@@ -15,13 +15,13 @@ dsTest <- data.frame(
 )
 dsTest$sdSoilResp[2:4] <- NA
 
-createTestFile <- function(){
+createTestFile <- function(unit = 'g/m^2/day'){
   createStdNcdfFile(
     data = dsTest
     , file.name = tempfile()
     , lat.values = 53.0
     , long.values = 13
-    , units = rep('g/m^2/day',2)
+    , units = rep(unit,2)
   )  
 }
 
@@ -48,6 +48,20 @@ test_that("readNcdfDataframe_noConvertTime",{
   if (requireNamespace("units")) 
     expect_equal(units::deparse_unit(ans$soilResp),"g d-1 m-2")
 })
+
+test_that("readNcdfDataframe_noUniDataUnit",{
+  fName <- createTestFile(unit = "mumol")
+  expect_warning(
+    ans <- readNcdfDataframe(fName)
+    ,"unit of "
+  )
+  unlink(fName)
+  expect_equal(ans, dsTest, check.attributes = FALSE)
+  aUnits <- attr(ans,"units")
+  expect_equal(aUnits, list(soilResp = "mumol", sdSoilResp = "mumol"))
+  expect_false(inherits(ans$soilResp, "units"))
+})
+
 
 test_that("readNcdfDataframe with variable name pattern",{
   fName <- createTestFile()

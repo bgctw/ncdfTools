@@ -58,8 +58,14 @@ readNcdfDataframe <- function(
       unit <- try(infoNcdfAttr(file.con, "units", var.name))
       if (!inherits(unit,"try-error")) {
         unitsAttr[var.name] <<- unit
-        if (requireNamespace("units"))
-          data <- units::set_units(data, unit, mode = "standard")
+        if (requireNamespace("units")) {
+          dataOrErr <- try(
+            units::set_units(data, unit, mode = "standard"), silent = TRUE)
+          if (inherits(dataOrErr, "try-error")) { warning(
+            "unit of ", var.name, ": ", dataOrErr) 
+          } else
+           data <- dataOrErr
+        }
       } 
     }
     data
