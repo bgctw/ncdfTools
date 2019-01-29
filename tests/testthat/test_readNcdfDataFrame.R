@@ -36,6 +36,19 @@ test_that("readNcdfDataframe",{
     expect_equal(units::deparse_unit(ans$soilResp),"g d-1 m-2")
 })
 
+test_that("readNcdfDataframe_noConvertTime",{
+  # do not parse time -> check that unit is assigned
+  fName <- createTestFile()
+  ans <- readNcdfDataframe(fName, isConvertTime = FALSE)
+  unlink(fName)
+  expect_equal(ans[,-1], dsTest[,-1], check.attributes = FALSE)
+  aUnits <- attr(ans,"units")
+  expect_equal(aUnits[-1], list(soilResp = "g/m^2/day", sdSoilResp = "g/m^2/day"))
+  expect_equal(aUnits[1], list(time = "days since 1582-10-15 00:00"))
+  if (requireNamespace("units")) 
+    expect_equal(units::deparse_unit(ans$soilResp),"g d-1 m-2")
+})
+
 test_that("readNcdfDataframe with variable name pattern",{
   fName <- createTestFile()
   ans <- readNcdfDataframe(fName, c("^soilResp"))

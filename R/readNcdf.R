@@ -52,20 +52,6 @@ readNcdfDataframe <- function(
   ## Expects all variables in the file to be one-dimensional.
   file.con <- open.nc(file.name)
   on.exit(close.nc(file.con))
-  varInfo <- infoNcdfVars(file.con, order.var = "id")
-  dimData0 <- if (isConvertTime) {
-    readNcdfTime(file.con, timeVar = dimVar, tzone = tzone)
-  } else {
-    var.get.nc(file.con, dimVar)
-  }
-  ansEmpty <- structure( data.frame(x = dimVar), names = dimVar)
-  if (!nrow(varInfo)) return(ansEmpty)
-  varNames <- if (length(varPattern)) {
-    pattern <- paste( paste0("(",varPattern,")"), collapse = "|")
-    iNames <- grep(pattern, varInfo$name)
-    varInfo$name[iNames]
-  } else varInfo$name
-  if (!length(varNames)) return(ansEmpty)
   unitsAttr <- list()
   attachUnit <- function(data, var.name){
     if (isTRUE(isAttachingUnit)) {
@@ -78,6 +64,21 @@ readNcdfDataframe <- function(
     }
     data
   }
+  varInfo <- infoNcdfVars(file.con, order.var = "id")
+  dimData0 <- if (isConvertTime) {
+    readNcdfTime(file.con, timeVar = dimVar, tzone = tzone)
+  } else {
+    data <- as.vector(var.get.nc(file.con, dimVar))
+    attachUnit(data, dimVar)
+  }
+  ansEmpty <- structure( data.frame(x = dimVar), names = dimVar)
+  if (!nrow(varInfo)) return(ansEmpty)
+  varNames <- if (length(varPattern)) {
+    pattern <- paste( paste0("(",varPattern,")"), collapse = "|")
+    iNames <- grep(pattern, varInfo$name)
+    varInfo$name[iNames]
+  } else varInfo$name
+  if (!length(varNames)) return(ansEmpty)
   if (length(dimRange)) {
     dimRangeIndices <- .getDimRangeIndices(dimRange, dimData0)
     dimData <- dimData0[dimRangeIndices[1]:dimRangeIndices[2]]
