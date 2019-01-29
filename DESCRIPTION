@@ -7,7 +7,7 @@ Imports: RNetCDF, chron, abind
 Description: Set of tools to ease the handling of netCDF files. Its a lean version of ncdf.tools.
 License: GPL-2
 LazyLoad: yes
-Depends: R (>= 3.4)
+Depends: R (>= 3.2)
 Imports: chron, RNetCDF, abind
 Suggests: testthat, knitr
 LazyData: true
