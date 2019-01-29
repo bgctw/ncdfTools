@@ -25,7 +25,7 @@ ncFile <- createStdNcdfFile(
   , lat.values = 53.0
   , long.values = 13
   , time.values = dsTest$time
-  , units = 'g/m2'
+  , units = 'g/m^2'
   , data = dsTest$soilResp
 )
 fileName <- ncFile
@@ -43,7 +43,7 @@ test_that('infoNcdfVars',{
   expect_true( is.data.frame(ans) )
   expect_true(all(c("soilResp") %in% ans$name))
   expect_equal(ans$n.dims[match(c("soilResp"),ans$name)], c(3))
-  expect_equal(ans$unit[match(c("soilResp"),ans$name)], c("g/m2"))
+  expect_equal(ans$unit[match(c("soilResp"),ans$name)], c("g/m^2"))
   ##TODO
   ans <- infoNcdfVars(ncFileDs, order.var = 'id')
   expect_true(all(c("soilResp","sdSoilResp") %in% ans$name))
@@ -82,6 +82,9 @@ test_that('readNcdfVarName',{
 test_that('readNcdf',{
   ans <- readNcdf(fileName)
   expect_equal( as.numeric(ans), dsTest$soilResp )
+  if (requireNamespace("units")) {
+    expect_equal(units::deparse_unit(ans),"g m-2")
+  }
 })
 
 test_that('readNcdfTime',{

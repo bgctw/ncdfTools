@@ -21,7 +21,7 @@ createTestFile <- function(){
     , file.name = tempfile()
     , lat.values = 53.0
     , long.values = 13
-    , units = rep('g/m2/day',2)
+    , units = rep('g/m^2/day',2)
   )  
 }
 
@@ -29,7 +29,11 @@ test_that("readNcdfDataframe",{
   fName <- createTestFile()
   ans <- readNcdfDataframe(fName)
   unlink(fName)
-  expect_equal(ans, dsTest)
+  expect_equal(ans, dsTest, check.attributes = FALSE)
+  aUnits <- attr(ans,"units")
+  expect_equal(aUnits, list(soilResp = "g/m^2/day", sdSoilResp = "g/m^2/day"))
+  if (requireNamespace("units")) 
+    expect_equal(units::deparse_unit(ans$soilResp),"g d-1 m-2")
 })
 
 test_that("readNcdfDataframe with variable name pattern",{
@@ -81,8 +85,8 @@ test_that("updateNcdfDataframe normal",{
   updateNcdfDataframe(ds = dsMod, file.name = fName)
   ans <- readNcdfDataframe(fName)
   unlink(fName)
-  expect_equal(ans[-iRecMod,], dsTest[-iRecMod,])
-  expect_equal(ans[iRecMod,], dsMod)
+  expect_equal(ans[-iRecMod,], dsTest[-iRecMod,], check.attributes = FALSE)
+  expect_equal(ans[iRecMod,], dsMod, check.attributes = FALSE)
 })
 
 test_that("updateNcdfDataframe missing timeCol",{

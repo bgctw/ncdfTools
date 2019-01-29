@@ -4,6 +4,7 @@ readNcdf <- function(
   ,var.name = c()  ##<< scalar string: name of the variable to extract. 
   ## If not supplied,
   ## this is tried to be determined with readNcdfVarName().
+  , isAttachingUnit = TRUE  ##<< set to FALSE to not try reading unit 
 ) {
   ##details<<
   ## Convenience function to automatically read in data from a ncdf file
@@ -13,8 +14,17 @@ readNcdf <- function(
   if (length(var.name) == 0)
     var.name = readNcdfVarName(file.con)
   data     <- var.get.nc(file.con, var.name)
+  if (isTRUE(isAttachingUnit)) {
+    unit <- try(infoNcdfAttr(file.con, "units", var.name))
+    if (!inherits(unit,"try-error")) {
+      attr(data,"units") <- unit
+      if (requireNamespace("units"))
+        data <- units::set_units(data, unit, mode = "standard")
+    } 
+  }
   #TODO add dimnames
   ##value<< (multidimensional) array: data from the ncdf file.
+  ## With unit in attribute units and if package units is there as unidata unit
   return(data)
 }  
 
@@ -32,6 +42,7 @@ readNcdfDataframe <- function(
   , dimRange = NULL  ##<< possibility to specify start and end of 
   ## the single dimension to read only a subset.
   ## Values must exactly match entries in dimVar
+  , isAttachingUnit = TRUE  ##<< set to FALSE to not try reading unit 
 ) {
   ##seealso<< \code{\link{updateNcdfDataframe}}
   ##details<<
@@ -55,22 +66,38 @@ readNcdfDataframe <- function(
     varInfo$name[iNames]
   } else varInfo$name
   if (!length(varNames)) return(ansEmpty)
+  unitsAttr <- list()
+  attachUnit <- function(data, var.name){
+    if (isTRUE(isAttachingUnit)) {
+      unit <- try(infoNcdfAttr(file.con, "units", var.name))
+      if (!inherits(unit,"try-error")) {
+        unitsAttr[var.name] <<- unit
+        if (requireNamespace("units"))
+          data <- units::set_units(data, unit, mode = "standard")
+      } 
+    }
+    data
+  }
   if (length(dimRange)) {
     dimRangeIndices <- .getDimRangeIndices(dimRange, dimData0)
     dimData <- dimData0[dimRangeIndices[1]:dimRangeIndices[2]]
     vars <- lapply(varNames, function(var.name){
-      var.get.nc(
+      data <- as.vector(var.get.nc(
         file.con, var.name
-        , start = c(1,1,dimRangeIndices[1]), count = c(1,1,1 + diff(dimRangeIndices)))
+        , start = c(1,1,dimRangeIndices[1])
+        , count = c(1,1,1 + diff(dimRangeIndices))))
     })
   } else {
     dimData <- dimData0
     vars <- lapply(varNames, function(var.name){
-      var.get.nc(file.con, var.name)
+      data <- as.vector(var.get.nc(file.con, var.name))
     })
   }
-  ans <- cbind(dimData, as.data.frame(do.call(cbind, vars)))
-  names(ans) <- c(dimVar, varNames)
+  varsT <- setNames( c(list(dimData), vars), c(dimVar, varNames))
+  ans <- do.call(cbind.data.frame, varsT)
+  for (varName in varNames) 
+    ans[[varName]] <- attachUnit(ans[[varName]], varName)
+  if (isTRUE(isAttachingUnit)) attr(ans,"units") <- unitsAttr
   ##value<< data.frame of all variables in the file. First column is the 
   ## dimension, usually time.
   return(ans)

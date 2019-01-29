@@ -9,6 +9,6 @@ License: GPL-2
 LazyLoad: yes
 Depends: R (>= 3.4)
 Imports: chron, RNetCDF, abind
-Suggests: testthat, knitr
+Suggests: testthat, knitr, units
 LazyData: true
 VignetteBuilder: knitr
