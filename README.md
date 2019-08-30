@@ -61,9 +61,10 @@ Installation
 ------------
 
 - install required system libraries libnetcdf-dev, udunits-bin and libudunits2-dev
-- install [RNetCDF package](http://r-forge.r-project.org/projects/rnetcdf)
+- install required R packages [RNetCDF package](https://cran.r-project.org/web/packages/RNetCDF) and [chron package](https://cran.r-project.org/web/packages/chron) and [abind package](https://cran.r-project.org/web/packages/chron)
+  - install.packages(c("chron","abind","RNetCDF"))
 - install this package
-  -  currently only from source from [git.bgc-jena.mpg.de](https://git.bgc-jena.mpg.de/twutz/ncdfTools)
+  -  currently only from github
 
 ``` r
 # Release stable version from CRAN
@@ -71,7 +72,7 @@ Installation
 
 # The development version from GitHub using devtools:
 # install.packages("devtools")
-# not yet devtools::install_github("bgctw/ncdfTools")
+devtools::install_github("bgctw/ncdfTools")
 ```
 
 Usage
