@@ -1,7 +1,7 @@
 \name{ncdfTools-package}
 \alias{ncdfTools-package}
 \alias{ncdfTools}
-\title{Post Processing of (Half-)Hourly Eddy-Covariance Measurements}
+\title{Set of tools to ease the handling of netCDF files}
 \description{
 Set of tools to simplify the handling of NetCDF files with the RNetCDF package. 
 Most functions are wrappers of basic functions from the RNetCDF package to 
@@ -16,10 +16,12 @@ Getting information on stored data:
 \item on dimensions: \code{\link{infoNcdfDims}}
 \item on attributes (global and for variables): \code{\link{infoNcdfAtts}}
 \item read coordinate or dimension values from ncdf file: 
-\code{\link{readCoordinatesNcdf}}
+  \code{\link{readCoordinatesNcdf}}
 \item guess (single) variable name: \code{\link{readNcdfVarName}}
 \item fast reading of ncdf data: \code{\link{readNcdf}} and 
-\code{\link{readNcdfDataframe}}
+  \code{\link{readNcdfDataframe}}
+\item converting data columns to unit objects:  
+  \code{\link{asUnitsDataFrame}}
 }%itemize
 
 Modifying NetCDF files
@@ -73,7 +75,7 @@ Some functionality is tailored for use at BGI department at bgc-jena.mpg.de
 }%itemize
 
 
-No longer supported:
+Formerly in ncdf.tools but no longer supported because of dependencies:
 \itemize{
 \item transform binary file to ncdf file: convertBinary2Ncdf
 \item convert file name to R date: .convertFilename2Date

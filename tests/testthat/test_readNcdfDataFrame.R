@@ -1,4 +1,7 @@
-#require(testthat)
+.tmp.f <- function(){
+  require(testthat)
+  isNotOnCRAN <- TRUE
+}
 context('read and updateNcdfDataframe')
 
 # TRUE during testthat::check()
@@ -32,8 +35,16 @@ test_that("readNcdfDataframe",{
   expect_equal(ans, dsTest, check.attributes = FALSE)
   aUnits <- attr(ans,"units")
   expect_equal(aUnits, list(soilResp = "g/m^2/day", sdSoilResp = "g/m^2/day"))
-  if (requireNamespace("units")) 
-    expect_equal(units::deparse_unit(ans$soilResp),"g d-1 m-2")
+})
+
+test_that("asUnitsDataFrame",{
+  fName <- createTestFile()
+  ansU <- readNcdfDataframe(fName) %>% asUnitsDataFrame()
+  unlink(fName)
+  if (requireNamespace("units")) {
+    expect_equal(units::deparse_unit(ansU$soilResp),"g d-1 m-2")
+    expect_equal(units::deparse_unit(ansU$sdSoilResp),"g d-1 m-2")
+  }
 })
 
 test_that("readNcdfDataframe_noConvertTime",{
@@ -45,14 +56,13 @@ test_that("readNcdfDataframe_noConvertTime",{
   aUnits <- attr(ans,"units")
   expect_equal(aUnits[-1], list(soilResp = "g/m^2/day", sdSoilResp = "g/m^2/day"))
   expect_equal(aUnits[1], list(time = "days since 1582-10-15 00:00"))
-  if (requireNamespace("units")) 
-    expect_equal(units::deparse_unit(ans$soilResp),"g d-1 m-2")
 })
 
 test_that("readNcdfDataframe_noUniDataUnit",{
   fName <- createTestFile(unit = "mumol")
+  ans0 <- readNcdfDataframe(fName)
   expect_warning(
-    ans <- readNcdfDataframe(fName)
+    ans <- asUnitsDataFrame(ans0)
     ,"unit of "
   )
   unlink(fName)

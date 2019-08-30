@@ -58,14 +58,6 @@ readNcdfDataframe <- function(
       unit <- try(infoNcdfAttr(file.con, "units", var.name))
       if (!inherits(unit,"try-error")) {
         unitsAttr[var.name] <<- unit
-        if (requireNamespace("units")) {
-          dataOrErr <- try(
-            units::set_units(data, unit, mode = "standard"), silent = TRUE)
-          if (inherits(dataOrErr, "try-error")) { warning(
-            "unit of ", var.name, ": ", dataOrErr) 
-          } else
-           data <- dataOrErr
-        }
       } 
     }
     data
@@ -109,6 +101,28 @@ readNcdfDataframe <- function(
   ## dimension, usually time.
   return(ans)
 }  
+
+asUnitsDataFrame <- function(
+  ### convert data.frame columns to units objects
+  data   ##<< data.frame
+  , units = attributes(data)$units  ##<< list with unit string entries
+  ## named as a column in \code{data}
+) {
+  if (requireNamespace("units")) {
+    for (var.name in names(units)) {
+      unit <- units[[var.name]]
+      dataOrErr <- try(units::set_units(
+          data[[var.name]], unit, mode = "standard"), silent = TRUE)
+      if (inherits(dataOrErr, "try-error")) { warning(
+        "unit of ", var.name, ": ", dataOrErr) 
+      } else
+        data[[var.name]] <- dataOrErr
+    }
+  }
+  ##value<< data.frame with columns converted to unit objects
+  data
+}
+
 
 .getDimRangeIndices <- function(
   ### get the indices of dimRange within dimData0
