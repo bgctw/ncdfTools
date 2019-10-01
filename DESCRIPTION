@@ -8,13 +8,7 @@ Description: Set of tools to ease the handling of netCDF files. Its a lean versi
 License: GPL-2
 LazyLoad: yes
 Depends: R (>= 3.2)
-Imports: 
-  RNetCDF,
-  abind,
-  chron
-Suggests: 
-  testthat, 
-  knitr, 
-  units
+Imports: RNetCDF, abind, chron
+Suggests: testthat, knitr, units
 LazyData: true
 VignetteBuilder: knitr
