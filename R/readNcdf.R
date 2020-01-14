@@ -69,7 +69,7 @@ readNcdfDataframe <- function(
     data <- as.vector(var.get.nc(file.con, dimVar))
     attachUnit(data, dimVar)
   }
-  ansEmpty <- structure( data.frame(x = dimVar), names = dimVar)
+  ansEmpty <- structure( data.frame(x = dimVar), names = dimVar)[FALSE,,drop = FALSE]
   if (!nrow(varInfo)) return(ansEmpty)
   varNames <- if (length(varPattern)) {
     pattern <- paste( paste0("(",varPattern,")"), collapse = "|")
