@@ -2,10 +2,10 @@
 \alias{readNcdfDataframe}
 \title{readNcdfDataframe}
 \description{fast reading of a single point netCDF file into an data.frame}
-\usage{readNcdfDataframe(file.name, varPattern = character(), 
+\usage{readNcdfDataframe(file.name, varPattern = vars, 
     dimVar = "time", isConvertTime = (dimVar == 
         "time"), tzone = "UTC", dimRange = NULL, 
-    isAttachingUnit = TRUE)}
+    isAttachingUnit = TRUE, vars = character())}
 \arguments{
   \item{file.name}{character string: name of the ncdf file to read the data from.}
   \item{varPattern}{string vector of regular expression patterns of
@@ -19,6 +19,7 @@ Default empty corresponds to all variables.}
 the single dimension to read only a subset.
 Values must exactly match entries in dimVar}
   \item{isAttachingUnit}{set to FALSE to not try reading unit}
+  \item{vars}{alternative shorthand for varPattern}
 }
 \details{Convenience function to automatically read in data from a ncdf file
 without specifying variable names and opening file connections.

@@ -32,7 +32,7 @@ readNcdf <- function(
 readNcdfDataframe <- function(
   ### fast reading of a single point netCDF file into an data.frame
   file.name   ##<< character string: name of the ncdf file to read the data from.
-  ,varPattern = character() ##<< string vector of regular expression patterns of 
+  ,varPattern = vars ##<< string vector of regular expression patterns of 
   ##  variable names to extract, that are concatenated by OR.
   ##  Default empty corresponds to all variables.
   , dimVar = "time" ##<< scalar string: name of the single dimension
@@ -43,6 +43,7 @@ readNcdfDataframe <- function(
   ## the single dimension to read only a subset.
   ## Values must exactly match entries in dimVar
   , isAttachingUnit = TRUE  ##<< set to FALSE to not try reading unit 
+  , vars = character() ##<< alternative shorthand for varPattern
 ) {
   ##seealso<< \code{\link{updateNcdfDataframe}}
   ##details<<
